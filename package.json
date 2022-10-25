@@ -1,0 +1,54 @@
+{
+    "name": "node-pdo",
+    "version": "1.0.0",
+    "description": "Pdo for Node",
+    "author": "Claudio Pennati <claudio.pennati@gmail.com>",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/Lupennat/node-pdo.git"
+    },
+    "main": "./dist/index.js",
+    "exports": {
+        "import": "./dist/index.js",
+        "require": "./dist/index.js"
+    },
+    "types": "./@types/index.d.ts",
+    "files": [
+        "dist/*",
+        "@types/*"
+    ],
+    "scripts": {
+        "clean": "del-cli dist",
+        "lint": "eslint src @types",
+        "lint:fix": "eslint src @types --fix",
+        "compile": "npm run clean && tsc",
+        "build": "npm run compile",
+        "watch": "tsc -w",
+        "test:coverage": "jest --coverage",
+        "test:watch": "jest --watch"
+    },
+    "engines": {
+        "node": "^14.19.0 || ^16.10.0 || >=18.0.0"
+    },
+    "devDependencies": {
+        "@tsconfig/node16": "^1.0.3",
+        "@types/jest": "^29.1.2",
+        "@types/lodash.shuffle": "^4.2.7",
+        "@types/node": "^16.11.64",
+        "@typescript-eslint/eslint-plugin": "^5.39.0",
+        "del-cli": "^5.0.0",
+        "esbuild-runner": "^2.2.2",
+        "eslint": "^8.24.0",
+        "eslint-config-prettier": "^8.5.0",
+        "eslint-config-standard-with-typescript": "^23.0.0",
+        "eslint-plugin-import": "^2.26.0",
+        "eslint-plugin-n": "^15.3.0",
+        "eslint-plugin-promise": "^6.0.1",
+        "jest": "^29.1.2",
+        "typescript": "^4.8.4"
+    },
+    "dependencies": {
+        "mysql2": "github:sidorares/node-mysql2#master"
+    }
+}

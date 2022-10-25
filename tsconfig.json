@@ -1,0 +1,12 @@
+{
+    "extends": "@tsconfig/node16/tsconfig.json",
+
+    "compilerOptions": {
+        "moduleResolution": "Node16",
+        "allowSyntheticDefaultImports": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+        "outDir": "dist",
+        "types": ["@types/jest", "@types/node"]
+    }
+}
