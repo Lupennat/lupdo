@@ -1,12 +1,12 @@
 {
-    "name": "node-pdo",
-    "version": "1.0.0",
+    "name": "npdo",
+    "version": "0.0.1",
     "description": "Pdo for Node",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/Lupennat/node-pdo.git"
+        "url": "git+https://github.com/Lupennat/npdo.git"
     },
     "main": "./dist/index.js",
     "exports": {
