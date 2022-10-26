@@ -18,6 +18,9 @@
         "dist/*",
         "@types/*"
     ],
+    "publishConfig": {
+        "access": "public"
+    },
     "scripts": {
         "prepublishOnly": "safe-publish-latest && npm run build",
         "prepublish": "not-in-publish || npm run prepublishOnly",
