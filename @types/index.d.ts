@@ -48,16 +48,16 @@ export declare namespace Pdo {
         ) => Promise<Pdo.Statement>;
     }
 
-    declare namespace Driver {
+    namespace Driver {
         type Options = mysql.PoolOptions;
         type Constructor = new (
             options: Pdo.Driver.Options,
             connectCallback: ConnectCallbackFunction | null
         ) => Pdo.Driver;
 
-        declare namespace Mysql {
+        namespace Mysql {
             interface Connection {
-                fields: FieldPacket[];
+                fields: mysql.FieldPacket[];
                 sql: string;
                 params: Pdo.PreparedStatement.Params | null;
 
@@ -149,7 +149,7 @@ export declare namespace Pdo {
         close: () => Promise<void>;
     }
 
-    declare namespace PreparedStatement {
+    namespace PreparedStatement {
         interface ObjectParams {
             [key: string]: ValidBindings | ValidBindings[];
         }
