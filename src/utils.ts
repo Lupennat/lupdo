@@ -1,4 +1,4 @@
-import { Pdo } from '../@types/index';
+import { NpdoPreparedStatement } from './types';
 
 export function isFunctionConstructor(fn: Function): boolean {
     try {
@@ -17,10 +17,10 @@ export function isFunctionConstructor(fn: Function): boolean {
 
 export function getSqlInfo(
     rawSql: string,
-    placeholder: Pdo.PreparedStatement.Placeholder = '?',
-    identifiers: Pdo.PreparedStatement.Identifiers = [':'],
-    negativeLooks: Pdo.PreparedStatement.NegativeLooks = ['"', "'", '`', '%']
-): [number, Pdo.PreparedStatement.ObjectParamsDescriptor[], string] {
+    placeholder: NpdoPreparedStatement.Placeholder = '?',
+    identifiers: NpdoPreparedStatement.Identifiers = [':'],
+    negativeLooks: NpdoPreparedStatement.NegativeLooks = ['"', "'", '`', '%']
+): [number, NpdoPreparedStatement.ObjectParamsDescriptor[], string] {
     const placeholderRegex = new RegExp(`[${placeholder}]`, 'g');
     const placeholders = (rawSql.match(placeholderRegex) ?? []).length;
     const keys = [];
@@ -60,9 +60,9 @@ export function getSqlInfo(
 }
 
 export function convertObjectParamsToArrayParams(
-    objectParamDescriptors: Pdo.PreparedStatement.ObjectParamsDescriptor[],
-    objectParams: Pdo.PreparedStatement.ObjectParams = {}
-): Pdo.PreparedStatement.ArrayParams {
+    objectParamDescriptors: NpdoPreparedStatement.ObjectParamsDescriptor[],
+    objectParams: NpdoPreparedStatement.ObjectParams = {}
+): NpdoPreparedStatement.ArrayParams {
     const params = [];
     for (const objectParamsDescriptor of objectParamDescriptors) {
         if (objectParamsDescriptor.name in objectParams) {

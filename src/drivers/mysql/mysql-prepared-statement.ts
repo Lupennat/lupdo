@@ -1,15 +1,15 @@
-import { Pdo } from '../../../@types/index';
+import { NpdoPreparedStatement } from '../../types';
 import MysqlStatement from './mysql-statement';
 
-class MysqlPreparedStatement extends MysqlStatement implements Pdo.PreparedStatement {
+class MysqlPreparedStatement extends MysqlStatement implements NpdoPreparedStatement {
     public bindValue(
         key: string | number,
-        value: Pdo.PreparedStatement.ValidBindings | Pdo.PreparedStatement.ValidBindings[]
+        value: NpdoPreparedStatement.ValidBindings | NpdoPreparedStatement.ValidBindings[]
     ): void {
         this.connection.bindValue(key, value);
     }
 
-    public async execute(params?: Pdo.PreparedStatement.Params): Promise<void> {
+    public async execute(params?: NpdoPreparedStatement.Params): Promise<void> {
         await this.connection.execute(params);
     }
 

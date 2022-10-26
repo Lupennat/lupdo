@@ -1,11 +1,12 @@
 'use strict';
 
-import { Pdo } from '../../../@types/index';
+import { NpdoPreparedStatement, NpdoStatement, NpdoTransaction } from '../../types';
 import MysqlPreparedStatement from './mysql-prepared-statement';
 import MysqlStatement from './mysql-statement';
+import { Connection } from './types';
 
-class MysqlTransaction implements Pdo.Transaction {
-    constructor(protected readonly connection: Pdo.Driver.Mysql.Connection) {}
+class MysqlTransaction implements NpdoTransaction {
+    constructor(protected readonly connection: Connection) {}
 
     async commit(): Promise<void> {
         return await this.connection.commit();
@@ -21,7 +22,7 @@ class MysqlTransaction implements Pdo.Transaction {
         return statement.rowCount();
     }
 
-    async prepare(sql: string): Promise<Pdo.PreparedStatement> {
+    async prepare(sql: string): Promise<NpdoPreparedStatement> {
         await this.connection.prepare(sql);
         return new MysqlPreparedStatement(this.connection);
     }
@@ -31,7 +32,7 @@ class MysqlTransaction implements Pdo.Transaction {
         fetchMode?: number,
         columnOrFnOrObject?: number | Function | object,
         constructorArgs?: any[]
-    ): Promise<Pdo.Statement> {
+    ): Promise<NpdoStatement> {
         await this.connection.query(sql);
         return new MysqlStatement(this.connection, fetchMode, columnOrFnOrObject, constructorArgs);
     }

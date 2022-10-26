@@ -1,23 +1,24 @@
-import { Pdo } from '../../../@types/index';
-
 import { RowDataPacket } from 'mysql2';
-import { FETCH_ARRAY, FETCH_CLASS, FETCH_COLUMN, FETCH_DEFAULT, FETCH_INTO, FETCH_OBJ } from '../../constants';
-import { isFunctionConstructor } from '../../utils';
-import PdoError from '../../pdo-error';
 
-class MysqlStatement implements Pdo.Statement {
-    protected readonly connection: Pdo.Driver.Mysql.Connection;
+import { isFunctionConstructor } from '../../utils';
+import NpdoError from '../../pdo-error';
+import { NpdoStatement } from '../../types';
+import { Connection } from './types';
+import NpdoConstants from '../../constants';
+
+class MysqlStatement implements NpdoStatement {
+    protected readonly connection: Connection;
     protected constructorArgs: any[] = [];
     // eslint-disable-next-line @typescript-eslint/no-extraneous-class
     protected fnToFetch: Function = class {};
     protected columnToFetch: number = 0;
     protected objectToFetch: object | null = null;
-    protected fetchMode: number = FETCH_DEFAULT;
+    protected fetchMode: number = NpdoConstants.FETCH_DEFAULT;
     protected readonly cursorOrientation: number | null = null;
     protected readonly cursorOffset: number = 0;
 
     constructor(
-        connection: Pdo.Driver.Mysql.Connection,
+        connection: Connection,
         fetchMode?: number,
         columnOrFnOrObject?: number | Function | object,
         constructorArgs?: any[]
@@ -47,7 +48,7 @@ class MysqlStatement implements Pdo.Statement {
 
     public *fetchColumn<T>(column: number): Iterable<T> {
         this.columnToFetch = column;
-        yield* this.fetch<T>(FETCH_COLUMN);
+        yield* this.fetch<T>(NpdoConstants.FETCH_COLUMN);
     }
 
     public *fetchObject<T>(fnOrObject?: Function | object, constructorArgs?: any[]): Iterable<T> {
@@ -55,7 +56,7 @@ class MysqlStatement implements Pdo.Statement {
         fnOrObject = fnOrObject != null ? fnOrObject : (class {} as Function);
         typeof fnOrObject === 'function' ? (this.fnToFetch = fnOrObject) : (this.objectToFetch = fnOrObject);
         this.constructorArgs = constructorArgs != null ? constructorArgs : [];
-        yield* this.fetch(typeof fnOrObject === 'function' ? FETCH_CLASS : FETCH_OBJ);
+        yield* this.fetch(typeof fnOrObject === 'function' ? NpdoConstants.FETCH_CLASS : NpdoConstants.FETCH_OBJ);
     }
 
     public getColumnMeta(column: number): any {
@@ -83,19 +84,19 @@ class MysqlStatement implements Pdo.Statement {
 
         if (Array.isArray(constructorArgs)) {
             this.constructorArgs = constructorArgs;
-            suggestedFetchMode = FETCH_CLASS;
+            suggestedFetchMode = NpdoConstants.FETCH_CLASS;
         }
 
         if (columnOrFnOrObject != null) {
             if (typeof columnOrFnOrObject === 'number') {
                 this.columnToFetch = columnOrFnOrObject;
-                suggestedFetchMode = FETCH_COLUMN;
+                suggestedFetchMode = NpdoConstants.FETCH_COLUMN;
             } else if (typeof columnOrFnOrObject === 'function') {
                 this.fnToFetch = columnOrFnOrObject;
-                suggestedFetchMode = FETCH_CLASS;
+                suggestedFetchMode = NpdoConstants.FETCH_CLASS;
             } else {
                 this.objectToFetch = columnOrFnOrObject;
-                suggestedFetchMode = FETCH_INTO;
+                suggestedFetchMode = NpdoConstants.FETCH_INTO;
             }
         }
 
@@ -107,7 +108,7 @@ class MysqlStatement implements Pdo.Statement {
     }
 
     protected adaptRowToFetch(row: RowDataPacket): any {
-        if (this.fetchMode === FETCH_CLASS) {
+        if (this.fetchMode === NpdoConstants.FETCH_CLASS) {
             if (isFunctionConstructor(this.fnToFetch)) {
                 return Object.assign(new (this.fnToFetch as FunctionConstructor)(...this.constructorArgs), row);
             } else {
@@ -115,22 +116,22 @@ class MysqlStatement implements Pdo.Statement {
             }
         }
 
-        if (this.fetchMode === FETCH_COLUMN) {
+        if (this.fetchMode === NpdoConstants.FETCH_COLUMN) {
             if (this.connection.fields.length - 1 < this.columnToFetch) {
-                throw new PdoError(`Column ${this.columnToFetch} does not exists.`);
+                throw new NpdoError(`Column ${this.columnToFetch} does not exists.`);
             }
             const field = this.connection.fields[this.columnToFetch];
 
             return row[field.name];
         }
 
-        if (this.fetchMode === FETCH_ARRAY) {
+        if (this.fetchMode === NpdoConstants.FETCH_ARRAY) {
             return this.connection.fields.map(field => {
                 return row[field.name];
             });
         }
 
-        if (this.fetchMode === FETCH_INTO) {
+        if (this.fetchMode === NpdoConstants.FETCH_INTO) {
             return Object.assign({}, this.objectToFetch, row);
         }
 

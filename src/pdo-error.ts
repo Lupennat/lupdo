@@ -1,3 +1,3 @@
-class PdoError extends Error {}
+class NpdoError extends Error {}
 
-export = PdoError;
+export = NpdoError;

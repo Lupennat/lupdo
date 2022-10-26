@@ -1,5 +1,3 @@
-import { Pdo } from '../../../@types/index';
-
 import {
     FieldPacket,
     OkPacket,
@@ -10,9 +8,12 @@ import {
     PreparedStatementInfo
 } from 'mysql2/promise';
 import { convertObjectParamsToArrayParams, getSqlInfo } from '../../utils';
-import PdoError from '../../pdo-error';
+import NpdoError from '../../pdo-error';
 
-class MysqlConnection implements Pdo.Driver.Mysql.Connection {
+import { NpdoPreparedStatement } from '../../types';
+import { Connection } from './types';
+
+class MysqlConnection implements Connection {
     protected connection: PoolConnection | null = null;
     protected inTransaction: boolean = false;
     protected statement: PreparedStatementInfo | null = null;
@@ -21,11 +22,11 @@ class MysqlConnection implements Pdo.Driver.Mysql.Connection {
     protected direction = null;
     protected selectResults: RowDataPacket[][] | RowDataPacket[] = [];
     protected affectingResults: ResultSetHeader | null = null;
-    protected namedParameters: Pdo.PreparedStatement.ObjectParamsDescriptor[] = [];
+    protected namedParameters: NpdoPreparedStatement.ObjectParamsDescriptor[] = [];
     protected positionalParametersLength: number = 0;
     protected sqlOnlyPositional: string = '';
 
-    public params: Pdo.PreparedStatement.Params | null = null;
+    public params: NpdoPreparedStatement.Params | null = null;
     public fields: FieldPacket[] = [];
     public sql: string = '';
 
@@ -38,7 +39,7 @@ class MysqlConnection implements Pdo.Driver.Mysql.Connection {
 
     public async commit(): Promise<void> {
         if (this.connection === null || !this.inTransaction) {
-            throw new PdoError(`Transaction must be opened before commit`);
+            throw new NpdoError(`Transaction must be opened before commit`);
         }
         await this.connection.commit();
         await this.close();
@@ -46,7 +47,7 @@ class MysqlConnection implements Pdo.Driver.Mysql.Connection {
 
     public async rollback(): Promise<void> {
         if (this.connection === null || !this.inTransaction) {
-            throw new PdoError(`Transaction must be opened before rollback`);
+            throw new NpdoError(`Transaction must be opened before rollback`);
         }
         await this.connection.rollback();
         await this.close();
@@ -56,7 +57,7 @@ class MysqlConnection implements Pdo.Driver.Mysql.Connection {
         [this.positionalParametersLength, this.namedParameters, this.sqlOnlyPositional] = getSqlInfo(sql);
 
         if (this.positionalParametersLength > 0 && this.namedParameters.length > 0) {
-            throw new PdoError('Mixed named and positional parameters found on sql');
+            throw new NpdoError('Mixed named and positional parameters found on sql');
         }
 
         this.sql = sql;
@@ -65,23 +66,23 @@ class MysqlConnection implements Pdo.Driver.Mysql.Connection {
 
     public bindValue(
         key: string | number,
-        value: Pdo.PreparedStatement.ValidBindings | Pdo.PreparedStatement.ValidBindings[]
+        value: NpdoPreparedStatement.ValidBindings | NpdoPreparedStatement.ValidBindings[]
     ): void {
         if (typeof key === 'number') {
             if (this.positionalParametersLength === 0) {
-                throw new PdoError('Positional parameters not found on sql');
+                throw new NpdoError('Positional parameters not found on sql');
             }
             const index = key - 1 < 0 ? 0 : key - 1;
             if (index > this.positionalParametersLength) {
-                throw new PdoError(`Parameter at position ${key} not found on sql`);
+                throw new NpdoError(`Parameter at position ${key} not found on sql`);
             }
             if (this.params === null) {
                 this.params = [];
             }
-            (this.params as Pdo.PreparedStatement.ArrayParams)[index] = value;
+            (this.params as NpdoPreparedStatement.ArrayParams)[index] = value;
         } else {
             if (this.namedParameters.length === 0) {
-                throw new PdoError('Named parameters not found on sql');
+                throw new NpdoError('Named parameters not found on sql');
             }
 
             let paramKey = '';
@@ -92,24 +93,24 @@ class MysqlConnection implements Pdo.Driver.Mysql.Connection {
             }
 
             if (paramKey === '') {
-                throw new PdoError(`Parameter with name ${key} not found on sql`);
+                throw new NpdoError(`Parameter with name ${key} not found on sql`);
             }
 
             if (this.params === null) {
                 this.params = {};
             }
 
-            (this.params as Pdo.PreparedStatement.ObjectParams)[paramKey] = value;
+            (this.params as NpdoPreparedStatement.ObjectParams)[paramKey] = value;
         }
     }
 
-    public async execute(params?: Pdo.PreparedStatement.Params): Promise<void> {
+    public async execute(params?: NpdoPreparedStatement.Params): Promise<void> {
         if (this.statement === null) {
-            throw new PdoError('Statement is closed, you need to prepare a new statment');
+            throw new NpdoError('Statement is closed, you need to prepare a new statment');
         }
 
         if (this.cursorLocked) {
-            throw new PdoError('Free cursor before new execute');
+            throw new NpdoError('Free cursor before new execute');
         }
 
         if (params != null) {
@@ -126,11 +127,11 @@ class MysqlConnection implements Pdo.Driver.Mysql.Connection {
 
         const bindings =
             this.positionalParametersLength > 0
-                ? (this.params as Pdo.PreparedStatement.ArrayParams)
+                ? (this.params as NpdoPreparedStatement.ArrayParams)
                 : this.namedParameters.length > 0
                 ? convertObjectParamsToArrayParams(
                       this.namedParameters,
-                      this.params as Pdo.PreparedStatement.ObjectParams
+                      this.params as NpdoPreparedStatement.ObjectParams
                   )
                 : [];
 
