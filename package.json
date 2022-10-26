@@ -1,6 +1,6 @@
 {
     "name": "npdo",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Pdo for Node",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",
