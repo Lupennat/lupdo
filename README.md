@@ -1,2 +1,2 @@
 # node-pdo
-Node PDO
+Node PDO Alpha Version
