@@ -1,6 +1,6 @@
 {
     "name": "npdo",
-    "version": "0.0.2",
+    "version": "0.0.3",
     "description": "Pdo for Node",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",
@@ -10,8 +10,7 @@
     },
     "main": "./dist/index.js",
     "exports": {
-        "import": "./dist/index.js",
-        "require": "./dist/index.js"
+        ".": "./dist/index.js"
     },
     "types": "./@types/index.d.ts",
     "files": [
