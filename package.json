@@ -22,7 +22,7 @@
         "access": "public"
     },
     "scripts": {
-        "prepublishOnly": "safe-publish-latest && npm run build",
+        "prepublishOnly": "safe-publish-latest && npm run lint && npm run test && npm run build",
         "prepublish": "not-in-publish || npm run prepublishOnly",
         "clean": "del-cli dist",
         "lint": "eslint src @types",
@@ -30,6 +30,7 @@
         "compile": "npm run clean && tsc",
         "build": "npm run compile",
         "watch": "tsc -w",
+        "test": "jest",
         "test:coverage": "jest --coverage",
         "test:watch": "jest --watch"
     },

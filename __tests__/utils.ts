@@ -20,7 +20,7 @@ test('get sql info', function () {
         }
     ]);
     expect(sql).toEqual('select * from table where test =? and testname =?');
-
+    // @ts-expect-error
     [placeholdersLength, namedKeys, sql] = getSqlInfo('select * from table where test =$ and testname =:namedKey', '$');
     expect(placeholdersLength).toEqual(1);
     expect(namedKeys).toEqual([
