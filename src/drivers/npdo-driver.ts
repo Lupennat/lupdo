@@ -19,6 +19,7 @@ abstract class NpdoDriver extends EventEmitter implements NpdoDriverI {
         super();
         const { created, destroyed, acquired, released, ...otherOptions } = poolOptions;
         const tarnPoolOptions: PoolOptions<NpdoDriverI.PoolConnection> = {
+            ...otherOptions,
             create: async (): Promise<NpdoDriverI.PoolConnection> => {
                 const connection = await this.createRawConnection();
                 const uuid = uuidv4();
@@ -27,7 +28,7 @@ abstract class NpdoDriver extends EventEmitter implements NpdoDriverI {
                     try {
                         await created(uuid, this.createNpdoConnection(connection));
                     } catch (error) {
-                        this.emit('log', 'error', error);
+                        this.emit('log', error, 'error');
                     }
                 }
                 connection.__npdo_uuid = uuid;
@@ -40,11 +41,13 @@ abstract class NpdoDriver extends EventEmitter implements NpdoDriverI {
                     try {
                         await destroyed(uuid);
                     } catch (error) {
-                        this.emit('log', 'error', error);
+                        this.emit('log', error, 'error');
                     }
                 }
             },
-            ...otherOptions
+            log: (message: any, logLevel?: any): void => {
+                this.emit('log', message, logLevel);
+            }
         };
 
         this.pool = new Pool<NpdoDriverI.PoolConnection>(tarnPoolOptions);

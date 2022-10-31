@@ -1,4 +1,5 @@
 import {
+    NpdoAvailableDriver,
     NpdoDriver,
     NpdoLogger,
     NpdoPoolOptions,
@@ -14,11 +15,9 @@ import SqliteDriver from './drivers/sqlite/sqlite-driver';
 
 class Npdo {
     protected driver: NpdoDriver;
-    protected static logger: NpdoLogger = (level: string, message: string) => {
-        console.log(message);
-    };
+    protected static logger: NpdoLogger = (message: any, level: any): void => {};
 
-    protected static availableDrivers: string[] = ['mysql', 'mariadb', 'sqlite', 'sqlite3'];
+    protected static availableDrivers: NpdoAvailableDriver[] = ['mysql', 'mariadb', 'sqlite', 'sqlite3'];
 
     static setLogger(logger: NpdoLogger): void {
         Npdo.logger = logger;
@@ -28,11 +27,11 @@ class Npdo {
         return Npdo.availableDrivers;
     }
 
-    constructor(driver: 'mariadb', mysqlOptions: NpdoDriver.MysqlOptions, poolOptions?: NpdoPoolOptions);
-    constructor(driver: 'mysql', mysqlOptions: NpdoDriver.MysqlOptions, poolOptions?: NpdoPoolOptions);
-    constructor(driver: 'sqlite', sqliteOptions: NpdoDriver.SqliteOptions, poolOptions?: NpdoPoolOptions);
-    constructor(driver: 'sqlite3', sqliteOptions: NpdoDriver.SqliteOptions, poolOptions?: NpdoPoolOptions);
-    constructor(driver: string, options: NpdoDriver.Options, poolOptions: NpdoPoolOptions = { min: 2, max: 10 }) {
+    constructor(
+        driver: NpdoAvailableDriver,
+        options: NpdoDriver.Options,
+        poolOptions: NpdoPoolOptions = { min: 2, max: 10 }
+    ) {
         switch (driver.toLowerCase()) {
             case 'mysql':
             case 'mariadb':

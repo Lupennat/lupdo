@@ -136,10 +136,11 @@ export interface NpdoPoolOptions {
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace NpdoDriver {
-    type MysqlOptions = mysql.ConnectionOptions;
+    interface MysqlOptions extends mysql.ConnectionOptions {}
 
     interface SqliteOptions extends sqlite.Options {
         path: string;
+        debug?: boolean;
     }
 
     type Options = MysqlOptions | SqliteOptions;
@@ -168,4 +169,6 @@ export interface NpdoColumnData {
     name: string;
 }
 
-export type NpdoLogger = (level: string, message: string) => any;
+export type NpdoLogger = (message: any, level: any) => any;
+
+export type NpdoAvailableDriver = 'mysql' | 'mariadb' | 'sqlite' | 'sqlite3';

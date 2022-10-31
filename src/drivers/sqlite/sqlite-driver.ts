@@ -21,7 +21,16 @@ class SqliteDriver extends NpdoDriver {
     }
 
     protected async createRawConnection(): Promise<NpdoDriverI.sqlitePoolConnection> {
-        const { path, ...sqliteOptions } = this.options;
+        const { path, debug, ...sqliteOptions } = this.options;
+        if (debug === true) {
+            const customVerbose = sqliteOptions.verbose;
+            sqliteOptions.verbose = (...args) => {
+                if (typeof customVerbose === 'function') {
+                    customVerbose.call(customVerbose, ...args);
+                }
+                console.log(...args);
+            };
+        }
         return new Database(path, sqliteOptions) as NpdoDriverI.sqlitePoolConnection;
     }
 
