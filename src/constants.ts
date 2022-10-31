@@ -1,5 +1,5 @@
 /**
- * Specifies that the default fetch mode shall be used. Default is Pdo.FETCH_OBJ
+ * Specifies that the default fetch mode shall be used. Default is Npdo.FETCH_OBJ
  */
 export const FETCH_DEFAULT: number = 1;
 

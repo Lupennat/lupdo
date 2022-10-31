@@ -23,7 +23,7 @@ class Npdo {
         Npdo.logger = logger;
     }
 
-    static getAvailableDrivers(): string[] {
+    static getAvailableDrivers(): NpdoAvailableDriver[] {
         return Npdo.availableDrivers;
     }
 

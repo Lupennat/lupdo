@@ -1,7 +1,7 @@
 {
     "name": "npdo",
-    "version": "0.0.8",
-    "description": "Pdo for Node",
+    "version": "0.0.9",
+    "description": "Database Abstraction Layer for Node js",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",
     "repository": {
@@ -9,6 +9,16 @@
         "url": "git+https://github.com/Lupennat/npdo.git"
     },
     "main": "./dist/index.js",
+    "keywords": [
+        "database",
+        "abstraction",
+        "layer",
+        "pdo",
+        "mysql",
+        "mariadb",
+        "sqlite",
+        "sqlite3"
+    ],
     "exports": {
         ".": "./dist/index.js"
     },
