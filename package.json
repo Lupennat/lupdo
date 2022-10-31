@@ -1,6 +1,6 @@
 {
     "name": "npdo",
-    "version": "0.0.12",
+    "version": "0.0.13",
     "description": "Database Abstraction Layer for Node js",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",
@@ -21,11 +21,8 @@
         "sqlite3"
     ],
     "exports": {
-        ".": {
-            "types": "./dist/types.d.ts",
-            "import": "./dist/index.js",
-            "require": "./dist/index.js"
-        }
+        ".": "./dist/index.js",
+        "./types": "./dist/types.d.ts"
     },
     "files": [
         "dist/*"
