@@ -1,13 +1,11 @@
-import { RowDataPacket } from 'mysql2';
+import { isFunctionConstructor } from '../utils';
+import NpdoError from '../npdo-error';
 
-import { isFunctionConstructor } from '../../utils';
-import NpdoError from '../../pdo-error';
-import { NpdoStatement } from '../../types';
-import { Connection } from './types';
-import NpdoConstants from '../../constants';
+import * as NpdoConstants from '../constants';
+import { NpdoRawConnection, NpdoRowData, NpdoStatement as NpdoStatementI } from '../types';
 
-class MysqlStatement implements NpdoStatement {
-    protected readonly connection: Connection;
+class NpdoStatement implements NpdoStatementI {
+    protected readonly connection: NpdoRawConnection;
     protected constructorArgs: any[] = [];
     // eslint-disable-next-line @typescript-eslint/no-extraneous-class
     protected fnToFetch: Function = class {};
@@ -18,7 +16,7 @@ class MysqlStatement implements NpdoStatement {
     protected readonly cursorOffset: number = 0;
 
     constructor(
-        connection: Connection,
+        connection: NpdoRawConnection,
         fetchMode?: number,
         columnOrFnOrObject?: number | Function | object,
         constructorArgs?: any[]
@@ -28,7 +26,7 @@ class MysqlStatement implements NpdoStatement {
     }
 
     public columnCount(): number {
-        return this.connection.fields.length;
+        return this.connection.columns.length;
     }
 
     public debug(): string {
@@ -38,7 +36,7 @@ class MysqlStatement implements NpdoStatement {
     public *fetch<T>(mode?: number, cursorOrientation?: number, cursorOffset?: number): Iterable<T> {
         this.fetchMode = mode == null ? this.fetchMode : mode;
 
-        yield* this.connection.fetch<T>(this.adaptRowToFetch.bind(this));
+        yield* this.connection.fetch<T>(this.adaptRowToFetch.bind(this), cursorOrientation, cursorOffset);
     }
 
     public fetchAll<T>(mode?: number, columnOrFnOrObject?: number | Function | object, constructorArgs?: any[]): T[] {
@@ -60,14 +58,14 @@ class MysqlStatement implements NpdoStatement {
     }
 
     public getColumnMeta(column: number): any {
-        return column in this.connection.fields ? this.connection.fields[column] : null;
+        return column in this.connection.columns ? this.connection.columns[column] : null;
     }
 
     public rowCount(): number {
         return this.connection.rowCount();
     }
 
-    public lastInsertId(): string | number | null {
+    public lastInsertId(): string | bigint | number | null {
         return this.connection.lastInsertId();
     }
 
@@ -103,11 +101,11 @@ class MysqlStatement implements NpdoStatement {
         this.fetchMode = fetchMode != null ? fetchMode : suggestedFetchMode;
     }
 
-    protected adaptRowsToFetch(rows: RowDataPacket[]): any[] {
+    protected adaptRowsToFetch(rows: NpdoRowData[]): any[] {
         return rows.map(row => this.adaptRowToFetch(row));
     }
 
-    protected adaptRowToFetch(row: RowDataPacket): any {
+    protected adaptRowToFetch(row: NpdoRowData): any {
         if (this.fetchMode === NpdoConstants.FETCH_CLASS) {
             if (isFunctionConstructor(this.fnToFetch)) {
                 return Object.assign(new (this.fnToFetch as FunctionConstructor)(...this.constructorArgs), row);
@@ -117,16 +115,16 @@ class MysqlStatement implements NpdoStatement {
         }
 
         if (this.fetchMode === NpdoConstants.FETCH_COLUMN) {
-            if (this.connection.fields.length - 1 < this.columnToFetch) {
+            if (this.connection.columns.length - 1 < this.columnToFetch) {
                 throw new NpdoError(`Column ${this.columnToFetch} does not exists.`);
             }
-            const field = this.connection.fields[this.columnToFetch];
+            const field = this.connection.columns[this.columnToFetch];
 
             return row[field.name];
         }
 
         if (this.fetchMode === NpdoConstants.FETCH_ARRAY) {
-            return this.connection.fields.map(field => {
+            return this.connection.columns.map(field => {
                 return row[field.name];
             });
         }
@@ -139,4 +137,4 @@ class MysqlStatement implements NpdoStatement {
     }
 }
 
-export = MysqlStatement;
+export = NpdoStatement;

@@ -1,0 +1,54 @@
+version: '3'
+services:
+    mysql:
+        image: 'mysql/mysql-server:8.0'
+        container_name: npdoMysql
+        restart: unless-stopped
+        tty: true
+        ports:
+            - '3306:3306'
+        environment:
+            MYSQL_DATABASE: 'test_db'
+            MYSQL_ROOT_PASSWORD: "root"
+            MYSQL_USER: "npdo"
+            MYSQL_PASSWORD: "secret"
+        volumes:
+            - 'npdo-mysql:/var/lib/mysql'
+        networks:
+            - npdo
+    pgsql:
+        image: 'postgres:14'
+        ports:
+            - '5432:5432'
+        environment:
+            PGPASSWORD: 'secret'
+            POSTGRES_DB: 'test_db'
+            POSTGRES_USER: 'npdo'
+            POSTGRES_PASSWORD: 'secret'
+        volumes:
+            - 'npdo-pgsql:/var/lib/postgresql/data'
+        networks:
+            - npdo
+    mariadb:
+        image: 'mariadb:10'
+        ports:
+            - '3308:3306'
+        environment:
+            MYSQL_DATABASE: 'test_db'
+            MYSQL_ROOT_PASSWORD: "root"
+            MYSQL_USER: "npdo"
+            MYSQL_PASSWORD: "secret"
+        volumes:
+            - 'npdo-mariadb:/var/lib/mysql'
+        networks:
+            - npdo
+networks:
+    npdo:
+        driver: bridge
+volumes:
+    npdo-mysql:
+        driver: local
+    npdo-pgsql:
+        driver: local
+    npdo-mariadb:
+        driver: local

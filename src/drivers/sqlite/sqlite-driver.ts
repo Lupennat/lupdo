@@ -1,4 +1,4 @@
-import { createConnection } from 'mysql2/promise';
+import Database from 'better-sqlite3';
 import {
     NpdoPoolOptions,
     NpdoDriver as NpdoDriverI,
@@ -10,31 +10,31 @@ import {
 import NpdoPreparedStatement from '../npdo-prepared-statement';
 import NpdoStatement from '../npdo-statement';
 import NpdoTransaction from '../npdo-transaction';
-import MysqlConnection from './mysql-connection';
-import MysqlRawConnection from './mysql-raw-connection';
+import SqliteConnection from './sqlite-connection';
+import SqliteRawConnection from './sqlite-raw-connection';
 
 import NpdoDriver from '../npdo-driver';
 
-class MysqlDriver extends NpdoDriver {
-    constructor(protected options: NpdoDriverI.MysqlOptions, poolOptions: NpdoPoolOptions) {
+class SqliteDriver extends NpdoDriver {
+    constructor(protected options: NpdoDriverI.SqliteOptions, poolOptions: NpdoPoolOptions) {
         super(poolOptions);
     }
 
-    protected async createRawConnection(): Promise<NpdoDriverI.mysqlPoolConnection> {
-        return (await createConnection(this.options)) as NpdoDriverI.mysqlPoolConnection;
+    protected async createRawConnection(): Promise<NpdoDriverI.sqlitePoolConnection> {
+        const { path, ...sqliteOptions } = this.options;
+        return new Database(path, sqliteOptions) as NpdoDriverI.sqlitePoolConnection;
     }
 
-    protected createNpdoConnection(connection: NpdoDriverI.mysqlPoolConnection): NpdoConnection {
-        return new MysqlConnection(connection);
+    protected createNpdoConnection(connection: NpdoDriverI.sqlitePoolConnection): NpdoConnection {
+        return new SqliteConnection(connection);
     }
 
-    protected async destroyConnection(connection: NpdoDriverI.mysqlPoolConnection): Promise<void> {
-        await connection.end();
-        connection.removeAllListeners();
+    protected async destroyConnection(connection: NpdoDriverI.sqlitePoolConnection): Promise<void> {
+        await connection.close();
     }
 
     public async beginTransaction(): Promise<NpdoTransactionI> {
-        const connection = new MysqlRawConnection(this.pool);
+        const connection = new SqliteRawConnection(this.pool);
         await connection.beginTransaction();
         return new NpdoTransaction(connection);
     }
@@ -44,7 +44,7 @@ class MysqlDriver extends NpdoDriver {
     }
 
     public async prepare(sql: string): Promise<NpdoPreparedStatementI> {
-        const connection = new MysqlRawConnection(this.pool);
+        const connection = new SqliteRawConnection(this.pool);
         await connection.prepare(sql);
         return new NpdoPreparedStatement(connection);
     }
@@ -55,10 +55,10 @@ class MysqlDriver extends NpdoDriver {
         columnOrFnOrObject?: number | Function | object,
         constructorArgs?: any[]
     ): Promise<NpdoStatementI> {
-        const connection = new MysqlRawConnection(this.pool);
+        const connection = new SqliteRawConnection(this.pool);
         await connection.query(sql);
         return new NpdoStatement(connection, fetchMode, columnOrFnOrObject, constructorArgs);
     }
 }
 
-export = MysqlDriver;
+export = SqliteDriver;

@@ -1,21 +1,53 @@
-import { NpdoDriver, NpdoDrivers, NpdoPreparedStatement, NpdoStatement, NpdoTransaction } from './types';
+import {
+    NpdoDriver,
+    NpdoLogger,
+    NpdoPoolOptions,
+    NpdoPreparedStatement,
+    NpdoStatement,
+    NpdoTransaction
+} from './types';
 
 import MysqlDriver from './drivers/mysql/mysql-driver';
-import NpdoConstants from './constants';
-class Npdo extends NpdoConstants {
-    protected driver: NpdoDriver;
+import * as NpdoConstants from './constants';
+import NpdoError from './npdo-error';
+import SqliteDriver from './drivers/sqlite/sqlite-driver';
 
-    protected static availableDrivers: NpdoDrivers = {
-        mysql: MysqlDriver
+class Npdo {
+    protected driver: NpdoDriver;
+    protected static logger: NpdoLogger = (level: string, message: string) => {
+        console.log(message);
     };
 
-    static getAvailableDrivers(): string[] {
-        return Object.keys(Npdo.availableDrivers);
+    protected static availableDrivers: string[] = ['mysql', 'mariadb', 'sqlite', 'sqlite3'];
+
+    static setLogger(logger: NpdoLogger): void {
+        Npdo.logger = logger;
     }
 
-    constructor(driver: NpdoDriver.Available, options: NpdoDriver.Options) {
-        super();
-        this.driver = new Npdo.availableDrivers[driver](options);
+    static getAvailableDrivers(): string[] {
+        return Npdo.availableDrivers;
+    }
+
+    constructor(driver: 'mariadb', mysqlOptions: NpdoDriver.MysqlOptions, poolOptions?: NpdoPoolOptions);
+    constructor(driver: 'mysql', mysqlOptions: NpdoDriver.MysqlOptions, poolOptions?: NpdoPoolOptions);
+    constructor(driver: 'sqlite', sqliteOptions: NpdoDriver.SqliteOptions, poolOptions?: NpdoPoolOptions);
+    constructor(driver: 'sqlite3', sqliteOptions: NpdoDriver.SqliteOptions, poolOptions?: NpdoPoolOptions);
+    constructor(driver: string, options: NpdoDriver.Options, poolOptions: NpdoPoolOptions = { min: 2, max: 10 }) {
+        switch (driver.toLowerCase()) {
+            case 'mysql':
+            case 'mariadb':
+                this.driver = new MysqlDriver(options as NpdoDriver.MysqlOptions, poolOptions);
+                break;
+            case 'sqlite':
+            case 'sqlite3':
+                this.driver = new SqliteDriver(options as NpdoDriver.SqliteOptions, poolOptions);
+                break;
+            default:
+                throw new NpdoError(`driver "${driver}" not available`);
+        }
+        this.driver.on('log', (level: string, message: string) => {
+            Npdo.logger(level, message);
+        });
     }
 
     public async beginTransaction(): Promise<NpdoTransaction> {
@@ -47,5 +79,7 @@ class Npdo extends NpdoConstants {
         return statement;
     }
 }
+
+Object.assign(Npdo, NpdoConstants);
 
 export = Npdo;
