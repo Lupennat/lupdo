@@ -1,4 +1,6 @@
-# Npdo Alpha Version
+# Npdo
+
+> Npdo is in Alpha Version
 
 Npdo is an abstraction layer used for accessing databases, similar to PHP Data Objects exposes a set of APIs.\
 Npdo is not an ORM, Npdo aims to be a stable layer through which to build an ORM or a Query Builder.\
@@ -12,10 +14,12 @@ Npdo create a Pool of connection By Default.
     -   [mysql/mariadb](#mysql-options)
     -   [sqlite/sqlite3](#sqlite-options)
 -   [Pool Options](#pool-options)
--   [Connection]('#connection)
+-   [Connection](#connection)
 -   [Transaction](#transaction)
--   [Statement]('#statement)
--   [Prepared Statement]('#prepared-statement)
+-   [Statement](#statement)
+-   [Prepared Statement](#prepared-statement)
+-   [Logger](#logger)
+-   [Debug](#debug)
 
 ## Third Party Library
 
@@ -56,7 +60,7 @@ run();
 ## Npdo
 
 -   constructor(driver: [NpdoAvailableDriver[]](#supported-databases), driverOptions: [NpdoDriver.Options](#driver-options), NpdoPoolOptions: [PoolOptions](#pool-options))
--   setLogger(logger: [NpdoLogger]('#logger)): void
+-   setLogger(logger: [NpdoLogger](#logger)): void
 -   getAvailableDrivers(): [NpdoAvailableDriver[]](#supported-databases)
 -   prototype.beginTransaction() :Promise<[NpdoTransaction](#transaction)>
 -   prototype.exec(sql: string): Promise<number>
@@ -132,14 +136,14 @@ this connection should be used only to set session variables before it gets used
 
 -   prototype.columnCount(): number;
 -   prototype.debug(): string;
--   prototype.fetch<T>(mode?: [number]('#npdo-constants'), cursorOrientation?: number, cursorOffset?: number): Iterable<T>;
--   prototype.fetchAll<T>(mode?: [number]('#npdo-constants'), columnOrFnOrObject?: number | Function | object, constructorArgs?: any[]): T[];
+-   prototype.fetch<T>(mode?: [number](#npdo-constants), cursorOrientation?: number, cursorOffset?: number): Iterable<T>;
+-   prototype.fetchAll<T>(mode?: [number](#npdo-constants), columnOrFnOrObject?: number | Function | object, constructorArgs?: any[]): T[];
 -   prototype.fetchColumn<T>(column: number): Iterable<T>;
 -   prototype.fetchObject<T>(fnOrObject?: Function | object, constructorArgs?: any[]): Iterable<T>;
 -   prototype.getColumnMeta(column: number): any;
 -   prototype.rowCount(): number;
 -   prototype.lastInsertId(): string | bigint | number | null;
--   prototype.setFetchMode(mode: [number]('#npdo-constants'), columnOrFnOrObject?: number | object | Function, constructorArgs?: any[]): void;
+-   prototype.setFetchMode(mode: [number](#npdo-constants), columnOrFnOrObject?: number | object | Function, constructorArgs?: any[]): void;
 
 > cursorOrientation and cursorOffset are not yet implemented
 
@@ -164,3 +168,23 @@ extends [Statement](#statement)
 
 Array of [ValidBindings](#valid-bindings)]\
 or a key-value object
+
+## Logger
+
+Npdo by default doesn't log anything, you can assign a custom log for Npdo to intercept messages.\
+Error from custom [PoolOptions](#pool-options) `created` and `destroyed` are silently suppressed you can intercept it only from a custom logger.
+
+```js
+const Npdo = require('npdo');
+// ES6 or Typescrypt
+import Npdo from 'npdo';
+Npdo.setLogger((message: any, level?: any) => {
+    console.log(message, level);
+});
+```
+
+## Debug
+
+If you are running into problems, one thing that may help is enabling the debug mode for the connection.\
+You can enable raw Connection debug using [debug](#driver-options) parameter.\
+This will print extra information on stdout.
