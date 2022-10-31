@@ -1,7 +1,7 @@
 import { isFunctionConstructor } from '../utils';
 import NpdoError from '../npdo-error';
 
-import * as NpdoConstants from '../constants';
+import NpdoConstants from '../constants';
 import { NpdoRawConnection, NpdoRowData, NpdoStatement as NpdoStatementI } from '../types';
 
 class NpdoStatement implements NpdoStatementI {

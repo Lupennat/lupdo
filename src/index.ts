@@ -9,11 +9,11 @@ import {
 } from './types';
 
 import MysqlDriver from './drivers/mysql/mysql-driver';
-import * as NpdoConstants from './constants';
+import NpdoConstants from './constants';
 import NpdoError from './npdo-error';
 import SqliteDriver from './drivers/sqlite/sqlite-driver';
 
-class Npdo {
+class Npdo extends NpdoConstants {
     protected driver: NpdoDriver;
     protected static logger: NpdoLogger = (message: any, level: any): void => {};
 
@@ -32,6 +32,7 @@ class Npdo {
         options: NpdoDriver.Options,
         poolOptions: NpdoPoolOptions = { min: 2, max: 10 }
     ) {
+        super();
         switch (driver.toLowerCase()) {
             case 'mysql':
             case 'mariadb':
@@ -78,7 +79,5 @@ class Npdo {
         return statement;
     }
 }
-
-Object.assign(Npdo, NpdoConstants);
 
 export = Npdo;
