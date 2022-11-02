@@ -23,7 +23,7 @@ class Npdo extends NpdoConstants {
         Npdo.logger = logger;
     }
 
-    static getAvailableDrivers(): NpdoAvailableDriver[] {
+    static getAvailableDrivers(): string[] {
         return Npdo.availableDrivers;
     }
 

@@ -1,6 +1,6 @@
 {
     "name": "npdo",
-    "version": "0.0.13",
+    "version": "0.0.14",
     "description": "Database Abstraction Layer for Node js",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",
@@ -71,6 +71,7 @@
         "@types/node": "^16.18.0",
         "@types/uuid": "^8.3.4",
         "better-sqlite3": "^7.6.2",
+        "lodash.shuffle": "^4.2.0",
         "mysql2": "github:sidorares/node-mysql2#master",
         "tarn": "^3.0.2",
         "uuid": "^9.0.0"

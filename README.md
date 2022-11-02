@@ -45,6 +45,8 @@ Base Example
 const Npdo = require('npdo');
 // ES6 or Typescrypt
 import Npdo from 'npdo';
+// get types from 'npdo/types'
+import { NpdoStatement } from 'npdo/types';
 
 const npdo = new Npdo('sqlite', { path: ':memory' }, { min: 2, max: 3 });
 const run = async () => {
@@ -93,6 +95,12 @@ The only common option is
 ### Mysql Options
 
 [https://github.com/mysqljs/mysql#connection-options](https://github.com/mysqljs/mysql#connection-options)
+
+new option added:
+
+-   hosts: string[]
+
+> Hosts should be a list of host or host:port, the pool will use at random one of this hosts to get connection
 
 ### Sqlite Options
 

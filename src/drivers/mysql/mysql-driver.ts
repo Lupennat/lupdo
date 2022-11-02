@@ -12,7 +12,7 @@ import NpdoStatement from '../npdo-statement';
 import NpdoTransaction from '../npdo-transaction';
 import MysqlConnection from './mysql-connection';
 import MysqlRawConnection from './mysql-raw-connection';
-
+import shuffle from 'lodash.shuffle';
 import NpdoDriver from '../npdo-driver';
 
 class MysqlDriver extends NpdoDriver {
@@ -21,7 +21,16 @@ class MysqlDriver extends NpdoDriver {
     }
 
     protected async createRawConnection(): Promise<NpdoDriverI.mysqlPoolConnection> {
-        return (await createConnection(this.options)) as NpdoDriverI.mysqlPoolConnection;
+        const { hosts, ...mysqlOptions } = this.options;
+        if (hosts != null) {
+            const randomHost = shuffle<string>(hosts)[0];
+            const [host, port] = randomHost.split(':') as [string, string | undefined];
+            mysqlOptions.host = host;
+            if (port != null && !isNaN(Number(port))) {
+                mysqlOptions.port = Number(port);
+            }
+        }
+        return (await createConnection(mysqlOptions)) as NpdoDriverI.mysqlPoolConnection;
     }
 
     protected createNpdoConnection(connection: NpdoDriverI.mysqlPoolConnection): NpdoConnection {

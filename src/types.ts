@@ -136,7 +136,12 @@ export interface NpdoPoolOptions {
 
 // eslint-disable-next-line @typescript-eslint/no-namespace
 export declare namespace NpdoDriver {
-    interface MysqlOptions extends mysql.ConnectionOptions {}
+    interface MysqlOptions extends mysql.ConnectionOptions {
+        /**
+         * List of host or host:port to make Round-robin connections
+         */
+        hosts?: string[];
+    }
 
     interface SqliteOptions extends sqlite.Options {
         path: string;
