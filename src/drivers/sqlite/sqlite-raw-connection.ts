@@ -1,5 +1,4 @@
 import { NpdoAffectingData, NpdoColumnData, NpdoDriver, NpdoPreparedStatement, NpdoRowData } from '../../types';
-import { getSqlInfo } from '../../utils';
 import NpdoRawConnection from '../npdo-raw-connection';
 import { Statement } from 'better-sqlite3';
 
@@ -23,7 +22,7 @@ class SqliteRawConnection extends NpdoRawConnection {
     protected async executeStatement(
         connection: NpdoDriver.sqlitePoolConnection,
         statement: Statement,
-        bindings: NpdoPreparedStatement.ArrayParams
+        bindings: NpdoPreparedStatement.Params
     ): Promise<[NpdoAffectingData, NpdoRowData[], NpdoColumnData[]]> {
         const info = await statement.run(bindings);
         return [
@@ -33,10 +32,14 @@ class SqliteRawConnection extends NpdoRawConnection {
                       lastInsertRowid: info.lastInsertRowid,
                       affectedRows: info.changes
                   },
-            statement.reader ? statement.all(bindings) : [],
+            statement.reader ? statement.raw().all(bindings) : [],
             (statement.reader ? statement.columns() : []).map(field => {
                 return {
-                    name: field.name
+                    name: field.name,
+                    column: field.column,
+                    table: field.table,
+                    database: field.database,
+                    type: field.type
                 };
             })
         ];
@@ -50,10 +53,6 @@ class SqliteRawConnection extends NpdoRawConnection {
     ): Promise<[NpdoAffectingData, NpdoRowData[], NpdoColumnData[]]> {
         const statement = await this.getStatement(connection, sql);
         return await this.executeStatement(connection, statement, []);
-    }
-
-    protected getSqlInfo(rawSql: string): [number, NpdoPreparedStatement.ObjectParamsDescriptor[], string] {
-        return getSqlInfo(rawSql, '?', ['@', ':', '$']);
     }
 
     protected adaptBindValue(value: NpdoPreparedStatement.ValidBindings): NpdoPreparedStatement.ValidBindings {

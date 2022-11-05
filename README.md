@@ -9,6 +9,7 @@ Npdo create a Pool of connection By Default.
 -   [Third Party Library](#third-party-library)
 -   [Supported Databases](#supported-databases)
 -   [Usage](#usage)
+    - [Fetch Modes](FETCH_MODES.md)
 -   [Npdo](#npdo)
 -   [Driver Options](#driver-options)
     -   [mysql/mariadb](#mysql-options)
@@ -71,19 +72,38 @@ run();
 -   prototype.disconnect(): Promise<void>
 
 ### Npdo Constants
-
--   `FETCH_DEFAULT` Specifies that the default fetch mode shall be used. Default is Npdo.FETCH_OBJ
--   `FETCH_OBJ` Specifies that the fetch method shall return each row as an object with property names that correspond to the column names returned in the result set.
--   `FETCH_CLASS` Specifies that the fetch method shall return a new instance of the requested class, mapping the columns to named properties in the class.
+-   `FETCH_ASSOC` Specifies that the fetch method shall return each row as a key-value object keyed by column name as returned in the corresponding result set. If the result set contains multiple columns with the same name, Npdo::FETCH_ASSOC returns only a single value per column name.
+-   `FETCH_NUM` Specifies that the fetch method shall return each row as an array indexed by column number as returned in the corresponding result set, starting at column 0.
+-   `FETCH_BOTH` Specifies that the fetch method shall return each row as a key-value object keyed by both column name and number as returned in the corresponding result set, starting at column 0.
 -   `FETCH_COLUMN` Specifies that the fetch method shall return only a single requested column from the next row in the result set.
--   `FETCH_ARRAY` Specifies that the fetch method shall return each row as an array indexed by column number as returned in the corresponding result set, starting at column 0.
--   `FETCH_INTO` Specifies that the fetch method shall update an existing instance of the requested class, mapping the columns to named properties in the class.
--   `FETCH_ORI_NEXT` Fetch the next row in the result set. Valid only for scrollable cursors.
--   `FETCH_ORI_PRIOR` Fetch the previous row in the result set. Valid only for scrollable cursors.
--   `FETCH_ORI_FIRST` Fetch the first row in the result set. Valid only for scrollable cursors.
--   `FETCH_ORI_LAST` Fetch the last row in the result set. Valid only for scrollable cursors.
--   `FETCH_ORI_ABS` Fetch the requested row by row number from the result set. Valid only for scrollable cursors.
--   `FETCH_ORI_REL` Fetch the requested row by relative position from the current position of the cursor in the result set. Valid only for scrollable cursors.
+-   `FETCH_CLASS` Specifies that the fetch method shall return a new instance of the requested class, mapping the columns to named properties in the class (setter method is called if defined in the requested class).
+-   `FETCH_INTO` Specifies that the fetch method shall update an existing instance of the requested class, mapping the columns to named properties in the class (setter method is called if defined in the requested class).
+-   `FETCH_FUNC` Allows completely customize the way data is treated on the fly.
+-   `FETCH_NAMED` Specifies that the fetch method shall return each row as a key-value object keyed by column name as returned in the corresponding result set. If the result set contains multiple columns with the same name, Npdo::FETCH_NAMED returns an array of values per column name.
+-   `FETCH_KEY_PAIR` Fetch a two-column result into a key-value object where the first column is a key and the second column is the value.
+-   `FETCH_GROUP` Group return by values. Usually combined with Npdo::FETCH_COLUMN or Npdo::FETCH_KEY_PAIR.
+-   `FETCH_UNIQUE` Fetch only the unique values.
+-   `FETCH_CLASSTYPE` Determine the class name from the value of first column.
+-   `FETCH_ORI_NEXT` Fetch the next row in the result set.
+-   `FETCH_ORI_PRIOR` Fetch the previous row in the result set.
+-   `FETCH_ORI_FIRST` Fetch the first row in the result set.
+-   `FETCH_ORI_LAST` Fetch the last row in the result set.
+-   `FETCH_ORI_ABS` Fetch the requested row by row number from the result set.
+-   `FETCH_ORI_REL` Fetch the requested row by relative position from the current position of the cursor in the result set.
+
+### Npdo Attributes
+
+-   `ATTR_DEFAULT_FETCH_MODE` Set the default fetch mode [Default Npdo.FETCH_NUM]
+-   `ATTR_CASE` Force column names to a specific case. Can take one of the following values: [Default Npdo.CASE_NATURAL]
+    -   `Npdo.CASE_NATURAL`
+    -   `Npdo.CASE_LOWER`
+    -   `Npdo.CASE_UPPER`
+-   `ATTR_NULLS` Determines if and how null and empty strings should be converted. Can take one of the following values: [Default Npdo.NULL_NATURAL]
+    -   `Npdo.NULL_NATURAL`
+    -   `Npdo.NULL_EMPTY_STRING`
+    -   `Npdo.NULL_TO_STRING`
+-   `ATTR_DRIVER_NAME` Returns the name of the driver.
+
 
 ## Driver Options
 
@@ -143,18 +163,19 @@ this connection should be used only to set session variables before it gets used
 
 ## Statement
 
+-   prototype.getAttribute([attribute](#npdo-attributes): string): string | number;
+-   prototype.setAttribute([attribute](#npdo-attributes): string, value: number | string): boolean;
 -   prototype.columnCount(): number;
 -   prototype.debug(): string;
--   prototype.fetch<T>(mode?: [number](#npdo-constants), cursorOrientation?: number, cursorOffset?: number): Iterable<T>;
+-   prototype.fetch<T>(mode?: [number](#npdo-constants), cursorOrientation?: number): T | null;
 -   prototype.fetchAll<T>(mode?: [number](#npdo-constants), columnOrFnOrObject?: number | Function | object, constructorArgs?: any[]): T[];
--   prototype.fetchColumn<T>(column: number): Iterable<T>;
--   prototype.fetchObject<T>(fnOrObject?: Function | object, constructorArgs?: any[]): Iterable<T>;
--   prototype.getColumnMeta(column: number): any;
+-   prototype.fetchColumn(column: number): ColumnFecth | null;
+-   prototype.fetchObject<T>(fnOrObject?: Function | object, constructorArgs?: any[]): T | null;
+-   prototype.getColumnMeta(column: number): NpdoColumnData | null;
 -   prototype.rowCount(): number;
 -   prototype.lastInsertId(): string | bigint | number | null;
 -   prototype.setFetchMode(mode: [number](#npdo-constants), columnOrFnOrObject?: number | object | Function, constructorArgs?: any[]): void;
 
-> cursorOrientation and cursorOffset are not yet implemented
 
 ## Prepared Statement
 

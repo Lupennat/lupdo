@@ -1,26 +1,28 @@
-import { convertObjectParamsToArrayParams } from '../utils';
 import NpdoError from '../npdo-error';
 import {
+    FetchType,
+    AllFetchType,
     NpdoAffectingData,
     NpdoColumnData,
     NpdoDriver,
     NpdoPreparedStatement,
     NpdoRawConnection as NpdoRawConnectionI,
-    NpdoRowData
+    NpdoRowData,
+    SingleFetchType
 } from '../types';
 import { Pool } from 'tarn';
+import NpdoConstants from '../constants';
 
 abstract class NpdoRawConnection implements NpdoRawConnectionI {
     protected connection: NpdoDriver.PoolConnection | null = null;
     protected inTransaction: boolean = false;
     protected statement: any = null;
-    protected cursor: number = 0;
-    protected direction = null;
+    protected cursor: number = -1;
+
     protected selectResults: NpdoRowData[] = [];
     protected affectingResults: NpdoAffectingData = {};
     protected namedParameters: NpdoPreparedStatement.ObjectParamsDescriptor[] = [];
     protected positionalParametersLength: number = 0;
-    protected sqlOnlyPositional: string = '';
 
     public params: NpdoPreparedStatement.Params | null = null;
     public columns: NpdoColumnData[] = [];
@@ -35,7 +37,7 @@ abstract class NpdoRawConnection implements NpdoRawConnectionI {
     protected abstract executeStatement(
         connection: NpdoDriver.PoolConnection,
         statement: any,
-        bindings: NpdoPreparedStatement.ArrayParams
+        bindings: NpdoPreparedStatement.Params
     ): Promise<[NpdoAffectingData, NpdoRowData[], NpdoColumnData[]]>;
     protected abstract closeStatement(connection: NpdoDriver.PoolConnection, statement: any): Promise<void>;
     protected abstract doQuery(
@@ -43,11 +45,14 @@ abstract class NpdoRawConnection implements NpdoRawConnectionI {
         sql: string
     ): Promise<[NpdoAffectingData, NpdoRowData[], NpdoColumnData[]]>;
 
-    protected abstract getSqlInfo(rawSql: string): [number, NpdoPreparedStatement.ObjectParamsDescriptor[], string];
     protected abstract adaptBindValue(value: NpdoPreparedStatement.ValidBindings): NpdoPreparedStatement.ValidBindings;
 
     public async beginTransaction(): Promise<void> {
-        await this.doBeginTransaction(await this.generateConnection());
+        try {
+            await this.doBeginTransaction(await this.generateConnection());
+        } catch (error: any) {
+            throw new NpdoError(error);
+        }
         this.inTransaction = true;
     }
 
@@ -55,7 +60,13 @@ abstract class NpdoRawConnection implements NpdoRawConnectionI {
         if (this.connection === null || !this.inTransaction) {
             throw new NpdoError(`Transaction must be opened before commit`);
         }
-        await this.doCommit(this.connection);
+
+        try {
+            await this.doCommit(this.connection);
+        } catch (error: any) {
+            throw new NpdoError(error);
+        }
+
         await this.close();
     }
 
@@ -63,63 +74,46 @@ abstract class NpdoRawConnection implements NpdoRawConnectionI {
         if (this.connection === null || !this.inTransaction) {
             throw new NpdoError(`Transaction must be opened before rollback`);
         }
-        await this.doRollback(this.connection);
+
+        try {
+            await this.doRollback(this.connection);
+        } catch (error: any) {
+            throw new NpdoError(error);
+        }
+
         await this.close();
     }
 
     public async prepare(sql: string): Promise<void> {
-        [this.positionalParametersLength, this.namedParameters, this.sqlOnlyPositional] = this.getSqlInfo(sql);
-
-        if (this.positionalParametersLength > 0 && this.namedParameters.length > 0) {
-            throw new NpdoError('Mixed named and positional parameters found on sql');
-        }
-
         this.sql = sql;
 
-        this.statement = await this.getStatement(await this.generateOrReuseConnection(), this.sqlOnlyPositional);
+        try {
+            this.statement = await this.getStatement(await this.generateOrReuseConnection(), this.sql);
+        } catch (error: any) {
+            throw new NpdoError(error);
+        }
     }
 
     public bindValue(key: string | number, value: NpdoPreparedStatement.ValidBindings): void {
         value = this.adaptBindValue(value);
         if (typeof key === 'number') {
-            if (this.positionalParametersLength === 0) {
-                throw new NpdoError('Positional parameters not found on sql');
-            }
             const index = key - 1 < 0 ? 0 : key - 1;
-            if (index > this.positionalParametersLength) {
-                throw new NpdoError(`Parameter at position ${key} not found on sql`);
-            }
             if (this.params === null) {
                 this.params = [];
             }
             (this.params as NpdoPreparedStatement.ArrayParams)[index] = value;
         } else {
-            if (this.namedParameters.length === 0) {
-                throw new NpdoError('Named parameters not found on sql');
-            }
-
-            let paramKey = '';
-            for (const descriptor of this.namedParameters) {
-                if (descriptor.aliases.includes(key)) {
-                    paramKey = descriptor.name;
-                }
-            }
-
-            if (paramKey === '') {
-                throw new NpdoError(`Parameter with name ${key} not found on sql`);
-            }
-
             if (this.params === null) {
                 this.params = {};
             }
 
-            (this.params as NpdoPreparedStatement.ObjectParams)[paramKey] = value;
+            (this.params as NpdoPreparedStatement.ObjectParams)[key] = value;
         }
     }
 
     public async execute(params?: NpdoPreparedStatement.Params): Promise<void> {
         if (this.statement === null) {
-            this.statement = await this.getStatement(await this.generateOrReuseConnection(), this.sqlOnlyPositional);
+            this.statement = await this.getStatement(await this.generateOrReuseConnection(), this.sql);
         }
 
         if (params != null) {
@@ -134,63 +128,65 @@ abstract class NpdoRawConnection implements NpdoRawConnectionI {
             }
         }
 
-        const bindings =
-            this.positionalParametersLength > 0
-                ? (this.params as NpdoPreparedStatement.ArrayParams)
-                : this.namedParameters.length > 0
-                ? convertObjectParamsToArrayParams(
-                      this.namedParameters,
-                      this.params as NpdoPreparedStatement.ObjectParams
-                  )
-                : [];
+        try {
+            [this.affectingResults, this.selectResults, this.columns] = await this.executeStatement(
+                await this.generateOrReuseConnection(),
+                this.statement,
+                this.params === null ? [] : this.params
+            );
 
-        [this.affectingResults, this.selectResults, this.columns] = await this.executeStatement(
-            await this.generateOrReuseConnection(),
-            this.statement,
-            bindings
-        );
+            if (!this.inTransaction) {
+                await this.close();
+            }
 
-        if (!this.inTransaction) {
-            await this.close();
+            this.resetCursor();
+        } catch (error: any) {
+            throw new NpdoError(error);
         }
-
-        this.resetCursor();
     }
 
     public async query(sql: string): Promise<void> {
         this.sql = sql;
 
-        [this.affectingResults, this.selectResults, this.columns] = await this.doQuery(
-            await this.generateOrReuseConnection(),
-            sql
-        );
+        try {
+            [this.affectingResults, this.selectResults, this.columns] = await this.doQuery(
+                await this.generateOrReuseConnection(),
+                sql
+            );
 
-        if (!this.inTransaction) {
-            await this.close();
-        }
+            if (!this.inTransaction) {
+                await this.close();
+            }
 
-        this.resetCursor();
-    }
-
-    public *fetch<T>(adapter: Function, cursorOrientation?: number, cursorOffset?: number): Iterable<T> {
-        while (this.selectResults.length > this.cursor) {
-            const cursor = this.cursor;
-            this.cursor++;
-            yield adapter(this.selectResults[cursor]);
+            this.resetCursor();
+        } catch (error: any) {
+            throw new NpdoError(error);
         }
     }
 
-    public fetchAll<T>(adapter: Function): T[] {
-        const res = adapter(this.selectResults.slice(this.cursor));
-        this.cursor = this.selectResults.length;
-        return res;
+    public fetch<T extends FetchType>(adapter: Function, cursorOrientation: number): SingleFetchType<T> | null {
+        const cursor = this.getTempCursorForFetch(cursorOrientation);
+
+        if (!this.isValidCursor(cursor, cursorOrientation)) {
+            return null;
+        }
+        this.setCursor(cursor);
+
+        return adapter(this.selectResults[cursor]);
+    }
+
+    public fetchAll<T extends FetchType>(adapter: Function): AllFetchType<T> {
+        const cursor = this.getTempCursorForFetch();
+        this.setCursorToEnd();
+
+        return adapter(this.selectResults.slice(cursor));
     }
 
     public rowCount(): number {
         if (typeof this.affectingResults.affectedRows !== 'undefined') {
             return this.affectingResults.affectedRows;
         }
-        return this.selectResults.length;
+        return 0;
     }
 
     public lastInsertId(): string | number | bigint | null {
@@ -202,8 +198,34 @@ abstract class NpdoRawConnection implements NpdoRawConnectionI {
     }
 
     protected resetCursor(): void {
-        this.direction = null;
-        this.cursor = 0;
+        this.setCursor(-1);
+    }
+
+    protected setCursor(cursor: number): void {
+        this.cursor = cursor;
+    }
+
+    protected setCursorToEnd(): void {
+        this.setCursor(this.selectResults.length);
+    }
+
+    protected getTempCursorForFetch(cursorOrientation: number = NpdoConstants.FETCH_ORI_NEXT): number {
+        if (
+            (cursorOrientation & NpdoConstants.FETCH_ORI_FIRST) !== 0 ||
+            (cursorOrientation & NpdoConstants.FETCH_ORI_LAST) !== 0
+        ) {
+            return (cursorOrientation & NpdoConstants.FETCH_ORI_FIRST) !== 0 ? 0 : this.selectResults.length - 1;
+        }
+
+        const cursor = this.cursor;
+
+        return (cursorOrientation & NpdoConstants.FETCH_ORI_PRIOR) !== 0 ? cursor - 1 : cursor + 1;
+    }
+
+    protected isValidCursor(cursor: number, cursorOrientation: number = NpdoConstants.FETCH_ORI_NEXT): boolean {
+        return (cursorOrientation & NpdoConstants.FETCH_ORI_PRIOR) !== 0
+            ? cursor > -1
+            : cursor < this.selectResults.length;
     }
 
     protected async generateOrReuseConnection(): Promise<NpdoDriver.PoolConnection> {

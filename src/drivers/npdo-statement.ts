@@ -1,30 +1,17 @@
-import { isFunctionConstructor } from '../utils';
-import NpdoError from '../npdo-error';
-
 import NpdoConstants from '../constants';
-import { NpdoRawConnection, NpdoRowData, NpdoStatement as NpdoStatementI } from '../types';
+import {
+    FetchType,
+    AllFetchType,
+    ColumnFetch,
+    FetchFunctionClosure,
+    NpdoRowData,
+    NpdoStatement as NpdoStatementI,
+    SingleFetchType,
+    NpdoColumnData
+} from '../types';
+import NpdoFetchMode from './npdo-fetch-mode';
 
-class NpdoStatement implements NpdoStatementI {
-    protected readonly connection: NpdoRawConnection;
-    protected constructorArgs: any[] = [];
-    // eslint-disable-next-line @typescript-eslint/no-extraneous-class
-    protected fnToFetch: Function = class {};
-    protected columnToFetch: number = 0;
-    protected objectToFetch: object | null = null;
-    protected fetchMode: number = NpdoConstants.FETCH_DEFAULT;
-    protected readonly cursorOrientation: number | null = null;
-    protected readonly cursorOffset: number = 0;
-
-    constructor(
-        connection: NpdoRawConnection,
-        fetchMode?: number,
-        columnOrFnOrObject?: number | Function | object,
-        constructorArgs?: any[]
-    ) {
-        this.connection = connection;
-        this.assignFetchParameters(fetchMode, columnOrFnOrObject, constructorArgs);
-    }
-
+class NpdoStatement extends NpdoFetchMode implements NpdoStatementI {
     public columnCount(): number {
         return this.connection.columns.length;
     }
@@ -33,32 +20,33 @@ class NpdoStatement implements NpdoStatementI {
         return `SQL: ${this.connection.sql}\nPARAMS:${JSON.stringify(this.connection.params, null, 2)}`;
     }
 
-    public *fetch<T>(mode?: number, cursorOrientation?: number, cursorOffset?: number): Iterable<T> {
-        this.fetchMode = mode == null ? this.fetchMode : mode;
-
-        yield* this.connection.fetch<T>(this.adaptRowToFetch.bind(this), cursorOrientation, cursorOffset);
+    public fetch<T extends FetchType>(mode?: number, cursorOrientation?: number): SingleFetchType<T> | null {
+        return this.doFetch<T>(this.getFetchParameters(mode), cursorOrientation);
     }
 
-    public fetchAll<T>(mode?: number, columnOrFnOrObject?: number | Function | object, constructorArgs?: any[]): T[] {
-        this.assignFetchParameters(mode, columnOrFnOrObject, constructorArgs);
-        return this.connection.fetchAll<T>(this.adaptRowsToFetch.bind(this));
+    public fetchAll<T extends FetchType>(
+        mode?: number,
+        numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
+        constructorArgs?: any[]
+    ): AllFetchType<T> {
+        return this.connection.fetchAll<T>((rows: NpdoRowData[]): AllFetchType<T> => {
+            return this.adaptRowsToFetch<T>(
+                this.getFetchParameters(mode, numberOrClassOrFnOrObject, constructorArgs),
+                rows
+            );
+        });
     }
 
-    public *fetchColumn<T>(column: number): Iterable<T> {
-        this.columnToFetch = column;
-        yield* this.fetch<T>(NpdoConstants.FETCH_COLUMN);
+    public fetchColumn(column: number): ColumnFetch | null {
+        return this.doFetch<ColumnFetch>(this.getFetchParameters(NpdoConstants.FETCH_COLUMN, column));
     }
 
-    public *fetchObject<T>(fnOrObject?: Function | object, constructorArgs?: any[]): Iterable<T> {
-        // eslint-disable-next-line @typescript-eslint/no-extraneous-class
-        fnOrObject = fnOrObject != null ? fnOrObject : (class {} as Function);
-        typeof fnOrObject === 'function' ? (this.fnToFetch = fnOrObject) : (this.objectToFetch = fnOrObject);
-        this.constructorArgs = constructorArgs != null ? constructorArgs : [];
-        yield* this.fetch(typeof fnOrObject === 'function' ? NpdoConstants.FETCH_CLASS : NpdoConstants.FETCH_OBJ);
+    public fetchObject<T>(classOrObject: Function, constructorArgs?: any[]): T | null {
+        return this.doFetch(this.getFetchParameters(NpdoConstants.FETCH_CLASS, classOrObject, constructorArgs)) as T;
     }
 
-    public getColumnMeta(column: number): any {
-        return column in this.connection.columns ? this.connection.columns[column] : null;
+    public getColumnMeta(column: number): NpdoColumnData | null {
+        return this.connection.columns.length > column ? this.connection.columns[column] : null;
     }
 
     public rowCount(): number {
@@ -69,71 +57,33 @@ class NpdoStatement implements NpdoStatementI {
         return this.connection.lastInsertId();
     }
 
-    public setFetchMode(mode: number, columnOrFnOrObject?: number | object | Function, constructorArgs?: any[]): void {
-        this.assignFetchParameters(mode, columnOrFnOrObject, constructorArgs);
-    }
-
-    protected assignFetchParameters(
-        fetchMode?: number,
-        columnOrFnOrObject?: number | Function | object,
+    public setFetchMode(
+        mode: number,
+        numberOrClassOrFnOrObject?: number | object | Function,
         constructorArgs?: any[]
     ): void {
-        let suggestedFetchMode: number = this.fetchMode;
-
-        if (Array.isArray(constructorArgs)) {
-            this.constructorArgs = constructorArgs;
-            suggestedFetchMode = NpdoConstants.FETCH_CLASS;
-        }
-
-        if (columnOrFnOrObject != null) {
-            if (typeof columnOrFnOrObject === 'number') {
-                this.columnToFetch = columnOrFnOrObject;
-                suggestedFetchMode = NpdoConstants.FETCH_COLUMN;
-            } else if (typeof columnOrFnOrObject === 'function') {
-                this.fnToFetch = columnOrFnOrObject;
-                suggestedFetchMode = NpdoConstants.FETCH_CLASS;
-            } else {
-                this.objectToFetch = columnOrFnOrObject;
-                suggestedFetchMode = NpdoConstants.FETCH_INTO;
-            }
-        }
-
-        this.fetchMode = fetchMode != null ? fetchMode : suggestedFetchMode;
+        this.assignFetchParameters(mode, numberOrClassOrFnOrObject, constructorArgs);
     }
 
-    protected adaptRowsToFetch(rows: NpdoRowData[]): any[] {
-        return rows.map(row => this.adaptRowToFetch(row));
+    public getAttribute(attribute: string): string | number {
+        return this.attributes[attribute];
     }
 
-    protected adaptRowToFetch(row: NpdoRowData): any {
-        if (this.fetchMode === NpdoConstants.FETCH_CLASS) {
-            if (isFunctionConstructor(this.fnToFetch)) {
-                return Object.assign(new (this.fnToFetch as FunctionConstructor)(...this.constructorArgs), row);
-            } else {
-                return this.fnToFetch(row);
-            }
+    public setAttribute(attribute: string, value: number | string): boolean {
+        if (attribute in this.attributes) {
+            this.attributes[attribute] = value;
+            return true;
         }
+        return false;
+    }
 
-        if (this.fetchMode === NpdoConstants.FETCH_COLUMN) {
-            if (this.connection.columns.length - 1 < this.columnToFetch) {
-                throw new NpdoError(`Column ${this.columnToFetch} does not exists.`);
-            }
-            const field = this.connection.columns[this.columnToFetch];
-
-            return row[field.name];
-        }
-
-        if (this.fetchMode === NpdoConstants.FETCH_ARRAY) {
-            return this.connection.columns.map(field => {
-                return row[field.name];
-            });
-        }
-
-        if (this.fetchMode === NpdoConstants.FETCH_INTO) {
-            return Object.assign({}, this.objectToFetch, row);
-        }
-
-        return row;
+    protected doFetch<T extends FetchType>(
+        fetchParameters: NpdoStatementI.FetchParameters,
+        cursorOrientation: number = NpdoConstants.FETCH_ORI_NEXT
+    ): SingleFetchType<T> | null {
+        return this.connection.fetch<T>((row: NpdoRowData): SingleFetchType<T> | null => {
+            return this.adaptRowToFetch<T>(fetchParameters, row);
+        }, cursorOrientation);
     }
 }
 

@@ -3,32 +3,56 @@ import { PoolOptions } from 'tarn/dist/Pool';
 import {
     NpdoPoolOptions,
     NpdoDriver as NpdoDriverI,
-    NpdoConnection,
-    NpdoStatement,
-    NpdoTransaction,
-    NpdoPreparedStatement
+    NpdoTransaction as NpdoTransactionI,
+    NpdoPreparedStatement as NpdoPreparedStatementI,
+    NpdoStatement as NpdoStatementI,
+    NpdoRawConnection as NpdoRawConnectionI,
+    NpdoConnection as NpdoConnectionI,
+    NpdoAttributes,
+    FetchFunctionClosure,
+    NpdoAvailableDriver
 } from '../types';
 
 import { v4 as uuidv4 } from 'uuid';
 import EventEmitter from 'node:events';
+import NpdoConstants from '../constants';
+import NpdoTransaction from './npdo-transaction';
+import NpdoPreparedStatement from './npdo-prepared-statement';
+import NpdoStatement from './npdo-statement';
+import NpdoError from '../npdo-error';
 
 abstract class NpdoDriver extends EventEmitter implements NpdoDriverI {
+    protected attributes: NpdoAttributes = {
+        [NpdoConstants.ATTR_CASE]: NpdoConstants.CASE_NATURAL,
+        [NpdoConstants.ATTR_DEFAULT_FETCH_MODE]: NpdoConstants.FETCH_NUM,
+        [NpdoConstants.ATTR_NULLS]: NpdoConstants.NULL_NATURAL
+    };
+
     protected pool: Pool<NpdoDriverI.PoolConnection>;
 
-    constructor(poolOptions: NpdoPoolOptions) {
+    constructor(driver: NpdoAvailableDriver, poolOptions: NpdoPoolOptions, attributes: NpdoAttributes) {
         super();
+        Object.assign(this.attributes, attributes, {
+            [NpdoConstants.ATTR_DRIVER_NAME]: driver
+        });
         const { created, destroyed, acquired, released, ...otherOptions } = poolOptions;
         const tarnPoolOptions: PoolOptions<NpdoDriverI.PoolConnection> = {
+            min: 2,
+            max: 10,
             ...otherOptions,
+            validate: (connection: NpdoDriverI.PoolConnection) => {
+                return this.validateRawConnection(connection);
+            },
+            propagateCreateError: false,
             create: async (): Promise<NpdoDriverI.PoolConnection> => {
-                const connection = await this.createRawConnection();
+                const connection = await this.createConnection();
                 const uuid = uuidv4();
 
                 if (typeof created === 'function') {
                     try {
                         await created(uuid, this.createNpdoConnection(connection));
                     } catch (error) {
-                        this.emit('log', error, 'error');
+                        this.emit('log', new NpdoError('Created Callback Error.', error), 'error');
                     }
                 }
                 connection.__npdo_uuid = uuid;
@@ -41,7 +65,7 @@ abstract class NpdoDriver extends EventEmitter implements NpdoDriverI {
                     try {
                         await destroyed(uuid);
                     } catch (error) {
-                        this.emit('log', error, 'error');
+                        this.emit('log', new NpdoError('Destroy Callback Error.', error), 'error');
                     }
                 }
             },
@@ -65,21 +89,55 @@ abstract class NpdoDriver extends EventEmitter implements NpdoDriverI {
         });
     }
 
-    protected abstract createRawConnection(): Promise<NpdoDriverI.PoolConnection>;
+    protected abstract createConnection(): Promise<NpdoDriverI.PoolConnection>;
+    protected abstract getRawConnection(): NpdoRawConnectionI;
     protected abstract destroyConnection(connection: NpdoDriverI.PoolConnection): Promise<void>;
-    protected abstract createNpdoConnection(connection: NpdoDriverI.PoolConnection): NpdoConnection;
+    protected abstract createNpdoConnection(connection: NpdoDriverI.PoolConnection): NpdoConnectionI;
 
-    public abstract beginTransaction(): Promise<NpdoTransaction>;
-    public abstract disconnect(): Promise<void>;
+    protected validateRawConnection(connection: NpdoDriverI.PoolConnection): boolean {
+        return true;
+    }
 
-    public abstract prepare(sql: string): Promise<NpdoPreparedStatement>;
+    public async disconnect(): Promise<void> {
+        await this.pool.destroy();
+        this.pool.removeAllListeners('acquireSuccess');
+        this.pool.removeAllListeners('release');
+    }
 
-    public abstract query(
+    public async beginTransaction(): Promise<NpdoTransactionI> {
+        const connection = this.getRawConnection();
+        await connection.beginTransaction();
+        return new NpdoTransaction(connection, this.attributes);
+    }
+
+    public async prepare(sql: string, attributes: NpdoAttributes = {}): Promise<NpdoPreparedStatementI> {
+        const connection = this.getRawConnection();
+        await connection.prepare(sql);
+        return new NpdoPreparedStatement(connection, Object.assign({}, this.attributes, attributes));
+    }
+
+    public async query(
         sql: string,
         fetchMode?: number,
-        columnOrFnOrObject?: number | Function | object,
+        numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
         constructorArgs?: any[]
-    ): Promise<NpdoStatement>;
+    ): Promise<NpdoStatementI> {
+        const connection = this.getRawConnection();
+        await connection.query(sql);
+        return new NpdoStatement(connection, this.attributes, fetchMode, numberOrClassOrFnOrObject, constructorArgs);
+    }
+
+    public getAttribute(attribute: string): string | number {
+        return this.attributes[attribute];
+    }
+
+    public setAttribute(attribute: string, value: number | string): boolean {
+        if (attribute in this.attributes) {
+            this.attributes[attribute] = value;
+            return true;
+        }
+        return false;
+    }
 }
 
 export = NpdoDriver;

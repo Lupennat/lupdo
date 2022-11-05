@@ -1,4 +1,6 @@
 import {
+    FetchFunctionClosure,
+    NpdoAttributes,
     NpdoAvailableDriver,
     NpdoDriver,
     NpdoLogger,
@@ -30,20 +32,21 @@ class Npdo extends NpdoConstants {
     constructor(
         driver: NpdoAvailableDriver,
         options: NpdoDriver.Options,
-        poolOptions: NpdoPoolOptions = { min: 2, max: 10 }
+        poolOptions: NpdoPoolOptions = {},
+        attributes: NpdoAttributes = {}
     ) {
         super();
         switch (driver.toLowerCase()) {
             case 'mysql':
             case 'mariadb':
-                this.driver = new MysqlDriver(options as NpdoDriver.MysqlOptions, poolOptions);
+                this.driver = new MysqlDriver(driver, options as NpdoDriver.MysqlOptions, poolOptions, attributes);
                 break;
             case 'sqlite':
             case 'sqlite3':
-                this.driver = new SqliteDriver(options as NpdoDriver.SqliteOptions, poolOptions);
+                this.driver = new SqliteDriver(driver, options as NpdoDriver.SqliteOptions, poolOptions, attributes);
                 break;
             default:
-                throw new NpdoError(`driver "${driver}" not available`);
+                throw new NpdoError(`Driver [${driver}] not available.`);
         }
         this.driver.on('log', (level: string, message: string) => {
             Npdo.logger(level, message);
@@ -72,11 +75,19 @@ class Npdo extends NpdoConstants {
     public async query(
         sql: string,
         fetchMode?: number,
-        columnOrFnOrObject?: number | Function | object,
+        numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
         constructorArgs?: any[]
     ): Promise<NpdoStatement> {
-        const statement = await this.driver.query(sql, fetchMode, columnOrFnOrObject, constructorArgs);
+        const statement = await this.driver.query(sql, fetchMode, numberOrClassOrFnOrObject, constructorArgs);
         return statement;
+    }
+
+    public getAttribute(attribute: string): string | number {
+        return this.driver.getAttribute(attribute);
+    }
+
+    public setAttribute(attribute: string, value: number | string): boolean {
+        return this.driver.setAttribute(attribute, value);
     }
 }
 

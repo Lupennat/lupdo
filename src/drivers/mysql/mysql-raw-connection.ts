@@ -1,6 +1,5 @@
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { NpdoAffectingData, NpdoColumnData, NpdoDriver, NpdoPreparedStatement, NpdoRowData } from '../../types';
-import { getSqlInfo } from '../../utils';
 import NpdoRawConnection from '../npdo-raw-connection';
 
 class MysqlRawConnection extends NpdoRawConnection {
@@ -36,7 +35,6 @@ class MysqlRawConnection extends NpdoRawConnection {
         bindings?: NpdoPreparedStatement.ArrayParams
     ): Promise<[NpdoAffectingData, NpdoRowData[], NpdoColumnData[]]> {
         const [info, fields] = await connection.query(sql, bindings);
-
         return [
             info.constructor.name === 'ResultSetHeader'
                 ? {
@@ -44,17 +42,26 @@ class MysqlRawConnection extends NpdoRawConnection {
                       affectedRows: (info as ResultSetHeader).affectedRows
                   }
                 : {},
-            info.constructor.name === 'ResultSetHeader' ? [] : (info as RowDataPacket[]),
+            info.constructor.name === 'ResultSetHeader' ? [] : (info as RowDataPacket[]).map(row => Object.values(row)),
             Array.isArray(fields)
-                ? fields.map(field => {
-                      return { name: field.name };
+                ? (fields as any[]).map(field => {
+                      return {
+                          catalog: field.catalog,
+                          schema: field.schema,
+                          name: field.name,
+                          orgName: field.orgName,
+                          table: field.table,
+                          orgTable: field.orgTable,
+                          characterSet: field.characterSet,
+                          columnLength: field.columnLength,
+                          columnType: field.columnType,
+                          type: field.columnType,
+                          flags: field.flags,
+                          decimals: field.decimals
+                      };
                   })
                 : []
         ];
-    }
-
-    protected getSqlInfo(rawSql: string): [number, NpdoPreparedStatement.ObjectParamsDescriptor[], string] {
-        return getSqlInfo(rawSql);
     }
 
     protected adaptBindValue(value: NpdoPreparedStatement.ValidBindings): NpdoPreparedStatement.ValidBindings {
