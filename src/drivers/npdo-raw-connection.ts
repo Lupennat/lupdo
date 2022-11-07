@@ -8,9 +8,10 @@ import {
     NpdoPreparedStatement,
     NpdoRawConnection as NpdoRawConnectionI,
     NpdoRowData,
-    SingleFetchType
+    SingleFetchType,
+    NpdoPool
 } from '../types';
-import { Pool } from 'tarn';
+
 import NpdoConstants from '../constants';
 
 abstract class NpdoRawConnection implements NpdoRawConnectionI {
@@ -28,7 +29,7 @@ abstract class NpdoRawConnection implements NpdoRawConnectionI {
     public columns: NpdoColumnData[] = [];
     public sql: string = '';
 
-    constructor(protected readonly pool: Pool<NpdoDriver.PoolConnection>) {}
+    constructor(protected readonly pool: NpdoPool<NpdoDriver.PoolConnection>) {}
 
     protected abstract doBeginTransaction(connection: NpdoDriver.PoolConnection): Promise<void>;
     protected abstract doCommit(connection: NpdoDriver.PoolConnection): Promise<void>;
@@ -46,6 +47,10 @@ abstract class NpdoRawConnection implements NpdoRawConnectionI {
     ): Promise<[NpdoAffectingData, NpdoRowData[], NpdoColumnData[]]>;
 
     protected abstract adaptBindValue(value: NpdoPreparedStatement.ValidBindings): NpdoPreparedStatement.ValidBindings;
+
+    public log(message: string, logLevel: string): void {
+        this.pool.writeLog(message, logLevel);
+    }
 
     public async beginTransaction(): Promise<void> {
         try {

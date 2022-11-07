@@ -1,6 +1,5 @@
-import { Pool } from 'tarn';
-import { PoolOptions } from 'tarn/dist/Pool';
 import {
+    InternalNpdoPoolOptions,
     NpdoPoolOptions,
     NpdoDriver as NpdoDriverI,
     NpdoTransaction as NpdoTransactionI,
@@ -10,7 +9,8 @@ import {
     NpdoConnection as NpdoConnectionI,
     NpdoAttributes,
     FetchFunctionClosure,
-    NpdoAvailableDriver
+    NpdoAvailableDriver,
+    NpdoPool as NpdoPoolI
 } from '../types';
 
 import { v4 as uuidv4 } from 'uuid';
@@ -20,71 +20,107 @@ import NpdoTransaction from './npdo-transaction';
 import NpdoPreparedStatement from './npdo-prepared-statement';
 import NpdoStatement from './npdo-statement';
 import NpdoError from '../npdo-error';
+import NpdoPool from './npdo-pool';
 
 abstract class NpdoDriver extends EventEmitter implements NpdoDriverI {
+    protected instances: NpdoDriverI.instances = {
+        transaction: NpdoTransaction,
+        preparedStatement: NpdoPreparedStatement,
+        statement: NpdoStatement
+    };
+
     protected attributes: NpdoAttributes = {
         [NpdoConstants.ATTR_CASE]: NpdoConstants.CASE_NATURAL,
         [NpdoConstants.ATTR_DEFAULT_FETCH_MODE]: NpdoConstants.FETCH_NUM,
-        [NpdoConstants.ATTR_NULLS]: NpdoConstants.NULL_NATURAL
+        [NpdoConstants.ATTR_NULLS]: NpdoConstants.NULL_NATURAL,
+        [NpdoConstants.ATTR_DEBUG]: NpdoConstants.DEBUG_DISABLED
     };
 
-    protected pool: Pool<NpdoDriverI.PoolConnection>;
+    protected pool: NpdoPoolI<NpdoDriverI.PoolConnection>;
 
     constructor(driver: NpdoAvailableDriver, poolOptions: NpdoPoolOptions, attributes: NpdoAttributes) {
         super();
         Object.assign(this.attributes, attributes, {
             [NpdoConstants.ATTR_DRIVER_NAME]: driver
         });
-        const { created, destroyed, acquired, released, ...otherOptions } = poolOptions;
-        const tarnPoolOptions: PoolOptions<NpdoDriverI.PoolConnection> = {
+        const { created, destroyed, acquired, released, killed, ...otherOptions } = poolOptions;
+        const debugMode = this.getAttribute(NpdoConstants.ATTR_DEBUG) as number;
+        const hasDebug = (debugMode & NpdoConstants.DEBUG_ENABLED) !== 0;
+        const npdoPoolOptions: InternalNpdoPoolOptions<NpdoDriverI.PoolConnection> = {
             min: 2,
             max: 10,
+            acquireTimeoutMillis: 10000,
+            createTimeoutMillis: 5000,
             ...otherOptions,
+            propagateCreateError: false,
             validate: (connection: NpdoDriverI.PoolConnection) => {
                 return this.validateRawConnection(connection);
             },
-            propagateCreateError: false,
             create: async (): Promise<NpdoDriverI.PoolConnection> => {
                 const connection = await this.createConnection();
                 const uuid = uuidv4();
 
                 if (typeof created === 'function') {
-                    try {
-                        await created(uuid, this.createNpdoConnection(connection));
-                    } catch (error) {
-                        this.emit('log', new NpdoError('Created Callback Error.', error), 'error');
-                    }
+                    await created(uuid, this.createNpdoConnection(connection));
                 }
                 connection.__npdo_uuid = uuid;
+
+                if (hasDebug) {
+                    console.log(`Npdo Pool Resource Created: ${connection.__npdo_uuid}`);
+                }
+
                 return connection;
             },
+            kill: (connection: NpdoDriverI.PoolConnection) => {
+                if (connection !== undefined) {
+                    if (typeof killed === 'function') {
+                        killed(connection.__npdo_uuid);
+                    }
+
+                    if (hasDebug) {
+                        console.log(`Npdo Pool Resource Killed: ${connection.__npdo_uuid}`);
+                    }
+                }
+            },
             destroy: async (connection: NpdoDriverI.PoolConnection) => {
-                const uuid: string = connection.__npdo_uuid;
-                await this.destroyConnection(connection);
-                if (typeof destroyed === 'function') {
-                    try {
+                if (connection !== undefined) {
+                    const uuid: string = connection.__npdo_uuid;
+                    await this.destroyConnection(connection);
+
+                    if (typeof destroyed === 'function') {
                         await destroyed(uuid);
-                    } catch (error) {
-                        this.emit('log', new NpdoError('Destroy Callback Error.', error), 'error');
+                    }
+
+                    if (hasDebug) {
+                        console.log(`Npdo Pool Resource Destroyed: ${connection.__npdo_uuid}`);
                     }
                 }
             },
             log: (message: any, logLevel?: any): void => {
+                logLevel = logLevel != null ? (logLevel === 'warn' ? 'warning' : logLevel) : 'debug';
                 this.emit('log', message, logLevel);
             }
         };
 
-        this.pool = new Pool<NpdoDriverI.PoolConnection>(tarnPoolOptions);
+        this.pool = new NpdoPool<NpdoDriverI.PoolConnection>(npdoPoolOptions);
 
         this.pool.on('acquireSuccess', (eventId: number, connection: NpdoDriverI.PoolConnection) => {
             if (typeof acquired === 'function') {
                 acquired(connection.__npdo_uuid);
+            }
+
+            if (hasDebug) {
+                console.log(`Npdo Pool Resource Acquired: ${connection.__npdo_uuid}`);
             }
         });
 
         this.pool.on('release', (connection: NpdoDriverI.PoolConnection) => {
             if (typeof released === 'function') {
                 released(connection.__npdo_uuid);
+            }
+
+            if (hasDebug) {
+                console.log(`Npdo Pool Resource Released: ${connection.__npdo_uuid}`);
             }
         });
     }

@@ -1,8 +1,40 @@
 import * as sqlite from 'better-sqlite3';
 import * as mysql from 'mysql2/promise';
+import { Pool } from 'tarn';
+import { PoolOptions } from 'tarn/dist/Pool';
+
+export type NpdoTransactionConstructor = new (
+    connection: NpdoRawConnection,
+    attributes: NpdoAttributes
+) => NpdoTransaction;
+
+export type NpdoStatementConstructor = new (
+    connection: NpdoRawConnection,
+    attributes: NpdoAttributes,
+    fetchMode?: number,
+    numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
+    constructorArgs?: any[]
+) => NpdoStatement;
+
+export type NpdoPreparedStatementConstructor = new (
+    connection: NpdoRawConnection,
+    attributes: NpdoAttributes,
+    fetchMode?: number,
+    numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
+    constructorArgs?: any[]
+) => NpdoPreparedStatement;
 
 export interface NpdoConnection {
+    /**
+     *
+     * @param sql
+     * @returns
+     */
     query: (sql: string) => Promise<void>;
+}
+
+export interface NpdoPool<T> extends Pool<T> {
+    writeLog: (message: string, logLevel: string) => void;
 }
 
 export interface NpdoRawConnection {
@@ -28,6 +60,7 @@ export interface NpdoRawConnection {
 
     commit: () => Promise<void>;
     rollback: () => Promise<void>;
+    log: (message: any, logLevel: string) => void;
 
     rowCount: () => number;
     lastInsertId: () => string | number | bigint | null;
@@ -149,49 +182,76 @@ export interface NpdoDriver {
     setAttribute: (attribute: string, value: number | string) => boolean;
 }
 
+export interface InternalNpdoPoolOptions<T> extends PoolOptions<T> {
+    killResource?: boolean;
+    killTimeoutMillis?: number;
+    kill: (resource: T) => any;
+}
+
 export interface NpdoPoolOptions {
     /**
      * minimum pool size
+     *
      * [Default = 2]
      */
     min?: number;
     /**
      * maximum pool size
+     *
      * [Default = 10]
      */
     max?: number;
     /**
      * acquire promises are rejected after this many milliseconds
      * if a resource cannot be acquired
-     * [Default 30000]
+     *
+     * [Default 10000]
      */
     acquireTimeoutMillis?: number;
     /**
      * create operations are cancelled after this many milliseconds
      * if a resource cannot be acquired
-     * [Default 30000]
+     *
+     * [Default 5000]
      */
     createTimeoutMillis?: number;
     /**
      * destroy operations are awaited for at most this many milliseconds
      * new resources will be created after this timeout
+     *
      * [Default 5000],
      */
     destroyTimeoutMillis?: number;
     /**
+     * when pool destroy is executed
+     * connection will be released and brutaly killed after this timeut
+     *
+     * [Default 10000].
+     */
+    killTimeoutMillis?: number;
+    /**
+     * enable/disable killTimeout
+     *
+     * [Default false]
+     */
+    killResource?: boolean;
+    /**
      * Free resources are destroyed after this many milliseconds.
      * Note that if min > 0, some resources may be kept alive for longer.
      * To reliably destroy all idle resources, set min to 0.
+     *
      * [Default 30000]
      */
     idleTimeoutMillis?: number;
     /**
      * how long to idle after failed create before trying again
+     *
      * [Default 200]
      */
     createRetryIntervalMillis?: number;
     /**
      * how often to check for idle resources to destroy
+     *
      * [Default 500]
      */
     reapIntervalMillis?: number;
@@ -213,6 +273,10 @@ export interface NpdoPoolOptions {
      * Define Custom Release Callback.
      */
     released?: (uuid: string) => void;
+    /**
+     * Define Custom Kill Callback.
+     */
+    killed?: (uuid: string) => void;
 }
 
 export interface NpdoAttributes {
@@ -230,7 +294,6 @@ export declare namespace NpdoDriver {
 
     interface SqliteOptions extends sqlite.Options {
         path: string;
-        debug?: boolean;
     }
 
     type Options = MysqlOptions | SqliteOptions;
@@ -244,6 +307,12 @@ export declare namespace NpdoDriver {
     }
 
     type PoolConnection = sqlitePoolConnection | mysqlPoolConnection;
+
+    interface instances {
+        preparedStatement: NpdoPreparedStatementConstructor;
+        statement: NpdoStatementConstructor;
+        transaction: NpdoTransactionConstructor;
+    }
 }
 
 export type NpdoRowData = NpdoColumnValue[];

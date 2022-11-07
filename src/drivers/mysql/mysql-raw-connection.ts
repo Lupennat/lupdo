@@ -27,6 +27,20 @@ class MysqlRawConnection extends NpdoRawConnection {
         return await this.doQuery(connection, statement, bindings);
     }
 
+    protected validateRawConnection(connection: NpdoDriver.mysqlPoolConnection): boolean {
+        return (
+            connection &&
+            // @ts-expect-error
+            !connection._fatalError &&
+            // @ts-expect-error
+            !connection._protocolError &&
+            // @ts-expect-error
+            !connection._closing &&
+            // @ts-expect-error
+            !connection.stream.destroyed
+        );
+    }
+
     protected async closeStatement(connection: NpdoDriver.mysqlPoolConnection, statement: string): Promise<void> {}
 
     protected async doQuery(

@@ -12,6 +12,8 @@ import MysqlConnection from './mysql-connection';
 import MysqlRawConnection from './mysql-raw-connection';
 import shuffle from 'lodash.shuffle';
 import NpdoDriver from '../npdo-driver';
+import MysqlTransaction from './mysql-transaction';
+import NpdoConstants from '../../constants';
 
 class MysqlDriver extends NpdoDriver {
     constructor(
@@ -21,10 +23,12 @@ class MysqlDriver extends NpdoDriver {
         attributes: NpdoAttributes
     ) {
         super(driver, poolOptions, attributes);
+        this.instances.transaction = MysqlTransaction;
     }
 
     protected async createConnection(): Promise<NpdoDriverI.mysqlPoolConnection> {
         const { hosts, queryFormat, ...mysqlOptions } = this.options;
+        const debugMode = this.getAttribute(NpdoConstants.ATTR_DEBUG) as number;
         if (hosts != null) {
             const randomHost = shuffle<string>(hosts)[0];
             const [host, port] = randomHost.split(':') as [string, string | undefined];
@@ -39,7 +43,8 @@ class MysqlDriver extends NpdoDriver {
             rowsAsArray: true,
             namedPlaceholders: true,
             dateStrings: false,
-            supportBigNumbers: true
+            supportBigNumbers: true,
+            debug: (debugMode & NpdoConstants.DEBUG_ENABLED) !== 0
         })) as NpdoDriverI.mysqlPoolConnection;
     }
 

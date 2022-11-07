@@ -11,6 +11,7 @@ import SqliteConnection from './sqlite-connection';
 import SqliteRawConnection from './sqlite-raw-connection';
 
 import NpdoDriver from '../npdo-driver';
+import NpdoConstants from '../../constants';
 
 class SqliteDriver extends NpdoDriver {
     constructor(
@@ -23,8 +24,9 @@ class SqliteDriver extends NpdoDriver {
     }
 
     protected async createConnection(): Promise<NpdoDriverI.sqlitePoolConnection> {
-        const { path, debug, ...sqliteOptions } = this.options;
-        if (debug === true) {
+        const { path, ...sqliteOptions } = this.options;
+        const debugMode = this.getAttribute(NpdoConstants.ATTR_DEBUG) as number;
+        if ((debugMode & NpdoConstants.DEBUG_ENABLED) !== 0) {
             const customVerbose = sqliteOptions.verbose;
             sqliteOptions.verbose = (...args) => {
                 if (typeof customVerbose === 'function') {

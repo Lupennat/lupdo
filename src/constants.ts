@@ -87,6 +87,25 @@ class NpdoConstants {
     static readonly CASE_LOWER: number = 0b00000000000000100;
 
     /**
+     * Determines if DEBUG mode is enabled. Can take one of the following values:
+     * - Npdo.DEBUG_DISABLED
+     * - Npdo.DEBUG_ENABLED
+     *
+     * [Default Npdo.DEBUG_DISABLED]
+     */
+    static readonly ATTR_DEBUG: string = 'ATTR_DEBUG';
+
+    /**
+     * Disable DEBUG mode
+     */
+    static readonly DEBUG_DISABLED: number = 0b00000000000000001;
+
+    /**
+     * Enable DEBUG mode
+     */
+    static readonly DEBUG_ENABLED: number = 0b00000000000000010;
+
+    /**
      * Set the default fetch mode
      *
      * [Default Npdo.FETCH_NUM]

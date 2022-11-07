@@ -9,7 +9,7 @@ Npdo create a Pool of connection By Default.
 -   [Third Party Library](#third-party-library)
 -   [Supported Databases](#supported-databases)
 -   [Usage](#usage)
-    - [Fetch Modes](FETCH_MODES.md)
+    -   [Fetch Modes](FETCH_MODES.md)
 -   [Npdo](#npdo)
 -   [Driver Options](#driver-options)
     -   [mysql/mariadb](#mysql-options)
@@ -72,6 +72,7 @@ run();
 -   prototype.disconnect(): Promise<void>
 
 ### Npdo Constants
+
 -   `FETCH_ASSOC` Specifies that the fetch method shall return each row as a key-value object keyed by column name as returned in the corresponding result set. If the result set contains multiple columns with the same name, Npdo::FETCH_ASSOC returns only a single value per column name.
 -   `FETCH_NUM` Specifies that the fetch method shall return each row as an array indexed by column number as returned in the corresponding result set, starting at column 0.
 -   `FETCH_BOTH` Specifies that the fetch method shall return each row as a key-value object keyed by both column name and number as returned in the corresponding result set, starting at column 0.
@@ -94,23 +95,23 @@ run();
 ### Npdo Attributes
 
 -   `ATTR_DEFAULT_FETCH_MODE` Set the default fetch mode [Default Npdo.FETCH_NUM]
+-   `ATTR_DEBUG` Determines if DEBUG mode is enabled. Can take one of the following values: [Default Npdo.DEBUG_DISABLED]
+    -   `DEBUG_DISABLED` Disable DEBUG mode
+    -   `DEBUG_ENABLED` Enable DEBUG mode
 -   `ATTR_CASE` Force column names to a specific case. Can take one of the following values: [Default Npdo.CASE_NATURAL]
-    -   `Npdo.CASE_NATURAL`
-    -   `Npdo.CASE_LOWER`
-    -   `Npdo.CASE_UPPER`
+    -   `CASE_NATURAL` Leave column names as returned by the database driver.
+    -   `CASE_LOWER` Force column names to upper case.
+    -   `CASE_UPPER` Force column names to lower case.
 -   `ATTR_NULLS` Determines if and how null and empty strings should be converted. Can take one of the following values: [Default Npdo.NULL_NATURAL]
-    -   `Npdo.NULL_NATURAL`
-    -   `Npdo.NULL_EMPTY_STRING`
-    -   `Npdo.NULL_TO_STRING`
+    -   `NULL_NATURAL` No conversion takes place.
+    -   `NULL_EMPTY_STRING` Empty strings get converted to null.
+    -   `NULL_TO_STRING` null gets converted to an empty string.
 -   `ATTR_DRIVER_NAME` Returns the name of the driver.
-
 
 ## Driver Options
 
 Each driver uses the connection options of the corresponding npm package.\
-The only common option is
-
--   debug: boolean
+Debug mode, is defined through Npdo Attributes, custom debug connection options, will be ignored.
 
 ### Mysql Options
 
@@ -132,19 +133,37 @@ new option added:
 
 ## Pool Options
 
--   min: number;
--   max: number;
--   acquireTimeoutMillis?: number;
--   createTimeoutMillis?: number;
--   destroyTimeoutMillis?: number;
--   idleTimeoutMillis?: number;
--   createRetryIntervalMillis?: number;
--   reapIntervalMillis?: number;
--   propagateCreateError?: boolean;
--   created?: (uuid: string, connection: [NpdoConnection](#connection)) => Promise<void>;
--   destroyed?: (uuid: string) => Promise<void>;
--   acquired?: (uuid: string) => void;
--   released?: (uuid: string) => void;
+-   `min` minimum pool size [Default = 2].
+-   `max` maximum pool size [Default = 10].
+-   `acquireTimeoutMillis` acquire promises are rejected after this many milliseconds if a resource cannot be acquired [Default 10000].
+-   `createTimeoutMillis` create operations are cancelled after this many milliseconds if a resource cannot be acquired [Default 5000].
+-   `destroyTimeoutMillis` destroy operations are awaited for at most this many milliseconds new resources will be created after this timeout [Default 5000].
+-   `killTimeoutMillis` when pool destroy is executed, connection will be released and brutaly killed after this timeut [Default 10000].
+-   `killResource` enable/disable killTimeout [Default false].
+-   `idleTimeoutMillis` Free resources are destroyed after this many milliseconds. Note that if min > 0, some resources may be kept alive for longer. To reliably destroy all idle resources, set min to 0 [Default 30000].
+-   `createRetryIntervalMillis` how long to idle after failed create before trying again [Default 200].
+-   `reapIntervalMillis` how often to check for idle resources to destroy [Default 500].
+-   `created` Define Custom Created Callback.
+-   `destroyed` Define Custom Destroyed Callback.
+-   `acquired` Define Custom Acquired Callback.
+-   `released` Define Custom Release Callback.
+-   `killed` Define Custom Kill Callback.
+
+**`killResource` should always be false, before activating this option, verify that you have committed or rolled back all transactions and verified that you have executed all prepared statments**
+
+> When 'beginTransaction()' is called connection will be released to the pool only after 'commit()' or 'rollback()' is called.
+
+> When 'prepare()' is called, connection will be released to the pool only after first 'execute()' is called.
+
+**`created` callback should be used only to set session variables on the connection before it gets used.**
+
+```js
+{
+    created: async (uuid, connection) => {
+        await connection.query('SET SESSION auto_increment_increment=1');
+    };
+}
+```
 
 ## Connection
 
@@ -175,7 +194,6 @@ this connection should be used only to set session variables before it gets used
 -   prototype.rowCount(): number;
 -   prototype.lastInsertId(): string | bigint | number | null;
 -   prototype.setFetchMode(mode: [number](#npdo-constants), columnOrFnOrObject?: number | object | Function, constructorArgs?: any[]): void;
-
 
 ## Prepared Statement
 

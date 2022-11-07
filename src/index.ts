@@ -36,7 +36,7 @@ class Npdo extends NpdoConstants {
         attributes: NpdoAttributes = {}
     ) {
         super();
-        switch (driver.toLowerCase()) {
+        switch (driver) {
             case 'mysql':
             case 'mariadb':
                 this.driver = new MysqlDriver(driver, options as NpdoDriver.MysqlOptions, poolOptions, attributes);

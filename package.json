@@ -1,6 +1,6 @@
 {
     "name": "npdo",
-    "version": "0.0.15",
+    "version": "0.0.16",
     "description": "Database Abstraction Layer for Node js",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",
@@ -22,6 +22,7 @@
     ],
     "exports": {
         ".": "./dist/index.js",
+        "./error": "./dist/npdo-error.js",
         "./types": "./dist/types.d.ts"
     },
     "files": [
