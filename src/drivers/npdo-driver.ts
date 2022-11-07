@@ -19,7 +19,6 @@ import NpdoConstants from '../constants';
 import NpdoTransaction from './npdo-transaction';
 import NpdoPreparedStatement from './npdo-prepared-statement';
 import NpdoStatement from './npdo-statement';
-import NpdoError from '../npdo-error';
 import NpdoPool from './npdo-pool';
 
 abstract class NpdoDriver extends EventEmitter implements NpdoDriverI {

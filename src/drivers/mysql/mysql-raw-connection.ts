@@ -2,6 +2,14 @@ import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
 import { NpdoAffectingData, NpdoColumnData, NpdoDriver, NpdoPreparedStatement, NpdoRowData } from '../../types';
 import NpdoRawConnection from '../npdo-raw-connection';
 
+interface protectedMysqlConnection extends NpdoDriver.mysqlPoolConnection {
+    _fatalError: boolean;
+    _protocolError: boolean;
+    _closing: boolean;
+    stream: {
+        destroyed: boolean;
+    };
+}
 class MysqlRawConnection extends NpdoRawConnection {
     protected async doBeginTransaction(connection: NpdoDriver.mysqlPoolConnection): Promise<void> {
         await connection.beginTransaction();
@@ -29,15 +37,11 @@ class MysqlRawConnection extends NpdoRawConnection {
 
     protected validateRawConnection(connection: NpdoDriver.mysqlPoolConnection): boolean {
         return (
-            connection &&
-            // @ts-expect-error
-            !connection._fatalError &&
-            // @ts-expect-error
-            !connection._protocolError &&
-            // @ts-expect-error
-            !connection._closing &&
-            // @ts-expect-error
-            !connection.stream.destroyed
+            connection != null &&
+            !(connection as protectedMysqlConnection)._fatalError &&
+            !(connection as protectedMysqlConnection)._protocolError &&
+            !(connection as protectedMysqlConnection)._closing &&
+            !(connection as protectedMysqlConnection).stream.destroyed
         );
     }
 
