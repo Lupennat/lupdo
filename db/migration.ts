@@ -2,8 +2,9 @@ import Npdo from '../src/index';
 import { NpdoAvailableDriver, NpdoDriver } from '../src/types';
 import config from './config';
 import { companies, users } from './faker';
+import { existsSync, writeFileSync } from 'node:fs';
 
-const populateMysql = async (driver: NpdoAvailableDriver, driverConf: NpdoDriver.Options) => {
+const populateMysql = async (driver: NpdoAvailableDriver, driverConf: NpdoDriver.MysqlOptions) => {
     const npdo = new Npdo(driver, driverConf);
     await npdo.exec('DROP TABLE IF EXISTS users;');
     await npdo.exec('DROP TABLE IF EXISTS companies;');
@@ -25,7 +26,10 @@ const populateMysql = async (driver: NpdoAvailableDriver, driverConf: NpdoDriver
     await npdo.disconnect();
 };
 
-const populateSqlite = async (driver: NpdoAvailableDriver, driverConf: NpdoDriver.Options) => {
+const populateSqlite = async (driver: NpdoAvailableDriver, driverConf: NpdoDriver.SqliteOptions) => {
+    if (!existsSync(driverConf.path)) {
+        writeFileSync(driverConf.path, '');
+    }
     const npdo = new Npdo(driver, driverConf);
     await npdo.exec('DROP TABLE IF EXISTS users;');
     await npdo.exec('DROP TABLE IF EXISTS companies;');
@@ -47,9 +51,9 @@ const populateSqlite = async (driver: NpdoAvailableDriver, driverConf: NpdoDrive
 };
 
 const migrate = async () => {
-    await populateMysql('mysql', config.mysql);
-    await populateMysql('mariadb', config.mariadb);
-    await populateSqlite('sqlite3', config.sqlite3);
+    await populateMysql('mysql', config.mysql as NpdoDriver.MysqlOptions);
+    await populateMysql('mariadb', config.mariadb as NpdoDriver.MysqlOptions);
+    await populateSqlite('sqlite3', config.sqlite3 as NpdoDriver.SqliteOptions);
 };
 
 migrate();

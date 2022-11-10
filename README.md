@@ -219,8 +219,7 @@ or a key-value object
 
 ## Logger
 
-Npdo by default doesn't log anything, you can assign a custom log for Npdo to intercept messages.\
-Error from custom [PoolOptions](#pool-options) `created` and `destroyed` are silently suppressed you can intercept it only from a custom logger.
+Npdo by default doesn't log anything, you can assign a custom log for Npdo to intercept messages.
 
 ```js
 const Npdo = require('npdo');
@@ -234,5 +233,5 @@ Npdo.setLogger((message: any, level?: any) => {
 ## Debug
 
 If you are running into problems, one thing that may help is enabling the debug mode for the connection.\
-You can enable raw Connection debug using [debug](#driver-options) parameter.\
+You can enable debug using [debug](#driver-options) parameter.\
 This will print extra information on stdout.
