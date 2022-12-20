@@ -1,11 +1,14 @@
 import { Connection } from 'mysql2/promise';
-import { NpdoConnection } from '../../types';
-class MysqlConnection implements NpdoConnection {
-    constructor(public readonly connection: Connection) {}
+import PdoConnection from '../pdo-connection';
+
+class MysqlConnection extends PdoConnection {
+    constructor(public readonly connection: Connection) {
+        super();
+    }
 
     async query(sql: string): Promise<void> {
         await this.connection.query(sql);
     }
 }
 
-export = MysqlConnection;
+export default MysqlConnection;

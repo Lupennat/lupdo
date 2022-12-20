@@ -1,14 +1,16 @@
 'use strict';
 
 import { Database } from 'better-sqlite3';
-import { NpdoConnection } from '../../types';
+import PdoConnection from '../pdo-connection';
 
-class SqliteConnection implements NpdoConnection {
-    constructor(public readonly connection: Database) {}
+class SqliteConnection extends PdoConnection {
+    constructor(public readonly connection: Database) {
+        super();
+    }
 
     async query(sql: string): Promise<void> {
         await this.connection.prepare(sql).run([]);
     }
 }
 
-export = SqliteConnection;
+export default SqliteConnection;

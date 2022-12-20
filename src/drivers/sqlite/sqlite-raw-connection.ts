@@ -1,29 +1,32 @@
-import { NpdoAffectingData, NpdoColumnData, NpdoDriver, NpdoPreparedStatement, NpdoRowData } from '../../types';
-import NpdoRawConnection from '../npdo-raw-connection';
 import { Statement } from 'better-sqlite3';
+import PdoAffectingData from '../../types/pdo-affecting-data';
+import PdoColumnData from '../../types/pdo-column-data';
+import { sqlitePoolConnection } from '../../types/pdo-pool';
+import { Params, ValidBindings } from '../../types/pdo-prepared-statement';
+import PdoRowData from '../../types/pdo-raw-data';
+import PdoRawConnection from '../pdo-raw-connection';
 
-class SqliteRawConnection extends NpdoRawConnection {
-    protected async doBeginTransaction(connection: NpdoDriver.sqlitePoolConnection): Promise<void> {
+class SqliteRawConnection extends PdoRawConnection {
+    protected async doBeginTransaction(connection: sqlitePoolConnection): Promise<void> {
         await connection.prepare('BEGIN').run();
     }
 
-    protected async doCommit(connection: NpdoDriver.sqlitePoolConnection): Promise<void> {
+    protected async doCommit(connection: sqlitePoolConnection): Promise<void> {
         await connection.prepare('COMMIT').run();
     }
 
-    protected async doRollback(connection: NpdoDriver.sqlitePoolConnection): Promise<void> {
+    protected async doRollback(connection: sqlitePoolConnection): Promise<void> {
         await connection.prepare('ROLLBACK').run();
     }
 
-    protected async getStatement(connection: NpdoDriver.sqlitePoolConnection, sql: string): Promise<Statement> {
+    protected async getStatement(sql: string, connection: sqlitePoolConnection): Promise<Statement> {
         return connection.prepare(sql);
     }
 
     protected async executeStatement(
-        connection: NpdoDriver.sqlitePoolConnection,
         statement: Statement,
-        bindings: NpdoPreparedStatement.Params
-    ): Promise<[NpdoAffectingData, NpdoRowData[], NpdoColumnData[]]> {
+        bindings: Params
+    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
         const info = await statement.run(bindings);
         return [
             statement.reader
@@ -45,17 +48,19 @@ class SqliteRawConnection extends NpdoRawConnection {
         ];
     }
 
-    protected async closeStatement(connection: NpdoDriver.sqlitePoolConnection, statement: Statement): Promise<void> {}
-
-    protected async doQuery(
-        connection: NpdoDriver.sqlitePoolConnection,
-        sql: string
-    ): Promise<[NpdoAffectingData, NpdoRowData[], NpdoColumnData[]]> {
-        const statement = await this.getStatement(connection, sql);
-        return await this.executeStatement(connection, statement, []);
+    protected async closeStatement(): Promise<void> {
+        return void 0;
     }
 
-    protected adaptBindValue(value: NpdoPreparedStatement.ValidBindings): NpdoPreparedStatement.ValidBindings {
+    protected async doQuery(
+        connection: sqlitePoolConnection,
+        sql: string
+    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+        const statement = await this.getStatement(sql, connection);
+        return await this.executeStatement(statement, []);
+    }
+
+    protected adaptBindValue(value: ValidBindings): ValidBindings {
         if (value instanceof Date) {
             return value.valueOf();
         }
@@ -68,4 +73,4 @@ class SqliteRawConnection extends NpdoRawConnection {
     }
 }
 
-export = SqliteRawConnection;
+export default SqliteRawConnection;

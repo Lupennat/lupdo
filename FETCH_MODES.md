@@ -1,33 +1,33 @@
-# Npdo Fetch Modes
+#  Fetch Modes
 
 -   Classic Modes:
-    -   [Npdo.FETCH_BOTH](#npdofetch_both)
-    -   [Npdo.FETCH_NUM](#npdofetch_num)
-    -   [Npdo.FETCH_ASSOC](#npdofetch_assoc)
+    -   [FETCH_BOTH](#fetch_both)
+    -   [FETCH_NUM](#fetch_num)
+    -   [FETCH_ASSOC](#fetch_assoc)
 -   Most useful modes:
-    -   [Npdo.FETCH_COLUMN](#npdofetch_column)
-    -   [Npdo.FETCH_KEY_PAIR](#npdofetch_key_pair)
-    -   [Npdo.FETCH_UNIQUE](#npdofetch_unique)
-    -   [Npdo.FETCH_GROUP](#npdofetch_group)
+    -   [FETCH_COLUMN](#fetch_column)
+    -   [FETCH_KEY_PAIR](#fetch_key_pair)
+    -   [FETCH_UNIQUE](#fetch_unique)
+    -   [FETCH_GROUP](#fetch_group)
 -   OOP:
-    -   [Npdo.FETCH_CLASS](#npdofetch_class)
-    -   [Npdo.FETCH_CLASSTYPE](#npdofetch_classtype)
-    -   [Npdo.FETCH_INTO](#npdofetch_into)
+    -   [FETCH_CLASS](#fetch_class)
+    -   [FETCH_CLASSTYPE](#fetch_classtype)
+    -   [FETCH_INTO](#fetch_into)
 -   Miscellaneous
-    -   [Npdo.FETCH_FUNC](#npdofetch_func)
-    -   [Npdo.FETCH_NAMED](#npdofetch_named)
+    -   [FETCH_FUNC](#fetch_func)
+    -   [FETCH_NAMED](#fetch_named)
 -   [Cursors Orientation](#cursor-orientation)
-    -   [FETCH_ORI_NEXT](#npdofetch_ori_next)
-    -   [FETCH_ORI_PRIOR](#npdofetch_ori_prior)
-    -   [FETCH_ORI_FIRST](#npdofetch_ori_first)
-    -   [FETCH_ORI_LAST](#npdofetch_ori_last)
+    -   [FETCH_ORI_NEXT](#fetch_ori_next)
+    -   [FETCH_ORI_PRIOR](#fetch_ori_prior)
+    -   [FETCH_ORI_FIRST](#fetch_ori_first)
+    -   [FETCH_ORI_LAST](#fetch_ori_last)
 
-## Npdo.FETCH_BOTH
+## FETCH_BOTH
 
 The row is returned in the form of object, where data is duplicated, to be accessed via both numeric and key indexes.
 
 ```js
-const user = (await npdo.query("SELECT * from users LIMIT 1").fetch(Npdo.FETCH_BOTH);
+const user = (await pdo.query("SELECT * from users LIMIT 1").fetch(FETCH_BOTH);
 /*
 {
     '0' : 11
@@ -40,12 +40,12 @@ const user = (await npdo.query("SELECT * from users LIMIT 1").fetch(Npdo.FETCH_B
 */
 ```
 
-## Npdo.FETCH_NUM
+## FETCH_NUM
 
 The row is returned in the form of array. This mode is set by default.
 
 ```js
-const user = (await npdo.query("SELECT * from users LIMIT 1").fetch(Npdo.FETCH_NUM);
+const user = (await pdo.query("SELECT * from users LIMIT 1").fetch(FETCH_NUM);
 /*
 [
     11,
@@ -55,12 +55,12 @@ const user = (await npdo.query("SELECT * from users LIMIT 1").fetch(Npdo.FETCH_N
 */
 ```
 
-## Npdo.FETCH_ASSOC
+## FETCH_ASSOC
 
-The row is returned in the form of object. See also [Npdo.FETCH_NAMED](#npdofetch_named)
+The row is returned in the form of object. See also [FETCH_NAMED](#fetch_named)
 
 ```js
-const user = (await npdo.query("SELECT * from users LIMIT 1").fetch(Npdo.FETCH_ASSOC);
+const user = (await pdo.query("SELECT * from users LIMIT 1").fetch(FETCH_ASSOC);
 /*
 {
     'id' : 11,
@@ -70,12 +70,12 @@ const user = (await npdo.query("SELECT * from users LIMIT 1").fetch(Npdo.FETCH_A
 */
 ```
 
-## Npdo.FETCH_COLUMN
+## FETCH_COLUMN
 
 It is often very handy to get plain one-dimensional array right out of the query, if only one column out of many rows being fetched. Here you go:
 
 ```js
-const data = (await npdo.query("SELECT name FROM users").fetchAll(Npdo.FETCH_COLUMN);
+const data = (await pdo.query("SELECT name FROM users").fetchAll(FETCH_COLUMN);
 /*
 [
     'Claudio',
@@ -86,12 +86,12 @@ const data = (await npdo.query("SELECT name FROM users").fetchAll(Npdo.FETCH_COL
 */
 ```
 
-## Npdo.FETCH_KEY_PAIR
+## FETCH_KEY_PAIR
 
 Also extremely useful format, when we need to get the same column as above, but indexed not by numbers in order but by an unique field:
 
 ```js
-const data = (await npdo.query("SELECT name, gender FROM users").fetchAll(Npdo.FETCH_KEY_PAIR);
+const data = (await pdo.query("SELECT name, gender FROM users").fetchAll(FETCH_KEY_PAIR);
 /*
 {
     'Claudio' : 'male',
@@ -105,7 +105,7 @@ const data = (await npdo.query("SELECT name, gender FROM users").fetchAll(Npdo.F
 The returned key-value format is excellent for the dictionary like data or simply for indexed values, like below
 
 ```js
-const data = (await npdo.query("SELECT gender, count(*) FROM users GROUP BY gender").fetchAll(Npdo.FETCH_KEY_PAIR);
+const data = (await pdo.query("SELECT gender, count(*) FROM users GROUP BY gender").fetchAll(FETCH_KEY_PAIR);
 /*
 {
     'male' : 4,
@@ -116,12 +116,12 @@ const data = (await npdo.query("SELECT gender, count(*) FROM users GROUP BY gend
 }
 ```
 
-## Npdo.FETCH_UNIQUE
+## FETCH_UNIQUE
 
 Same as above, but getting not one column but full row, yet indexed by an unique field
 
 ```js
-const data = (await npdo.query('SELECT * FROM users').fetchAll(Npdo.FETCH_UNIQUE);
+const data = (await pdo.query('SELECT * FROM users').fetchAll(FETCH_UNIQUE);
 /*
 {
     '11' : ['Claudio', 'male'],
@@ -135,7 +135,7 @@ const data = (await npdo.query('SELECT * FROM users').fetchAll(Npdo.FETCH_UNIQUE
 here you get the data array indexed by id (Note that the first column selected have to be unique. In this query it is assumed that first column is id, but to be sure better list it up explicitly). Or you can use any other unique field as well:
 
 ```js
-const data = (await npdo.query('SELECT name, users.* FROM users').fetchAll(Npdo.FETCH_UNIQUE);
+const data = (await pdo.query('SELECT name, users.* FROM users').fetchAll(FETCH_UNIQUE);
 /*
 {
     'Claudio' : [11, 'male']
@@ -146,28 +146,28 @@ const data = (await npdo.query('SELECT name, users.* FROM users').fetchAll(Npdo.
 */
 ```
 
-> This mode could be combined with Npdo.FETCH_ASSOC, Npdo.FETCH_BOTH, Npdo.FETCH_COLUMN, Npdo.FETCH_COLUMN, Npdo.FETCH_INTO, NPDO.FETCH_CLASS
+> This mode could be combined with FETCH_ASSOC, FETCH_BOTH, FETCH_COLUMN, FETCH_COLUMN, FETCH_INTO, FETCH_CLASS
 
 ```js
-(await npdo.query('SELECT name, users.* FROM users').fetchAll(Npdo.FETCH_UNIQUE | Npdo.FETCH_ASSOC);
-(await npdo.query('SELECT name, users.* FROM users').fetchAll(Npdo.FETCH_UNIQUE | Npdo.FETCH_BOTH);
-(await npdo.query('SELECT name, users.* FROM users').fetchAll(Npdo.FETCH_UNIQUE | Npdo.FETCH_COLUMN);
-npdo.setFetchMode(Npdo.FETCH_COLUMN, 2);
-(await npdo.query('SELECT name, users.* FROM users').fetchAll(Npdo.FETCH_UNIQUE | Npdo.FETCH_COLUMN);
-(await npdo.query("SELECT name, 'User', users.* FROM users").fetchAll(Npdo.FETCH_UNIQUE | Npdo.FETCH_CLASS | Npdo.FETCH_CLASS_TYPE);
+(await pdo.query('SELECT name, users.* FROM users').fetchAll(FETCH_UNIQUE | FETCH_ASSOC);
+(await pdo.query('SELECT name, users.* FROM users').fetchAll(FETCH_UNIQUE | FETCH_BOTH);
+(await pdo.query('SELECT name, users.* FROM users').fetchAll(FETCH_UNIQUE | FETCH_COLUMN);
+pdo.setFetchMode(FETCH_COLUMN, 2);
+(await pdo.query('SELECT name, users.* FROM users').fetchAll(FETCH_UNIQUE | FETCH_COLUMN);
+(await pdo.query("SELECT name, 'User', users.* FROM users").fetchAll(FETCH_UNIQUE | FETCH_CLASS | FETCH_CLASS_TYPE);
 class Test {}
-npdo.setFetchMode(Npdo.FETCH_INTO, new Test());
-(await npdo.query('SELECT name, users.* FROM users').fetchAll(Npdo.FETCH_UNIQUE | Npdo.FETCH_INTO);
-npdo.setFetchMode(Npdo.FETCH_CLASS, Test);
-(await npdo.query('SELECT name, users.* FROM users').fetchAll(Npdo.FETCH_UNIQUE | Npdo.FETCH_CLASS);
+pdo.setFetchMode(FETCH_INTO, new Test());
+(await pdo.query('SELECT name, users.* FROM users').fetchAll(FETCH_UNIQUE | FETCH_INTO);
+pdo.setFetchMode(FETCH_CLASS, Test);
+(await pdo.query('SELECT name, users.* FROM users').fetchAll(FETCH_UNIQUE | FETCH_CLASS);
 ```
 
-## Npdo.FETCH_GROUP
+## FETCH_GROUP
 
 This mode groups the returned rows into a nested array, where indexes will be unique values from the first column, and values will be arrays similar to ones returned by regular fetchAll(). The following code, for example, will separate user from gender an put them into different arrays:
 
 ```js
-const data = (await npdo.query('SELECT gender, name, id FROM users').fetchAll(Npdo.FETCH_GROUP);
+const data = (await pdo.query('SELECT gender, name, id FROM users').fetchAll(FETCH_GROUP);
 /*
 {
     'male': [
@@ -198,20 +198,20 @@ const data = (await npdo.query('SELECT gender, name, id FROM users').fetchAll(Np
 
 So, this is the ideal solution for such a popular demand like "group events by date" or "group goods by category".
 
-> This mode could be combined with Npdo.FETCH_ASSOC, Npdo.FETCH_BOTH, Npdo.FETCH_COLUMN, Npdo.FETCH_COLUMN, Npdo.FETCH_INTO, NPDO.FETCH_CLASS
+> This mode could be combined with FETCH_ASSOC, FETCH_BOTH, FETCH_COLUMN, FETCH_COLUMN, FETCH_INTO, FETCH_CLASS
 
 ```js
-(await npdo.query('SELECT gender, name, id FROM users').fetchAll(Npdo.FETCH_GROUP | Npdo.FETCH_ASSOC);
-(await npdo.query('SELECT gender, name, id FROM users').fetchAll(Npdo.FETCH_GROUP | Npdo.FETCH_BOTH);
-(await npdo.query('SELECT gender, name, id FROM users').fetchAll(Npdo.FETCH_GROUP | Npdo.FETCH_COLUMN);
-npdo.setFetchMode(Npdo.FETCH_COLUMN, 2);
-(await npdo.query('SELECT gender, name, id FROM users').fetchAll(Npdo.FETCH_GROUP | Npdo.FETCH_COLUMN);
-(await npdo.query("SELECT gender, 'User', name, id FROM users").fetchAll(Npdo.FETCH_GROUP | Npdo.FETCH_CLASS | Npdo.FETCH_CLASS_TYPE);
+(await pdo.query('SELECT gender, name, id FROM users').fetchAll(FETCH_GROUP | FETCH_ASSOC);
+(await pdo.query('SELECT gender, name, id FROM users').fetchAll(FETCH_GROUP | FETCH_BOTH);
+(await pdo.query('SELECT gender, name, id FROM users').fetchAll(FETCH_GROUP | FETCH_COLUMN);
+pdo.setFetchMode(FETCH_COLUMN, 2);
+(await pdo.query('SELECT gender, name, id FROM users').fetchAll(FETCH_GROUP | FETCH_COLUMN);
+(await pdo.query("SELECT gender, 'User', name, id FROM users").fetchAll(FETCH_GROUP | FETCH_CLASS | FETCH_CLASS_TYPE);
 class Test {}
-npdo.setFetchMode(Npdo.FETCH_INTO, new Test());
-(await npdo.query('SELECT gender, name, id FROM users').fetchAll(Npdo.FETCH_GROUP | Npdo.FETCH_INTO);
-npdo.setFetchMode(Npdo.FETCH_CLASS, Test);
-(await npdo.query('SELECT gender, name, id FROM users').fetchAll(Npdo.FETCH_GROUP | Npdo.FETCH_CLASS);
+pdo.setFetchMode(FETCH_INTO, new Test());
+(await pdo.query('SELECT gender, name, id FROM users').fetchAll(FETCH_GROUP | FETCH_INTO);
+pdo.setFetchMode(FETCH_CLASS, Test);
+(await pdo.query('SELECT gender, name, id FROM users').fetchAll(FETCH_GROUP | FETCH_CLASS);
 ```
 
 **A hint**: in case you need to select all the fields, but group by not the first one, the first idea that sporings in the mind won't work:
@@ -228,13 +228,13 @@ SELECT gender, users.* FROM users
 
 now it works like a charm!
 
-## Npdo.FETCH_CLASS
+## FETCH_CLASS
 
-The cornerstone of object manipulation in Npdo. Creates an instance of a class with a given name, mapping returned columns to the class' properties. This mode can be used to get either a single row or an array of rows from database. With fetchAll() the approach is quite familiar:
+The cornerstone of object manipulation in  Creates an instance of a class with a given name, mapping returned columns to the class' properties. This mode can be used to get either a single row or an array of rows from database. With fetchAll() the approach is quite familiar:
 
 ```js
 class User {}
-const users = npdo.query('SELECT name FROM users').fetchAll(Npdo.FETCH_CLASS, User);
+const users = pdo.query('SELECT name FROM users').fetchAll(FETCH_CLASS, User);
 ```
 
 will give you an array consists of objects of a User class, with properties filled from returned data:
@@ -254,8 +254,8 @@ While to get a single row you have two options. However, although you could use 
 
 ```js
 class User {}
-const stmt = npdo.query('SELECT name FROM users LIMIT 1');
-stmt.setFetchMode(Npdo.FETCH_CLASS, User);
+const stmt = pdo.query('SELECT name FROM users LIMIT 1');
+stmt.setFetchMode(FETCH_CLASS, User);
 user = stmt.fetch();
 ```
 
@@ -263,7 +263,7 @@ it is recommended to use a dedicated fetchObject() method:
 
 ```js
 class User {}
-const user = npdo.query('SELECT name FROM users LIMIT 1').fetchObject(User);
+const user = pdo.query('SELECT name FROM users LIMIT 1').fetchObject(User);
 ```
 
 as there are several issues with using fetch() to get an object:
@@ -285,7 +285,7 @@ For example, this code
 class User {
     name;
 }
-const user = npdo.query('SELECT * FROM users LIMIT 1').fetchObject(User);
+const user = pdo.query('SELECT * FROM users LIMIT 1').fetchObject(User);
 ```
 
 will give you an object with all the properties automatically assigned, no matter were they exist in the class or not:
@@ -308,7 +308,7 @@ class User
         this.#name = value;
     }
 }
-const user = npdo.query('SELECT * FROM users LIMIT 1').fetchObject(User);
+const user = pdo.query('SELECT * FROM users LIMIT 1').fetchObject(User);
 /*
 User {
     // #name: 'Claudio'
@@ -318,7 +318,7 @@ User {
 */
 ```
 
-As you can see, in this mode Npdo can assign values to private properties as well. Which is a bit unexpected but extremely useful.
+As you can see, in this mode Pdo can assign values to private properties as well. Which is a bit unexpected but extremely useful.
 
 Of course, for the newly created classes we may want to supply constructor parameters. So, let's add them to the examples above:
 
@@ -328,12 +328,12 @@ class User {
         this.car = car;
     }
 }
-const users = npdo.query('SELECT name FROM users LIMIT 1').fetchAll(Npdo.FETCH_CLASS, User, ['Tesla']);
+const users = pdo.query('SELECT name FROM users LIMIT 1').fetchAll(FETCH_CLASS, User, ['Tesla']);
 // or using fetch()
-const stmt = npdo.query('SELECT name FROM users LIMIT 1');
-// stmt.setFetchMode(Npdo.FETCH_CLASS, User, ['Tesla']);
+const stmt = pdo.query('SELECT name FROM users LIMIT 1');
+// stmt.setFetchMode(FETCH_CLASS, User, ['Tesla']);
 // const user = stmt.fetch();
-const user = stmt.fetchObject(Npdo.FETCH_CLASS, User, ['Tesla']);
+const user = stmt.fetchObject(FETCH_CLASS, User, ['Tesla']);
 ```
 
 will give you
@@ -345,12 +345,12 @@ User {
 }
 ```
 
-## Npdo.FETCH_CLASSTYPE
+## FETCH_CLASSTYPE
 
-One more modifier flag which tells Npdo to get the class name from the first column's value. With this flag one can avoid using setFetchMode() with fetch():
+One more modifier flag which tells Pdo to get the class name from the first column's value. With this flag one can avoid using setFetchMode() with fetch():
 
 ```js
-const data = npdo.query("SELECT 'User', name FROM users").fetch(Npdo.FETCH_CLASS | Npdo.FETCH_CLASSTYPE);
+const data = pdo.query("SELECT 'User', name FROM users").fetch(FETCH_CLASS | FETCH_CLASSTYPE);
 /*
 User {
     'name' : 'Claudio
@@ -361,8 +361,8 @@ User {
 Besides, as it was noted in the comments to the main article, this mode can be useful if objects of different classes can be created from the same query
 
 ```js
-const stmt = npdo.query('SELECT gender, name FROM users');
-const users = stmt.fetchAll(Npdo.FETCH_CLASS | Npdo.FETCH_CLASSTYPE);
+const stmt = pdo.query('SELECT gender, name FROM users');
+const users = stmt.fetchAll(FETCH_CLASS | FETCH_CLASSTYPE);
 /*
 [
     Male {
@@ -375,9 +375,9 @@ const users = stmt.fetchAll(Npdo.FETCH_CLASS | Npdo.FETCH_CLASSTYPE);
 */
 ```
 
-## Npdo.FETCH_INTO
+## FETCH_INTO
 
-Unlike `Npdo.FETCH_CLASS`, doesn't create a new object but update the existing one. Works with `setFetchMode()` only, which takes the existing variable as a parameter.
+Unlike `FETCH_CLASS`, doesn't create a new object but update the existing one. Works with `setFetchMode()` only, which takes the existing variable as a parameter.
 
 ```js
 class User {
@@ -397,8 +397,8 @@ User {
   state: "up'n'running"
 }
 */
-const stmt = npdo.query('SELECT name FROM users LIMIT 1');
-stmt.setFetchMode(Npdo.FETCH_INTO, user);
+const stmt = pdo.query('SELECT name FROM users LIMIT 1');
+stmt.setFetchMode(FETCH_INTO, user);
 const data = stmt.fetch();
 console.log(data, user);
 /*
@@ -413,7 +413,7 @@ User {
 */
 ```
 
-Unlike Npdo.FETCH_CLASS, this mode assign property only if property/setter are defined.
+Unlike FETCH_CLASS, this mode assign property only if property/setter are defined.
 
 convenient use of `fetchAll`, thanks to the use of setters.
 
@@ -432,8 +432,8 @@ User {
   names: []
 }
 */
-const stmt = npdo.query('SELECT name FROM users LIMIT 3');
-const users = stmt.fetchAll(Npdo.FETCH_INTO | user);
+const stmt = pdo.query('SELECT name FROM users LIMIT 3');
+const users = stmt.fetchAll(FETCH_INTO | user);
 
 console.log(users, user);
 /*
@@ -446,21 +446,21 @@ User {
 */
 ```
 
-## Npdo.FETCH_FUNC
+## FETCH_FUNC
 
-For the closure lovers. Not very convenient as you should list parameters for the every returned column manually. For example, a Npdo.FETCH_COLUMN emulator:
+For the closure lovers. Not very convenient as you should list parameters for the every returned column manually. For example, a FETCH_COLUMN emulator:
 
 ```js
-data = npdo.query('SELECT name FROM users').fetchAll(Pdo.FETCH_FUNC, function (first) {
+data = pdo.query('SELECT name FROM users').fetchAll(Pdo.FETCH_FUNC, function (first) {
     return first;
 });
 ```
 
-## Npdo.FETCH_NAMED
-Almost exactly the same as `Npdo.FETCH_ASSOC`, but with one little difference. Many times I've seen a question, whether it's possible to distinguish different fields with the same names that returned by same query. With the only answer is using aliases in SQL or numeric indices instead of associative. However, Npdo offers another way. If this mode is used, returned values are assigned the same way as with `Npdo.FETCH_ASSOC`, but if there are several columns with the same name in the result set, all values are stored in the nested array. For example, let's try to select from users and companies, while both tables has a column name. Using `Npdo.FETCH_ASSOC`, we'll lose one of the names:
+## FETCH_NAMED
+Almost exactly the same as `FETCH_ASSOC`, but with one little difference. Many times I've seen a question, whether it's possible to distinguish different fields with the same names that returned by same query. With the only answer is using aliases in SQL or numeric indices instead of associative. However, Pdo offers another way. If this mode is used, returned values are assigned the same way as with `FETCH_ASSOC`, but if there are several columns with the same name in the result set, all values are stored in the nested array. For example, let's try to select from users and companies, while both tables has a column name. Using `FETCH_ASSOC`, we'll lose one of the names:
 
 ```js
-const data = npdo.query("SELECT name, gender FROM users, companies WHERE users.name = 'Claudio'").fetch(Npdo.FETCH_ASSOC);
+const data = pdo.query("SELECT name, gender FROM users, companies WHERE users.name = 'Claudio'").fetch(FETCH_ASSOC);
 /*
 {
   'name' => 'Lupennat srl'
@@ -469,10 +469,10 @@ const data = npdo.query("SELECT name, gender FROM users, companies WHERE users.n
 */
 ```
 
-While if `Npdo.FETCH_NAMED` is used instead, everything will be kept intact:
+While if `FETCH_NAMED` is used instead, everything will be kept intact:
 
 ```js
-const data = npdo.query("SELECT name, gender FROM users, companies WHERE users.name = 'Claudio'").fetch(Npdo.FETCH_NAMED);
+const data = pdo.query("SELECT name, gender FROM users, companies WHERE users.name = 'Claudio'").fetch(FETCH_NAMED);
 /*
 {
     'name': ['Claudio', 'Lupennat srl'],
@@ -483,15 +483,15 @@ const data = npdo.query("SELECT name, gender FROM users, companies WHERE users.n
 
 ## Cursor Orientation
 
-For a NpdoStatement cursorOrientation determines which row will be returned to the caller. This value must be one of the Npdo.FETCH*ORI*\* constants, defaulting to Npdo.FETCH_ORI_NEXT.
+For a PdoStatement cursorOrientation determines which row will be returned to the caller. This value must be one of the FETCH*ORI*\* constants, defaulting to FETCH_ORI_NEXT.
 
-### Npdo.FETCH_ORI_NEXT
+### FETCH_ORI_NEXT
 
 ```js
 // read data forwards
-const query = npdo.query('SELECT id FROM users order by id desc');
+const query = pdo.query('SELECT id FROM users order by id desc');
 let row;
-while ((row = stmt.fetch(Npdo.FETCH_NUM, Npdo.FETCH_ORI_NEXT))) {
+while ((row = stmt.fetch(FETCH_NUM, FETCH_ORI_NEXT))) {
     console.log(row);
 }
 /*
@@ -503,12 +503,12 @@ while ((row = stmt.fetch(Npdo.FETCH_NUM, Npdo.FETCH_ORI_NEXT))) {
 */
 ```
 
-### Npdo.FETCH_ORI_PRIOR
+### FETCH_ORI_PRIOR
 
 ```js
 // read data backwards
-const query = npdo.query('SELECT id FROM users order by id desc');
-let row = stmt.fetch(Npdo.FETCH_NUM, Npdo.FETCH_ORI_LAST);
+const query = pdo.query('SELECT id FROM users order by id desc');
+let row = stmt.fetch(FETCH_NUM, FETCH_ORI_LAST);
 do {
     console.log(row);
 } while ((row = stmt.fetch(PDO::FETCH_NUM, PDO::FETCH_ORI_PRIOR)));
@@ -522,23 +522,23 @@ do {
 */
 ```
 
-### Npdo.FETCH_ORI_FIRST
+### FETCH_ORI_FIRST
 
 Fetch the first row in the results set. Cursor will be moved to first row.
 
 ```js
-const query = npdo.query('SELECT id FROM users order by id desc');
+const query = pdo.query('SELECT id FROM users order by id desc');
 let row;
-while ((row = stmt.fetch(Npdo.FETCH_NUM))) {
+while ((row = stmt.fetch(FETCH_NUM))) {
     // console.log(row);
 }
-row = stmt.fetch(Npdo.FETCH_NUM);
+row = stmt.fetch(FETCH_NUM);
 console.log(row);
 // null
-row = stmt.fetch(Npdo.FETCH_NUM, Npdo.FETCH_ORI_FIRST);
+row = stmt.fetch(FETCH_NUM, FETCH_ORI_FIRST);
 console.log(row);
 // [1]
-while ((row = stmt.fetch(Npdo.FETCH_NUM))) {
+while ((row = stmt.fetch(FETCH_NUM))) {
     console.log(row);
 }
 /*
@@ -549,16 +549,16 @@ while ((row = stmt.fetch(Npdo.FETCH_NUM))) {
 */
 ```
 
-### Npdo.FETCH_ORI_LAST
+### FETCH_ORI_LAST
 
 Fetch the last row in the result set. Cursor will be moved to last row.
 
 ```js
-const query = npdo.query('SELECT id FROM users order by id desc');
-let row = stmt.fetch(Npdo.FETCH_NUM, Npdo.FETCH_ORI_LAST);
+const query = pdo.query('SELECT id FROM users order by id desc');
+let row = stmt.fetch(FETCH_NUM, FETCH_ORI_LAST);
 console.log(row);
 // [22]
-row = stmt.fetch(Npdo.FETCH_NUM);
+row = stmt.fetch(FETCH_NUM);
 console.log(row);
 // null
 ```

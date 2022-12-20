@@ -1,13 +1,15 @@
 {
-    "extends": "@tsconfig/node16/tsconfig.json",
-    "include": ["./src/**/*"],
+    "extends": "./typescript/tsconfig.base.json",
     "compilerOptions": {
-        "moduleResolution": "Node16",
-        "allowSyntheticDefaultImports": true,
-        "experimentalDecorators": true,
-        "emitDecoratorMetadata": true,
-        "declaration": true,
-        "outDir": "dist",
-        "types": ["@types/jest", "@types/node"]
+        "lib": ["es2020"],
+        "module": "commonjs",
+        "target": "es2020",
+        "outDir": "./dist/cjs",
+
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "moduleResolution": "node"
     }
 }

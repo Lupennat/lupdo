@@ -1,57 +1,45 @@
 import { ResultSetHeader, RowDataPacket } from 'mysql2/promise';
-import { NpdoAffectingData, NpdoColumnData, NpdoDriver, NpdoPreparedStatement, NpdoRowData } from '../../types';
-import NpdoRawConnection from '../npdo-raw-connection';
+import PdoAffectingData from '../../types/pdo-affecting-data';
+import PdoColumnData from '../../types/pdo-column-data';
+import { mysqlPoolConnection } from '../../types/pdo-pool';
+import { ArrayParams, ValidBindings } from '../../types/pdo-prepared-statement';
+import PdoRowData from '../../types/pdo-raw-data';
+import PdoRawConnection from '../pdo-raw-connection';
 
-interface protectedMysqlConnection extends NpdoDriver.mysqlPoolConnection {
-    _fatalError: boolean;
-    _protocolError: boolean;
-    _closing: boolean;
-    stream: {
-        destroyed: boolean;
-    };
-}
-class MysqlRawConnection extends NpdoRawConnection {
-    protected async doBeginTransaction(connection: NpdoDriver.mysqlPoolConnection): Promise<void> {
+class MysqlRawConnection extends PdoRawConnection {
+    protected async doBeginTransaction(connection: mysqlPoolConnection): Promise<void> {
         await connection.beginTransaction();
     }
 
-    protected async doCommit(connection: NpdoDriver.mysqlPoolConnection): Promise<void> {
+    protected async doCommit(connection: mysqlPoolConnection): Promise<void> {
         await connection.commit();
     }
 
-    protected async doRollback(connection: NpdoDriver.mysqlPoolConnection): Promise<void> {
+    protected async doRollback(connection: mysqlPoolConnection): Promise<void> {
         await connection.rollback();
     }
 
-    protected async getStatement(connection: NpdoDriver.mysqlPoolConnection, sql: string): Promise<string> {
+    protected async getStatement(sql: string): Promise<string> {
         return sql;
     }
 
     protected async executeStatement(
-        connection: NpdoDriver.mysqlPoolConnection,
         statement: string,
-        bindings: NpdoPreparedStatement.ArrayParams
-    ): Promise<[NpdoAffectingData, NpdoRowData[], NpdoColumnData[]]> {
+        bindings: ArrayParams,
+        connection: mysqlPoolConnection
+    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
         return await this.doQuery(connection, statement, bindings);
     }
 
-    protected validateRawConnection(connection: NpdoDriver.mysqlPoolConnection): boolean {
-        return (
-            connection != null &&
-            !(connection as protectedMysqlConnection)._fatalError &&
-            !(connection as protectedMysqlConnection)._protocolError &&
-            !(connection as protectedMysqlConnection)._closing &&
-            !(connection as protectedMysqlConnection).stream.destroyed
-        );
+    protected async closeStatement(): Promise<void> {
+        return void 0;
     }
 
-    protected async closeStatement(connection: NpdoDriver.mysqlPoolConnection, statement: string): Promise<void> {}
-
     protected async doQuery(
-        connection: NpdoDriver.mysqlPoolConnection,
+        connection: mysqlPoolConnection,
         sql: string,
-        bindings?: NpdoPreparedStatement.ArrayParams
-    ): Promise<[NpdoAffectingData, NpdoRowData[], NpdoColumnData[]]> {
+        bindings?: ArrayParams
+    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
         const [info, fields] = await connection.query(sql, bindings);
         return [
             info.constructor.name === 'ResultSetHeader'
@@ -82,9 +70,9 @@ class MysqlRawConnection extends NpdoRawConnection {
         ];
     }
 
-    protected adaptBindValue(value: NpdoPreparedStatement.ValidBindings): NpdoPreparedStatement.ValidBindings {
+    protected adaptBindValue(value: ValidBindings): ValidBindings {
         return value;
     }
 }
 
-export = MysqlRawConnection;
+export default MysqlRawConnection;

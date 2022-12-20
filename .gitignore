@@ -102,3 +102,9 @@ dist
 
 # TernJS port file
 .tern-port
+
+# code-workspace
+*.code-workspace
+
+# Sqlite Local files
+.sqlite*

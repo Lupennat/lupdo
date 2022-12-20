@@ -1,65 +1,84 @@
-import { createConnection } from 'mysql2/promise';
-import {
-    NpdoPoolOptions,
-    NpdoDriver as NpdoDriverI,
-    NpdoConnection,
-    NpdoAttributes,
-    NpdoRawConnection,
-    NpdoAvailableDriver
-} from '../../types';
+import { createConnection as mysql2CreateConnection } from 'mysql2/promise';
 
+import { ATTR_DEBUG, DEBUG_ENABLED } from '../../constants';
+import { PdoAvailableDriver } from '../../types/pdo';
+import PdoAttributes from '../../types/pdo-attributes';
+import PdoConnectionI from '../../types/pdo-connection';
+import { MysqlOptions } from '../../types/pdo-driver';
+import { PoolOptions, mysqlPoolConnection } from '../../types/pdo-pool';
+import PdoRawConnectionI from '../../types/pdo-raw-connection';
+import PdoDriver from '../pdo-driver';
 import MysqlConnection from './mysql-connection';
 import MysqlRawConnection from './mysql-raw-connection';
-import shuffle from 'lodash.shuffle';
-import NpdoDriver from '../npdo-driver';
-import MysqlTransaction from './mysql-transaction';
-import NpdoConstants from '../../constants';
 
-class MysqlDriver extends NpdoDriver {
+interface protectedMysqlConnection extends mysqlPoolConnection {
+    _fatalError: boolean;
+    _protocolError: boolean;
+    _closing: boolean;
+    stream:
+        | undefined
+        | {
+              destroyed: boolean;
+          };
+}
+
+class MysqlDriver extends PdoDriver {
     constructor(
-        driver: NpdoAvailableDriver,
-        protected options: NpdoDriverI.MysqlOptions,
-        poolOptions: NpdoPoolOptions,
-        attributes: NpdoAttributes
+        driver: PdoAvailableDriver,
+        protected options: MysqlOptions,
+        poolOptions: PoolOptions,
+        attributes: PdoAttributes
     ) {
         super(driver, poolOptions, attributes);
-        this.instances.transaction = MysqlTransaction;
     }
 
-    protected async createConnection(): Promise<NpdoDriverI.mysqlPoolConnection> {
-        const { hosts, queryFormat, ...mysqlOptions } = this.options;
-        const debugMode = this.getAttribute(NpdoConstants.ATTR_DEBUG) as number;
-        if (hosts != null) {
-            const randomHost = shuffle<string>(hosts)[0];
-            const [host, port] = randomHost.split(':') as [string, string | undefined];
-            mysqlOptions.host = host;
-            if (port != null && !isNaN(Number(port))) {
-                mysqlOptions.port = Number(port);
-            }
-        }
+    protected async createConnection(): Promise<mysqlPoolConnection> {
+        const { ...mysqlOptions } = this.options;
+        const debugMode = this.getAttribute(ATTR_DEBUG) as number;
 
-        return (await createConnection({
+        mysqlOptions.queryFormat = undefined;
+
+        return (await mysql2CreateConnection({
             ...mysqlOptions,
             rowsAsArray: true,
             namedPlaceholders: true,
             dateStrings: false,
             supportBigNumbers: true,
-            debug: (debugMode & NpdoConstants.DEBUG_ENABLED) !== 0
-        })) as NpdoDriverI.mysqlPoolConnection;
+            debug: (debugMode & DEBUG_ENABLED) !== 0
+        })) as mysqlPoolConnection;
     }
 
-    protected createNpdoConnection(connection: NpdoDriverI.mysqlPoolConnection): NpdoConnection {
+    protected createPdoConnection(connection: mysqlPoolConnection): PdoConnectionI {
         return new MysqlConnection(connection);
     }
 
-    protected async destroyConnection(connection: NpdoDriverI.mysqlPoolConnection): Promise<void> {
+    protected async closeConnection(connection: mysqlPoolConnection): Promise<void> {
         await connection.end();
         connection.removeAllListeners();
     }
 
-    public getRawConnection(): NpdoRawConnection {
+    protected async destroyConnection(connection: mysqlPoolConnection): Promise<void> {
+        // get new connection to force kill pending
+        const newConn = await this.createConnection();
+        await newConn.query('KILL QUERY ' + connection.threadId);
+        await newConn.end();
+        await connection.end();
+        connection.removeAllListeners();
+    }
+
+    protected validateRawConnection(connection: protectedMysqlConnection): boolean {
+        return (
+            connection != null &&
+            !connection._fatalError &&
+            !connection._protocolError &&
+            !connection._closing &&
+            (connection.stream == null || !connection.stream.destroyed)
+        );
+    }
+
+    public getRawConnection(): PdoRawConnectionI {
         return new MysqlRawConnection(this.pool);
     }
 }
 
-export = MysqlDriver;
+export default MysqlDriver;
