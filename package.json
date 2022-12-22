@@ -48,7 +48,7 @@
         "lint": "eslint --ext \".js,.jsx,.ts,.tsx\" \"./src\"",
         "lint:fix": "eslint --fix --ext \".js,.jsx,.ts,.tsx\" \"./src\"",
         "sqlite:up": "sqlite3 .sqlite.db < src/__tests__/data/sqlite.sql && sqlite3 .sqlite3.db < src/__tests__/data/sqlite.sql",
-        "sqlite:down": "rimraf .sqlite",
+        "sqlite:down": "rimraf .sqlite*.db",
         "docker:up": "docker compose -f docker-compose.yml up --build -d mysql mariadb && docker-compose -f docker-compose.yml up waitmysql waitmariadb",
         "docker:down": "docker compose -f docker-compose.yml down",
         "db:up": "npm run sqlite:up && npm run docker:up",

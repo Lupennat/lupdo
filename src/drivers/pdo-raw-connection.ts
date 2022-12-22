@@ -1,8 +1,7 @@
-import { FETCH_ORI_FIRST, FETCH_ORI_LAST, FETCH_ORI_NEXT, FETCH_ORI_PRIOR } from '../constants';
+import { FETCH_BACKWARD } from '../constants';
 import { PdoError } from '../errors';
 import PdoAffectingData from '../types/pdo-affecting-data';
 import PdoColumnData from '../types/pdo-column-data';
-import { AllFetchType, FetchType, SingleFetchType } from '../types/pdo-fetch';
 import { PoolConnection, PoolI } from '../types/pdo-pool';
 import {
     ArrayParams,
@@ -166,22 +165,28 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         }
     }
 
-    public fetch<T extends FetchType>(adapter: Function, cursorOrientation: number): SingleFetchType<T> | null {
+    public fetch(cursorOrientation: number): PdoRowData | null {
         const cursor = this.getTempCursorForFetch(cursorOrientation);
 
         if (!this.isValidCursor(cursor, cursorOrientation)) {
+            cursorOrientation === FETCH_BACKWARD ? this.setCursorToStart() : this.setCursorToEnd();
             return null;
         }
+
         this.setCursor(cursor);
 
-        return adapter(this.selectResults[cursor]);
+        return this.selectResults[cursor];
     }
 
-    public fetchAll<T extends FetchType>(adapter: Function): AllFetchType<T> {
-        const cursor = this.getTempCursorForFetch();
-        this.setCursorToEnd();
+    public fetchAll(cursorOrientation: number): PdoRowData[] {
+        const cursor = this.getTempCursorForFetch(cursorOrientation);
+        if (cursorOrientation === FETCH_BACKWARD) {
+            this.setCursorToStart();
+            return this.selectResults.slice(0, cursor + 1).reverse();
+        }
 
-        return adapter(this.selectResults.slice(cursor));
+        this.setCursorToEnd();
+        return this.selectResults.slice(cursor);
     }
 
     public rowCount(): number {
@@ -199,7 +204,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         return this.affectingResults.lastInsertRowid;
     }
 
-    protected resetCursor(): void {
+    public resetCursor(): void {
         this.setCursor(-1);
     }
 
@@ -211,18 +216,21 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         this.setCursor(this.selectResults.length);
     }
 
-    protected getTempCursorForFetch(cursorOrientation: number = FETCH_ORI_NEXT): number {
-        if ((cursorOrientation & FETCH_ORI_FIRST) !== 0 || (cursorOrientation & FETCH_ORI_LAST) !== 0) {
-            return (cursorOrientation & FETCH_ORI_FIRST) !== 0 ? 0 : this.selectResults.length - 1;
-        }
-
-        const cursor = this.cursor;
-
-        return (cursorOrientation & FETCH_ORI_PRIOR) !== 0 ? cursor - 1 : cursor + 1;
+    protected setCursorToStart(): void {
+        this.setCursor(-1);
     }
 
-    protected isValidCursor(cursor: number, cursorOrientation: number = FETCH_ORI_NEXT): boolean {
-        return (cursorOrientation & FETCH_ORI_PRIOR) !== 0 ? cursor > -1 : cursor < this.selectResults.length;
+    protected getTempCursorForFetch(cursorOrientation: number): number {
+        let cursor = this.cursor;
+        if (cursorOrientation === FETCH_BACKWARD && cursor === -1) {
+            cursor = this.selectResults.length;
+        }
+
+        return cursorOrientation === FETCH_BACKWARD ? cursor - 1 : cursor + 1;
+    }
+
+    protected isValidCursor(cursor: number, cursorOrientation: number): boolean {
+        return cursorOrientation === FETCH_BACKWARD ? cursor > -1 : cursor < this.selectResults.length;
     }
 
     protected async generateOrReuseConnection(): Promise<PoolConnection> {

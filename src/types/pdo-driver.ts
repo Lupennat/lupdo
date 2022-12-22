@@ -1,7 +1,6 @@
 import * as sqlite from 'better-sqlite3';
 import * as mysql from 'mysql2/promise';
 import PdoAttributes from './pdo-attributes';
-import { FetchFunctionClosure } from './pdo-fetch';
 import { RawPoolConnection } from './pdo-pool';
 import PdoPreparedStatementI, { PdoPreparedStatementConstructor } from './pdo-prepared-statement';
 import PdoStatementI, { PdoStatementConstructor } from './pdo-statement';
@@ -26,14 +25,11 @@ export default interface PdoDriverI {
 
     disconnect: () => Promise<void>;
 
+    reconnect: () => void;
+
     prepare: (sql: string, attributes?: PdoAttributes) => Promise<PdoPreparedStatementI>;
 
-    query: (
-        sql: string,
-        fetchMode?: number,
-        numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
-        constructorArgs?: any[]
-    ) => Promise<PdoStatementI>;
+    query: (sql: string) => Promise<PdoStatementI>;
 
     on: (eventName: 'log', handler: (level: string, message: string) => void) => void;
 

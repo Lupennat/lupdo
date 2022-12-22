@@ -4,20 +4,20 @@ import { v4 as uuidv4 } from 'uuid';
 import {
     ATTR_CASE,
     ATTR_DEBUG,
-    ATTR_DEFAULT_FETCH_MODE,
     ATTR_DRIVER_NAME,
+    ATTR_FETCH_DIRECTION,
     ATTR_NULLS,
     CASE_NATURAL,
     DEBUG_DISABLED,
     DEBUG_ENABLED,
-    FETCH_NUM,
+    FETCH_FORWARD,
     NULL_NATURAL
 } from '../constants';
+import { PdoError } from '../errors';
 import { PdoAvailableDriver } from '../types/pdo';
 import PdoAttributes from '../types/pdo-attributes';
 import PdoConnectionI from '../types/pdo-connection';
 import PdoDriverI, { instances } from '../types/pdo-driver';
-import { FetchFunctionClosure } from '../types/pdo-fetch';
 import { InternalPdoPoolOptions, PoolConnection, PoolI, PoolOptions, RawPoolConnection } from '../types/pdo-pool';
 import PdoPreparedStatementI from '../types/pdo-prepared-statement';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
@@ -36,23 +36,35 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
     };
 
     protected attributes: PdoAttributes = {
+        [ATTR_FETCH_DIRECTION]: FETCH_FORWARD,
         [ATTR_CASE]: CASE_NATURAL,
-        [ATTR_DEFAULT_FETCH_MODE]: FETCH_NUM,
         [ATTR_NULLS]: NULL_NATURAL,
         [ATTR_DEBUG]: DEBUG_DISABLED
     };
 
+    protected pdoPoolOptions: InternalPdoPoolOptions<PoolConnection>;
+    protected pdoPoolEvents: { [key: string]: Function | undefined };
+    protected hasDebug = false;
+
     protected pool: PoolI<PoolConnection>;
+
+    protected disconnected = false;
 
     constructor(driver: PdoAvailableDriver, poolOptions: PoolOptions, attributes: PdoAttributes) {
         super();
+
         Object.assign(this.attributes, attributes, {
             [ATTR_DRIVER_NAME]: driver
         });
+
         const { created, destroyed, acquired, released, killed, ...otherOptions } = poolOptions;
+
+        this.pdoPoolEvents = { created, destroyed, acquired, released, killed };
+
         const debugMode = this.getAttribute(ATTR_DEBUG) as number;
-        const hasDebug = (debugMode & DEBUG_ENABLED) !== 0;
-        const pdoPoolOptions: InternalPdoPoolOptions<PoolConnection> = {
+
+        this.hasDebug = (debugMode & DEBUG_ENABLED) !== 0;
+        this.pdoPoolOptions = {
             min: 2,
             max: 10,
             acquireTimeoutMillis: 10000,
@@ -72,7 +84,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
                 connection.__lupdo_uuid = uuid;
                 connection.__lupdo_killed = false;
 
-                if (hasDebug) {
+                if (this.hasDebug) {
                     console.log(`Pdo Pool Resource Created: ${connection.__lupdo_uuid}`);
                 }
 
@@ -87,7 +99,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
                         killed(connection.__lupdo_uuid);
                     }
 
-                    if (hasDebug) {
+                    if (this.hasDebug) {
                         console.log(`Pdo Pool Resource Killed: ${connection.__lupdo_uuid}`);
                     }
                 }
@@ -102,7 +114,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
                         await destroyed(uuid);
                     }
 
-                    if (hasDebug) {
+                    if (this.hasDebug) {
                         console.log(`Pdo Pool Resource Destroyed: ${connection.__lupdo_uuid}`);
                     }
                 }
@@ -112,25 +124,27 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
                 this.emit('log', message, logLevel);
             }
         };
+        this.pool = new PdoPool<PoolConnection>(this.pdoPoolOptions);
+        this.assignPoolEvents();
+    }
 
-        this.pool = new PdoPool<PoolConnection>(pdoPoolOptions);
-
+    protected assignPoolEvents(): void {
         this.pool.on('acquireSuccess', (eventId: number, connection: PoolConnection) => {
-            if (typeof acquired === 'function') {
-                acquired(connection.__lupdo_uuid, eventId);
+            if (typeof this.pdoPoolEvents.acquired === 'function') {
+                this.pdoPoolEvents.acquired(connection.__lupdo_uuid, eventId);
             }
 
-            if (hasDebug) {
+            if (this.hasDebug) {
                 console.log(`Pdo Pool Resource Acquired: ${connection.__lupdo_uuid}`);
             }
         });
 
         this.pool.on('release', (connection: PoolConnection) => {
-            if (typeof released === 'function') {
-                released(connection.__lupdo_uuid);
+            if (typeof this.pdoPoolEvents.released === 'function') {
+                this.pdoPoolEvents.released(connection.__lupdo_uuid);
             }
 
-            if (hasDebug) {
+            if (this.hasDebug) {
                 console.log(`Pdo Pool Resource Released: ${connection.__lupdo_uuid}`);
             }
         });
@@ -143,39 +157,46 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
     protected abstract createPdoConnection(connection: PoolConnection): PdoConnectionI;
     protected abstract validateRawConnection(connection: PoolConnection): boolean;
 
+    public reconnect(): void {
+        if (this.disconnected) {
+            this.pool = new PdoPool<PoolConnection>(this.pdoPoolOptions);
+            this.assignPoolEvents();
+            this.disconnected = false;
+        }
+    }
+
     public async disconnect(): Promise<void> {
         await this.pool.destroy();
         this.pool.removeAllListeners('acquireSuccess');
         this.pool.removeAllListeners('release');
+        this.disconnected = true;
+    }
+
+    protected throwIfDisconnected(): void {
+        if (this.disconnected) {
+            throw new PdoError('Pdo is Disconnected from pool, please reconnect.');
+        }
     }
 
     public async beginTransaction(): Promise<PdoTransactionI> {
+        this.throwIfDisconnected();
         const connection = this.getRawConnection();
         await connection.beginTransaction();
         return new this.instances.transaction(connection, this.attributes);
     }
 
     public async prepare(sql: string, attributes: PdoAttributes = {}): Promise<PdoPreparedStatementI> {
+        this.throwIfDisconnected();
         const connection = this.getRawConnection();
         await connection.prepare(sql);
         return new this.instances.preparedStatement(connection, Object.assign({}, this.attributes, attributes));
     }
 
-    public async query(
-        sql: string,
-        fetchMode?: number,
-        numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
-        constructorArgs?: any[]
-    ): Promise<PdoStatementI> {
+    public async query(sql: string): Promise<PdoStatementI> {
+        this.throwIfDisconnected();
         const connection = this.getRawConnection();
         await connection.query(sql);
-        return new this.instances.statement(
-            connection,
-            this.attributes,
-            fetchMode,
-            numberOrClassOrFnOrObject,
-            constructorArgs
-        );
+        return new this.instances.statement(connection, this.attributes);
     }
 
     public getAttribute(attribute: string): string | number {
@@ -191,11 +212,14 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
     }
 
     public async getRawPoolConnection(): Promise<RawPoolConnection> {
-        const connection = (await this.pool.acquire().promise) as RawPoolConnection;
-        connection.release = async () => {
-            await this.pool.release(connection);
+        this.throwIfDisconnected();
+        const connection = await this.pool.acquire().promise;
+        return {
+            connection,
+            release: async () => {
+                await this.pool.release(connection);
+            }
         };
-        return connection;
     }
 }
 

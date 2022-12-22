@@ -1,5 +1,4 @@
 import PdoColumnData from './pdo-column-data';
-import { AllFetchType, FetchType, SingleFetchType } from './pdo-fetch';
 import { Params, ValidBindings } from './pdo-prepared-statement';
 import PdoRowData from './pdo-raw-data';
 
@@ -18,11 +17,11 @@ export default interface PdoRawConnectionI {
 
     query: (sql: string) => Promise<void>;
 
-    fetch: <T extends FetchType>(
-        adapter: (row: PdoRowData) => SingleFetchType<T> | null,
-        cursorOrientation: number
-    ) => SingleFetchType<T> | null;
-    fetchAll: <T extends FetchType>(adapter: (rows: PdoRowData[]) => AllFetchType<T>) => AllFetchType<T>;
+    fetch: (cursorOrientation: number) => PdoRowData | null;
+
+    fetchAll: (cursorOrientation: number) => PdoRowData[];
+
+    resetCursor: () => void;
 
     commit: () => Promise<void>;
     rollback: () => Promise<void>;

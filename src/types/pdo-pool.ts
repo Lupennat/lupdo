@@ -110,16 +110,11 @@ export interface mysqlPoolConnection extends mysql.Connection {
     __lupdo_killed: boolean;
 }
 
-export interface mysqlRawPoolConnection extends mysqlPoolConnection {
-    release: () => Promise<void>;
-}
-
-export interface sqliteRawPoolConnection extends sqlitePoolConnection {
-    release: () => Promise<void>;
-}
-
 export type PoolConnection = sqlitePoolConnection | mysqlPoolConnection;
 
-export type RawPoolConnection = sqliteRawPoolConnection | mysqlRawPoolConnection;
+export interface RawPoolConnection {
+    release: () => Promise<void>;
+    connection: PoolConnection;
+}
 
 export type PoolI<T> = TarnPool<T>;

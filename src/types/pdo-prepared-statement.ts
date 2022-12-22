@@ -1,5 +1,4 @@
 import PdoAttributes from './pdo-attributes';
-import { FetchFunctionClosure } from './pdo-fetch';
 import PdoRawConnectionI from './pdo-raw-connection';
 import PdoStatementI from './pdo-statement';
 
@@ -25,10 +24,7 @@ export type NegativeLooks = Array<'"' | "'" | '`' | '%'>;
 
 export type PdoPreparedStatementConstructor = new (
     connection: PdoRawConnectionI,
-    attributes: PdoAttributes,
-    fetchMode?: number,
-    numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
-    constructorArgs?: any[]
+    attributes: PdoAttributes
 ) => PdoPreparedStatementI;
 
 export default interface PdoPreparedStatementI extends PdoStatementI {

@@ -4,7 +4,6 @@ import PdoError from './errors/pdo-error';
 import PdoI, { PdoAvailableDriver, PdoLogger } from './types/pdo';
 import PdoAttributes from './types/pdo-attributes';
 import PdoDriverI, { DriverOptions, MysqlOptions, SqliteOptions } from './types/pdo-driver';
-import { FetchFunctionClosure } from './types/pdo-fetch';
 import { PoolOptions, RawPoolConnection } from './types/pdo-pool';
 import PdoPreparedStatementI from './types/pdo-prepared-statement';
 import PdoStatementI from './types/pdo-statement';
@@ -58,6 +57,10 @@ class Pdo implements PdoI {
         await this.driver.disconnect();
     }
 
+    public reconnect(): void {
+        this.driver.reconnect();
+    }
+
     public async exec(sql: string): Promise<number> {
         const statement = await this.query(sql);
         return statement.rowCount();
@@ -68,13 +71,8 @@ class Pdo implements PdoI {
         return statement;
     }
 
-    public async query(
-        sql: string,
-        fetchMode?: number,
-        numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
-        constructorArgs?: any[]
-    ): Promise<PdoStatementI> {
-        const statement = await this.driver.query(sql, fetchMode, numberOrClassOrFnOrObject, constructorArgs);
+    public async query(sql: string): Promise<PdoStatementI> {
+        const statement = await this.driver.query(sql);
         return statement;
     }
 

@@ -40,7 +40,7 @@ class SqliteRawConnection extends PdoRawConnection {
                 return {
                     name: field.name,
                     column: field.column,
-                    table: field.table,
+                    table: field.table ?? '',
                     database: field.database,
                     type: field.type
                 };

@@ -96,6 +96,21 @@ describe('Pdo Api', () => {
         });
         await pdo.query('SELECT 1');
         await pdo.disconnect();
+        await expect(pdo.query('SELECT 1')).rejects.toThrow('Pdo is Disconnected from pool, please reconnect.');
+        await expect(pdo.prepare('SELECT 1')).rejects.toThrow('Pdo is Disconnected from pool, please reconnect.');
+        await expect(pdo.exec('SELECT 1')).rejects.toThrow('Pdo is Disconnected from pool, please reconnect.');
+        await expect(pdo.beginTransaction()).rejects.toThrow('Pdo is Disconnected from pool, please reconnect.');
+        await expect(pdo.getRawPoolConnection()).rejects.toThrow('Pdo is Disconnected from pool, please reconnect.');
+    });
+
+    it.each(table)('Works $driver Reconnect', async ({ driver, config }) => {
+        const pdo = new Pdo(driver, config);
+        await pdo.query('SELECT 1');
+        await pdo.disconnect();
+        await expect(pdo.query('SELECT 1')).rejects.toThrow('Pdo is Disconnected from pool, please reconnect.');
+        pdo.reconnect();
+        await pdo.query('SELECT 1');
+        await pdo.disconnect();
     });
 
     it.each(table)('Works $driver Exec Return Number', async ({ driver, config }) => {
@@ -123,14 +138,14 @@ describe('Pdo Api', () => {
 
     it.each(table)('Works $driver Get Raw Pool Connection', async ({ driver, config }) => {
         const pdo = new Pdo(driver, config, {});
-        const connection = await pdo.getRawPoolConnection();
+        const raw = await pdo.getRawPoolConnection();
         if (isMysql(driver)) {
-            expect(connection as mysqlPoolConnection).toBeInstanceOf(PromiseConnection);
+            expect(raw.connection as mysqlPoolConnection).toBeInstanceOf(PromiseConnection);
         } else {
-            expect(connection as sqlitePoolConnection).toBeInstanceOf(Database);
+            expect(raw.connection as sqlitePoolConnection).toBeInstanceOf(Database);
         }
 
-        await connection.release();
+        await raw.release();
         await pdo.disconnect();
     });
 

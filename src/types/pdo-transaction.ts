@@ -1,5 +1,4 @@
 import PdoAttributes from './pdo-attributes';
-import { FetchFunctionClosure } from './pdo-fetch';
 import PdoPreparedStatementI from './pdo-prepared-statement';
 import PdoRawConnectionI from './pdo-raw-connection';
 import PdoStatementI from './pdo-statement';
@@ -18,10 +17,5 @@ export default interface PdoTransactionI {
 
     prepare: (sql: string, attributes?: PdoAttributes) => Promise<PdoPreparedStatementI>;
 
-    query: (
-        sql: string,
-        fetchMode?: number,
-        numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
-        constructorArgs?: any[]
-    ) => Promise<PdoStatementI>;
+    query: (sql: string) => Promise<PdoStatementI>;
 }

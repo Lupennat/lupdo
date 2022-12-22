@@ -1,7 +1,6 @@
 'use strict';
 
 import PdoAttributes from '../types/pdo-attributes';
-import { FetchFunctionClosure } from '../types/pdo-fetch';
 import PdoPreparedStatementI from '../types/pdo-prepared-statement';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
 import PdoStatementI from '../types/pdo-statement';
@@ -30,20 +29,9 @@ class PdoTransaction implements PdoTransactionI {
         return new PdoPreparedStatement(this.connection, Object.assign({}, this.attributes, attributes));
     }
 
-    async query(
-        sql: string,
-        fetchMode?: number,
-        numberOrClassOrFnOrObject?: number | FetchFunctionClosure | FunctionConstructor | object,
-        constructorArgs?: any[]
-    ): Promise<PdoStatementI> {
+    async query(sql: string): Promise<PdoStatementI> {
         await this.connection.query(sql);
-        return new PdoStatement(
-            this.connection,
-            this.attributes,
-            fetchMode,
-            numberOrClassOrFnOrObject,
-            constructorArgs
-        );
+        return new PdoStatement(this.connection, this.attributes);
     }
 }
 
