@@ -8,7 +8,7 @@ Lupdo create a Pool of connection By Default.
 -   [Supported Databases](#supported-databases)
 -   [Usage](#usage)
 -   [Pdo](#pdo)
-    -   [Constants & Attributes](#pdo-constants-&-attributes)
+    -   [Constants & Attributes](#pdo-constants--attributes)
     -   [Raw Pool Connection](#pdo-raw-pool-connection)
 -   [Driver Options](#driver-options)
     -   [mysql/mariadb](#mysql-options)
@@ -17,7 +17,7 @@ Lupdo create a Pool of connection By Default.
 -   [Transaction](#transaction)
 -   [Statement](#statement)
     -   [Fetched Object](#fetched-object)
-    -   [Fetch Examples](#FETCH.md)
+    -   [Fetch Examples](FETCH.md)
 -   [Prepared Statement](#prepared-statement)
     -   [Valid Bindings](#valid-bindings)
     -   [Params](#params)
@@ -62,7 +62,7 @@ run();
 
 ## Pdo
 
--   constructor(driver: [PdoAvailableDriver[]](#supported-databases), driverOptions: [DriverOptions](#driver-options),PoolOptions: [PoolOptions](#pool-options), attributes: [PdoAttributes](#pdo-constants-&-attributes))
+-   constructor(driver: [PdoAvailableDriver[]](#supported-databases), driverOptions: [DriverOptions](#driver-options),PoolOptions: [PoolOptions](#pool-options), attributes: [PdoAttributes](#pdo-constants--attributes))
 -   setLogger(logger: [PdoLogger](#logger)): void
 -   getAvailableDrivers(): [PdoAvailableDriver[]](#supported-databases)
 -   prototype.beginTransaction() :Promise<[PdoTransaction](#transaction)>
@@ -94,7 +94,7 @@ run();
 ### Pdo Raw Pool Connection
 
 Lupdo offers the possibility of retrieving a raw connection from the pool, to perform any unexposed operations.\
-The connection returned is the original [third-party](#driver-options) connection used behind the scenes by Lupdo.\
+The connection returned is the original [third-party](#driver-options) connection used behind the scenes by Lupdo.
 
 > **Warning**
 > Once the connection has been used, the connection must be released, otherwise the pool will not be able to disconnect.
@@ -110,7 +110,7 @@ Debug mode, is defined through Pdo Attributes, custom debug connection options, 
 
 ### Sqlite Options
 
-[https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md#new-databasepath-options](https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md#new-databasepath-options)\
+[https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md#new-databasepath-options](https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md#new-databasepath-options)
 
 new option added:
 
@@ -141,7 +141,7 @@ new option added:
 > killResource is supported only on mysql/mariadb driver
 
 > **Warning**
-> callback `created` should be used only to set session variables on the connection before it gets used.\*\*
+> callback `created` should be used only to set session variables on the connection before it gets used.
 
 ```js
 {
@@ -187,7 +187,7 @@ new option added:
 -   unique: () => Unique<T>;
 
 > **Note**
-> Fetched Object is an Iterable Object. [Here](#FETCH.md) you can find a more comprehensive guide.
+> Fetched Object is an Iterable Object. [Here](FETCH.md) you can find a more comprehensive guide.
 
 ## Prepared Statement
 
@@ -208,7 +208,7 @@ extends [Statement](#statement)
 
 ### Params
 
-Array of [ValidBindings](#valid-bindings)]\
+Array of [ValidBindings](#valid-bindings)\
 or a key-value object
 
 ## Logger
@@ -227,5 +227,5 @@ Pdo.setLogger((message: any, level?: any) => {
 ## Debug
 
 If you are running into problems, one thing that may help is enabling the debug mode for the connection.\
-You can enable debug using [ATTR_DEBUG](#pdo-constants-&-attributes).\
+You can enable debug using [ATTR_DEBUG](#pdo-constants--attributes).\
 This will print extra information on stdout.
