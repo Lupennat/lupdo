@@ -376,7 +376,7 @@ Map (4) {
 This mode groups the returned rows into a nested array, where indexes will be unique values from the first column, and values will be arrays similar to ones returned by regular all(). The following code, for example, will separate user from gender an put them into different arrays:
 
 ```ts
-const data = (await pdo.query('SELECT gender, name, id FROM users').fetchArray().group;
+const data = (await pdo.query('SELECT gender, name, id FROM users').fetchArray().group();
 /*
 Map(5) {
     'male': [
@@ -407,7 +407,7 @@ Map(5) {
 
 So, this is the ideal solution for such a popular demand like "group events by date" or "group goods by category".
 
-> **Note**
+> **Warning**
 > in case you need to select all the fields, but group by not the first one, the first idea that sporings in the mind won't work:
 
 ```sql
