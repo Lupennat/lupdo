@@ -258,7 +258,7 @@ const data = pdo.query("SELECT name, gender FROM users, companies WHERE users.na
 
 ## Fetched
 
-Fetched Object is in iterable object, that expose theese methods:
+Fetched Object is an iterable object, that expose theese methods:
 
 -   get: () => T | undefined;
 -   all: () => T[];
@@ -302,7 +302,7 @@ Map (4) {
 ```
 
 > **Note**
-> Methods Get And All, will return data according to [cursor orientation](#cursor-orientation)
+> Methods Get And All, will return data according to [cursor orientation](#cursor)
 
 ### Fetch Get
 
