@@ -89,7 +89,7 @@ const data = (await pdo.query("SELECT name FROM users").fetchColumn<string>(0).a
 
 ## Fetch Pair
 
-> **Info**
+> **Note**
 > Fetch pair return a Map not A Fetch Object
 
 Also extremely useful format, when we need to get the same column as for [Fetch Column](#fetch-column), but indexed not by numbers in order but by an unique field:
@@ -301,7 +301,7 @@ Map (4) {
 */
 ```
 
-> **Info**
+> **Note**
 > Methods Get And All, will return data according to [cursor orientation](#cursor-orientation)
 
 ### Fetch Get
@@ -337,7 +337,7 @@ fetch.all();
 
 ### Fetch Unique
 
-> **Info**
+> **Note**
 > Fetch unique return a Map
 
 Same as [Fetch Pair](#fetch-pair), but getting not one column but full row, yet indexed by an unique field
@@ -370,7 +370,7 @@ Map (4) {
 
 ### Fetch Group
 
-> **Info**
+> **Note**
 > Fetch group return a Map
 
 This mode groups the returned rows into a nested array, where indexes will be unique values from the first column, and values will be arrays similar to ones returned by regular all(). The following code, for example, will separate user from gender an put them into different arrays:
@@ -407,7 +407,7 @@ Map(5) {
 
 So, this is the ideal solution for such a popular demand like "group events by date" or "group goods by category".
 
-> **Info**
+> **Note**
 > in case you need to select all the fields, but group by not the first one, the first idea that sporings in the mind won't work:
 
 ```sql

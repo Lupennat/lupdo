@@ -186,7 +186,7 @@ new option added:
 -   group: () => Group<T>;
 -   unique: () => Unique<T>;
 
-> **Info**
+> **Note**
 > Fetched Object is an Iterable Object. [Here](#FETCH.md) you can find a more comprehensive guide.
 
 ## Prepared Statement
