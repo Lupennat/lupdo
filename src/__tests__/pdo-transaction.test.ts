@@ -28,28 +28,25 @@ describe('Pdo Transactions', () => {
         Pdo.setLogger(() => {});
     });
 
-    it.each(table)('Works $driver Transaction Rollback', async ({ driver }) => {
+    it.each(table)('Works $driver Transaction Rollback && Commit', async ({ driver }) => {
         const countBefore = await pdos[driver].query('SELECT count(*) as total from users');
         const counter = countBefore.fetchColumn<number>(0).get() as number;
-        const trx = await pdos[driver].beginTransaction();
+        let trx = await pdos[driver].beginTransaction();
         expect(trx).toBeInstanceOf(PdoTransaction);
-        const executed = await trx.exec(insertSql(driver, 'users', ['name', 'gender'], ['Claudio', 'All']));
+        let executed = await trx.exec(insertSql(driver, 'users', ['name', 'gender'], ['Claudio', 'All']));
         expect(executed).toBe(1);
         await trx.rollback();
-        const countAfter = await pdos[driver].query('SELECT count(*) as total from users');
+        let countAfter = await pdos[driver].query('SELECT count(*) as total from users');
         expect(countAfter.fetchColumn<number>(0).get()).toBe(counter);
-    });
 
-    it.each(table)('Works $driver Transaction Commit', async ({ driver }) => {
-        const countBefore = await pdos[driver].query('SELECT count(*) as total from users');
-        const counter = countBefore.fetchColumn<number>(0).get() as number;
-        const trx = await pdos[driver].beginTransaction();
+        trx = await pdos[driver].beginTransaction();
         expect(trx).toBeInstanceOf(PdoTransaction);
-        const executed = await trx.exec(insertSql(driver, 'users', ['name', 'gender'], ['Claudio', 'All']));
+        executed = await trx.exec(insertSql(driver, 'users', ['name', 'gender'], ['Claudio', 'All']));
         expect(executed).toBe(1);
         await trx.commit();
-        const countAfter = await pdos[driver].query('SELECT count(*) as total from users');
+        countAfter = await pdos[driver].query('SELECT count(*) as total from users');
         expect(countAfter.fetchColumn<number>(0).get()).toBe(counter + 1);
+
         const stmt = await pdos[driver].query("SELECT `id` from users where `name` = 'Claudio';");
         const id = stmt.fetchColumn<number>(0).get() as number;
         expect(await pdos[driver].exec('DELETE FROM users WHERE (`id` = ' + id + ');')).toBe(1);

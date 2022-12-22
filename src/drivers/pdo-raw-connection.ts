@@ -17,7 +17,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     protected connection: PoolConnection | null = null;
     protected inTransaction = false;
     protected statement: any = null;
-    protected cursor = -1;
+    protected cursor: number | null = null;
 
     protected selectResults: PdoRowData[] = [];
     protected affectingResults: PdoAffectingData = {};
@@ -62,9 +62,9 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
             await this.doCommit(this.connection as PoolConnection);
         } catch (error: any) {
             throw new PdoError(error);
+        } finally {
+            await this.close();
         }
-
-        await this.close();
     }
 
     public async rollback(): Promise<void> {
@@ -72,9 +72,9 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
             await this.doRollback(this.connection as PoolConnection);
         } catch (error: any) {
             throw new PdoError(error);
+        } finally {
+            await this.close();
         }
-
-        await this.close();
     }
 
     public async prepare(sql: string): Promise<void> {
@@ -84,6 +84,10 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
             this.statement = await this.getStatement(this.sql, await this.generateOrReuseConnection());
         } catch (error: any) {
             throw new PdoError(error);
+        } finally {
+            if (!this.inTransaction) {
+                await this.close();
+            }
         }
     }
 
@@ -134,13 +138,13 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
                 throw new Error('Query execution was interrupted');
             }
 
-            if (!this.inTransaction) {
-                await this.close();
-            }
-
             this.resetCursor();
         } catch (error: any) {
             throw new PdoError(error);
+        } finally {
+            if (!this.inTransaction) {
+                await this.close();
+            }
         }
     }
 
@@ -162,6 +166,10 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
             this.resetCursor();
         } catch (error: any) {
             throw new PdoError(error);
+        } finally {
+            if (!this.inTransaction) {
+                await this.close();
+            }
         }
     }
 
@@ -205,10 +213,10 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     }
 
     public resetCursor(): void {
-        this.setCursor(-1);
+        this.setCursor(null);
     }
 
-    protected setCursor(cursor: number): void {
+    protected setCursor(cursor: number | null): void {
         this.cursor = cursor;
     }
 
@@ -222,8 +230,8 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
 
     protected getTempCursorForFetch(cursorOrientation: number): number {
         let cursor = this.cursor;
-        if (cursorOrientation === FETCH_BACKWARD && cursor === -1) {
-            cursor = this.selectResults.length;
+        if (cursor === null) {
+            cursor = cursorOrientation === FETCH_BACKWARD ? this.selectResults.length : -1;
         }
 
         return cursorOrientation === FETCH_BACKWARD ? cursor - 1 : cursor + 1;

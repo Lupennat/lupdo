@@ -44,6 +44,7 @@ class MysqlDriver extends PdoDriver {
             namedPlaceholders: true,
             dateStrings: false,
             supportBigNumbers: true,
+            bigNumberStrings: false,
             debug: (debugMode & DEBUG_ENABLED) !== 0
         })) as mysqlPoolConnection;
     }

@@ -9,7 +9,8 @@ import Pdo from '../pdo';
 import { PdoLogger } from '../types/pdo';
 import { mysqlPoolConnection, sqlitePoolConnection } from '../types/pdo-pool';
 
-import table, { isMysql } from './fixtures/config';
+import { PdoError } from '../errors';
+import table, { isMysql, sqliteTables } from './fixtures/config';
 
 describe('Pdo Api', () => {
     it('Works Missing Driver', () => {
@@ -128,6 +129,12 @@ describe('Pdo Api', () => {
         await pdo.disconnect();
     });
 
+    it.each(table)('Works $driver Query Fails', async ({ driver, config }) => {
+        const pdo = new Pdo(driver, config);
+        await expect(pdo.query('SELECT ?')).rejects.toThrow(PdoError);
+        await pdo.disconnect();
+    });
+
     it.each(table)('Works $driver Prepare Return PdoPreparedStatement', async ({ driver, config }) => {
         const pdo = new Pdo(driver, config);
         const stmt = await pdo.prepare('SELECT 1');
@@ -135,6 +142,14 @@ describe('Pdo Api', () => {
         await stmt.execute();
         await pdo.disconnect();
     });
+
+    if (sqliteTables.length > 0) {
+        it.each(sqliteTables)('Works $driver Prepare Fails', async ({ driver, config }) => {
+            const pdo = new Pdo(driver, config);
+            await expect(pdo.prepare('SELECT ??')).rejects.toThrow(PdoError);
+            await pdo.disconnect();
+        });
+    }
 
     it.each(table)('Works $driver Get Raw Pool Connection', async ({ driver, config }) => {
         const pdo = new Pdo(driver, config, {});

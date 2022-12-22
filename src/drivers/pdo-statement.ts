@@ -13,7 +13,7 @@ import PdoColumnData from '../types/pdo-column-data';
 import PdoColumnValue from '../types/pdo-column-value';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
 import PdoRowData from '../types/pdo-raw-data';
-import PdoStatementI, { Both, Fetched, Group, Json, Named, Newable, Pair, Unique } from '../types/pdo-statement';
+import PdoStatementI, { Both, Dictionary, Fetched, Group, Named, Newable, Pair, Unique } from '../types/pdo-statement';
 
 class PdoStatement implements PdoStatementI {
     protected attributes: PdoAttributes;
@@ -60,9 +60,9 @@ class PdoStatement implements PdoStatementI {
      * If the result set contains multiple columns with the same name,
      * it returns only a single value per column name.
      */
-    public fetchJson(): Fetched<Json> {
-        return this.fetched((row: PdoRowData, columns: string[]): Json => {
-            return row.reduce((carry: Json, val: PdoColumnValue, currentIndex: number) => {
+    public fetchDictionary(): Fetched<Dictionary> {
+        return this.fetched((row: PdoRowData, columns: string[]): Dictionary => {
+            return row.reduce((carry: Dictionary, val: PdoColumnValue, currentIndex: number) => {
                 carry[columns[currentIndex]] = val;
                 return carry;
             }, {});
@@ -122,7 +122,7 @@ class PdoStatement implements PdoStatementI {
     /**
      * Allows completely customize the way data is treated on the fly.
      */
-    public fetchClosure<T>(fn: (...args: PdoColumnValue[]) => T): Fetched<T> {
+    public fetchClosure<T>(fn: (...args: any[]) => T): Fetched<T> {
         return this.fetched((row: PdoRowData) => {
             return fn(...row);
         });
@@ -165,7 +165,7 @@ class PdoStatement implements PdoStatementI {
         const map: Pair<T, U> = new Map();
 
         for (const row of this.connection.fetchAll(this.getAttribute(ATTR_FETCH_DIRECTION) as number)) {
-            map.set((row[0] ?? null) as T, row[1] as U);
+            map.set(row[0] as T, row[1] as U);
         }
 
         return map;
@@ -207,7 +207,7 @@ class PdoStatement implements PdoStatementI {
                 const duplicated = this.getDuplicatedColumns();
                 const map: Group<T> = new Map();
                 for (const row of this.connection.fetchAll(this.getAttribute(ATTR_FETCH_DIRECTION) as number)) {
-                    const key = row.shift() ?? null;
+                    const key = row.shift() as PdoColumnValue;
                     const values = map.get(key) ?? [];
                     values.push(callable(this.getRowNulled(row), columns, duplicated));
                     map.set(key, values);
@@ -219,7 +219,7 @@ class PdoStatement implements PdoStatementI {
                 const duplicated = this.getDuplicatedColumns();
                 const map: Unique<T> = new Map();
                 for (const row of this.connection.fetchAll(this.getAttribute(ATTR_FETCH_DIRECTION) as number)) {
-                    map.set(row.shift() ?? null, callable(this.getRowNulled(row), columns, duplicated));
+                    map.set(row.shift() as PdoColumnValue, callable(this.getRowNulled(row), columns, duplicated));
                 }
                 return map;
             },
@@ -242,12 +242,12 @@ class PdoStatement implements PdoStatementI {
     }
 
     protected getRowNulled(row: PdoRowData): PdoRowData {
-        const nullType = this.attributes[ATTR_NULLS] as number;
-        return (nullType & NULL_NATURAL) !== 0
+        const nullType = this.getAttribute(ATTR_NULLS) as number;
+        return nullType === NULL_NATURAL
             ? row
             : row.map((val: PdoColumnValue) => {
                   return val === null || (typeof val === 'string' && val === '')
-                      ? (nullType & NULL_EMPTY_STRING) !== 0
+                      ? nullType === NULL_EMPTY_STRING
                           ? null
                           : ''
                       : val;
@@ -275,18 +275,20 @@ class PdoStatement implements PdoStatementI {
         for (let x = 0; x < row.length; x++) {
             const key = columns[x];
             if (key in obj) {
-                const desc = Object.getOwnPropertyDescriptor(obj, key) as PropertyDescriptor;
-                if (typeof desc.value === 'function') {
-                    throw new PdoError(`class [${obj.constructor.name}.${key}()] conflict with column name [${key}].`);
-                }
-                if (typeof desc.get === 'function' && typeof desc.set !== 'function') {
-                    throw new PdoError(
-                        `class getter [${obj.constructor.name}.${key}()] defined wihtout a setter, it conflict with column name [${key}].`
-                    );
+                const desc = Object.getOwnPropertyDescriptor(obj, key);
+                if (desc === undefined) {
+                    if (typeof obj[key] === 'function') {
+                        throw new PdoError(
+                            `[${obj.constructor.name}.prototype.${key}()] conflict with column name [${key}].`
+                        );
+                    }
                 }
             }
-
-            obj[key] = row[x];
+            try {
+                obj[key] = row[x];
+            } catch (error: any) {
+                throw new PdoError(error);
+            }
         }
     }
 }

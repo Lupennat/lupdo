@@ -5,7 +5,7 @@ import PdoRawConnectionI from './pdo-raw-connection';
 
 export type PdoStatementConstructor = new (connection: PdoRawConnectionI, attributes: PdoAttributes) => PdoStatementI;
 
-export type Json = { [key: string]: PdoColumnValue };
+export type Dictionary = { [key: string]: PdoColumnValue };
 export type Both = { [key: string | number]: PdoColumnValue };
 export type Named = { [key: string]: PdoColumnValue | PdoColumnValue[] };
 export type Newable<T = unknown> = new (...args: any[]) => T;
@@ -27,7 +27,7 @@ export default interface PdoStatementI {
      * If the result set contains multiple columns with the same name,
      * it returns only a single value per column name.
      */
-    fetchJson: () => Fetched<Json>;
+    fetchDictionary: () => Fetched<Dictionary>;
 
     /**
      * Specifies that the fetch method shall return each row as an array indexed by
@@ -57,7 +57,7 @@ export default interface PdoStatementI {
     /**
      * Allows completely customize the way data is treated on the fly.
      */
-    fetchClosure: <T>(fn: (...args: PdoColumnValue[]) => T) => Fetched<T>;
+    fetchClosure: <T>(fn: (...args: any[]) => T) => Fetched<T>;
 
     /**
      * Specifies that the fetch method shall return each row as a key-value object keyed

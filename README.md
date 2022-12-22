@@ -166,7 +166,7 @@ new option added:
 -   prototype.setAttribute([attribute](#pdo-attributes): string, value: number | string): boolean;
 -   prototype.columnCount(): number;
 -   prototype.debug(): string;
--   prototype.fetchJson(): [Fetched](#fetched-object)<Json>;
+-   prototype.fetchDictionary(): [Fetched](#fetched-object)<Dictionary>;
 -   prototype.fetchArray(): [Fetched](#fetched-object)<PdoColumnValue[]>;
 -   prototype.fetchBoth(): [Fetched](#fetched-object)<Both>;
 -   prototype.fetchColumn<T extends PdoColumnValue>(column: number): [Fetched](#fetched-object)<T>;

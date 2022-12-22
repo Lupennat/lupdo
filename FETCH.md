@@ -3,7 +3,7 @@
 -   Classic Modes:
     -   [Fetch Both](#fetch-both)
     -   [Fetch Array](#fetch-array)
-    -   [Fetch Json](#fetch-json)
+    -   [Fetch Dictionary](#fetch-dictionary)
 -   Most useful modes:
     -   [Fetch Column](#fetch-column)
     -   [Fetch Pair](#fetch-pair)
@@ -56,12 +56,12 @@ const user = (await pdo.query("SELECT * from users LIMIT 1").fetchArray().get();
 */
 ```
 
-## Fetch Json
+## Fetch Dictionary
 
 The row is returned in the form of object. See also [Fetch Named](#fetch-named)
 
 ```ts
-const user = (await pdo.query("SELECT * from users LIMIT 1").fetchJson().get();
+const user = (await pdo.query("SELECT * from users LIMIT 1").fetchDictionary().get();
 /*
 {
     'id' : 11,
@@ -232,12 +232,16 @@ pdo.query('SELECT name FROM users')
 
 ## Fetch Named
 
-Almost exactly the same as [Fetch Json](#fetch-json), but with one little difference. Many times I've seen a question, whether it's possible to distinguish different fields with the same names that returned by same query. With the only answer is using aliases in SQL or numeric indices instead of associative. However, Pdo offers another way. If this mode is used, returned values are assigned the same way as with `fetchJson`, but if there are several columns with the same name in the result set, all values are stored in the nested array. For example, let's try to select from users and companies, while both tables has a column name. Using `fetchJson`, we'll lose one of the names:
+Almost exactly the same as [Fetch Dictionary](#fetch-dictionary), but with one little difference. Many times I've seen a question, whether it's possible to distinguish different fields with the same names that returned by same query. With the only answer is using aliases in SQL or numeric indices instead of associative. However, Pdo offers another way. If this mode is used, returned values are assigned the same way as with `fetchDictionary`, but if there are several columns with the same name in the result set, all values are stored in the nested array. For example, let's try to select from users and companies, while both tables has a column name. Using `fetchDictionary`, we'll lose one of the names:
 
 ```ts
-const data = pdo.query("SELECT name, gender FROM users, companies WHERE users.name = 'Claudio'").fetchJson().get();
+const data = pdo
+    .query("SELECT * FROM users, companies WHERE users.name = 'Claudio'")
+    .fetchDictionary()
+    .get();
 /*
 {
+  'id' => 10
   'name' => 'Lupennat srl'
   'gender' => 'male
 }
@@ -247,9 +251,10 @@ const data = pdo.query("SELECT name, gender FROM users, companies WHERE users.na
 While if `fetchNamed` is used instead, everything will be kept intact:
 
 ```ts
-const data = pdo.query("SELECT name, gender FROM users, companies WHERE users.name = 'Claudio'").fetchNamed().get();
+const data = pdo.query("SELECT * FROM users, companies WHERE users.name = 'Claudio'").fetchNamed().get();
 /*
 {
+    'id' => [1, 10],
     'name': ['Claudio', 'Lupennat srl'],
     'gender' : 'male'
 }

@@ -1,4 +1,4 @@
-import { ATTR_CASE, CASE_LOWER, CASE_NATURAL } from '../constants';
+import { ATTR_CASE, ATTR_FETCH_DIRECTION, CASE_LOWER, CASE_NATURAL, FETCH_BACKWARD } from '../constants';
 import Pdo from '../pdo';
 import { PdoI } from '../types';
 
@@ -55,19 +55,24 @@ describe('Pdo Statement', () => {
     });
 
     it.each(table)('Works $driver Statement Last Insert Id', async ({ driver }) => {
-        let stmt = await pdos[driver].query('SELECT * FROM users limit 5;');
+        let trx = await pdos[driver].beginTransaction();
+        let stmt = await trx.query('SELECT * FROM users limit 5;');
+
         expect(stmt.lastInsertId()).toBe(null);
-        stmt = await pdos[driver].query('SELECT count(*) as total from users');
+        stmt = await trx.query('SELECT count(*) as total from users');
         const lastId = stmt.fetchColumn<number>(0).get() as number;
-        stmt = await pdos[driver].query(insertSql(driver, 'users', ['name', 'gender'], ['Claudio', 'All']));
+        stmt = await trx.query(insertSql(driver, 'users', ['name', 'gender'], ['Claudio', 'All']));
         expect(stmt.lastInsertId()).toBeGreaterThan(lastId);
+        await trx.rollback();
     });
 
     it.each(table)('Works $driver Statement Row Count', async ({ driver }) => {
-        let stmt = await pdos[driver].query('SELECT * FROM users limit 5;');
+        let trx = await pdos[driver].beginTransaction();
+        let stmt = await trx.query('SELECT * FROM users limit 5;');
         expect(stmt.rowCount()).toBe(0);
-        stmt = await pdos[driver].query(insertSql(driver, 'users', ['name', 'gender'], ['Claudio', 'All']));
+        stmt = await trx.query(insertSql(driver, 'users', ['name', 'gender'], ['Claudio', 'All']));
         expect(stmt.rowCount()).toBe(1);
+        await trx.rollback();
     });
 
     it.each(table)('Works $driver Column Count', async ({ driver }) => {
@@ -80,5 +85,22 @@ describe('Pdo Statement', () => {
         expect(stmt.getColumnMeta(0)?.name).toBe('id');
         expect(stmt.getColumnMeta(1)?.name).toBe('name');
         expect(stmt.getColumnMeta(5)).toBeNull();
+    });
+
+    it.each(table)('Works $driver Reset Cursor', async ({ driver }) => {
+        const stmt = await pdos[driver].query('SELECT * FROM users limit 5;');
+        const fetch = stmt.fetchArray();
+        expect(fetch.get()).toEqual([1, 'Edmund', 'Multigender']);
+        fetch.all();
+        expect(fetch.get()).toBeUndefined();
+        stmt.resetCursor();
+        expect(fetch.get()).toEqual([1, 'Edmund', 'Multigender']);
+        stmt.setAttribute(ATTR_FETCH_DIRECTION, FETCH_BACKWARD);
+        stmt.resetCursor();
+        expect(fetch.get()).toEqual([5, 'Sincere', 'Demi-girl']);
+        fetch.all();
+        expect(fetch.get()).toBeUndefined();
+        stmt.resetCursor();
+        expect(fetch.get()).toEqual([5, 'Sincere', 'Demi-girl']);
     });
 });
