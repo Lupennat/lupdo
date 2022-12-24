@@ -1,3 +1,11 @@
+<p align="center">
+	<a href="https://www.npmjs.com/package/lupdo" target="__blank"><img src="https://img.shields.io/npm/v/lupdo?color=0476bc&label=" alt="NPM version"></a>
+	<a href="https://www.npmjs.com/package/lupdo" target="__blank"><img alt="NPM Downloads" src="https://img.shields.io/npm/dm/lupdo?color=3890aa&label="></a>
+	<!-- <a href="https://codecov.io/gh/Lupennat/lupdo" >
+        <img src="https://codecov.io/gh/Lupennat/lupdo/branch/main/graph/badge.svg?token=l1fm5ZWd8O"/>
+    </a> -->
+</p>
+
 # Lupdo
 
 Lupdo is an abstraction layer used for accessing databases, similar to PHP Data Objects exposes a set of APIs.\
