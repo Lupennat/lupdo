@@ -1,9 +1,7 @@
-import MysqlDriver from './drivers/mysql/mysql-driver';
-import SqliteDriver from './drivers/sqlite/sqlite-driver';
-import PdoError from './errors/pdo-error';
-import PdoI, { PdoAvailableDriver, PdoLogger } from './types/pdo';
+import { PdoError } from './errors';
+import PdoI, { PdoLogger } from './types/pdo';
 import PdoAttributes from './types/pdo-attributes';
-import PdoDriverI, { DriverOptions, MysqlOptions, SqliteOptions } from './types/pdo-driver';
+import PdoDriverI, { DriverOptions, PdoDriverConstructor } from './types/pdo-driver';
 import { PoolOptions, RawPoolConnection } from './types/pdo-pool';
 import PdoPreparedStatementI from './types/pdo-prepared-statement';
 import PdoStatementI from './types/pdo-statement';
@@ -11,38 +9,38 @@ import PdoTransactionI from './types/pdo-transaction';
 
 class Pdo implements PdoI {
     protected driver: PdoDriverI;
+
     protected static logger: PdoLogger = (): void => {
         return void 0;
     };
 
-    protected static availableDrivers: PdoAvailableDriver[] = ['mysql', 'mariadb', 'sqlite', 'sqlite3'];
+    protected static availableDrivers: { [key: string]: PdoDriverConstructor } = {};
 
     static setLogger(logger: PdoLogger): void {
         Pdo.logger = logger;
     }
 
-    static getAvailableDrivers(): PdoAvailableDriver[] {
-        return Pdo.availableDrivers;
+    static getAvailableDrivers(): string[] {
+        return Object.keys(Pdo.availableDrivers);
+    }
+
+    static addDriver(driverName: string, driver: PdoDriverConstructor): void {
+        if (!(driverName in Pdo.availableDrivers)) {
+            Pdo.availableDrivers[driverName] = driver;
+        }
     }
 
     constructor(
-        protected driverName: PdoAvailableDriver,
+        protected driverName: string,
         options: DriverOptions,
         poolOptions: PoolOptions = {},
         attributes: PdoAttributes = {}
     ) {
-        switch (driverName as string) {
-            case 'mysql':
-            case 'mariadb':
-                this.driver = new MysqlDriver(driverName, options as MysqlOptions, poolOptions, attributes);
-                break;
-            case 'sqlite':
-            case 'sqlite3':
-                this.driver = new SqliteDriver(driverName, options as SqliteOptions, poolOptions, attributes);
-                break;
-            default:
-                throw new PdoError(`Driver [${driverName}] not available.`);
+        if (!(driverName in Pdo.availableDrivers)) {
+            throw new PdoError(`Driver [${driverName}] not available.`);
         }
+        this.driver = new Pdo.availableDrivers[driverName](driverName, options, poolOptions, attributes);
+
         this.driver.on('log', (level: string, message: string) => {
             Pdo.logger(level, message);
         });

@@ -1,24 +1,26 @@
 import { ATTR_DEBUG, DEBUG_ENABLED } from '../constants';
-import PdoConnection from '../drivers/pdo-connection';
-import { PdoError } from '../errors';
 import Pdo from '../pdo';
-import table, { mysqlTables } from './fixtures/config';
+import PdoConnection from '../support/pdo-connection';
 
 describe('Pdo Pool', () => {
-    it.each(table)('Works $driver Connection Pool Events Parameters', async ({ driver, config }) => {
+    it('Works Connection Pool Events Parameters', async () => {
         const createdMock = jest.fn();
         const acquiredMock = jest.fn();
         const destroyedMock = jest.fn();
         const releasedMock = jest.fn();
 
-        const pdo = new Pdo(driver, config, {
-            min: 1,
-            max: 1,
-            created: createdMock,
-            destroyed: destroyedMock,
-            acquired: acquiredMock,
-            released: releasedMock
-        });
+        const pdo = new Pdo(
+            'fake',
+            {},
+            {
+                min: 1,
+                max: 1,
+                created: createdMock,
+                destroyed: destroyedMock,
+                acquired: acquiredMock,
+                released: releasedMock
+            }
+        );
 
         await pdo.query('SELECT 1');
         expect(typeof createdMock.mock.lastCall[0] === 'string').toBeTruthy();
@@ -48,7 +50,7 @@ describe('Pdo Pool', () => {
         expect(destroyedMock).toBeCalledTimes(1);
     });
 
-    it.each(table)('Works $driver Connection Pool Events', async ({ driver, config }) => {
+    it('Works Connection Pool Events', async () => {
         const events: {
             created: {
                 [key: string]: number;
@@ -72,21 +74,25 @@ describe('Pdo Pool', () => {
             released: {}
         };
 
-        const pdo = new Pdo(driver, config, {
-            max: 5,
-            async created(uuid: string): Promise<void> {
-                events.created[uuid] = events.created[uuid] == null ? 1 : events.created[uuid] + 1;
-            },
-            async destroyed(uuid: string): Promise<void> {
-                events.destroyed[uuid] = events.destroyed[uuid] == null ? 1 : events.destroyed[uuid] + 1;
-            },
-            acquired(uuid: string): void {
-                events.acquired[uuid] = events.acquired[uuid] == null ? 1 : events.acquired[uuid] + 1;
-            },
-            released(uuid: string): void {
-                events.released[uuid] = events.released[uuid] == null ? 1 : events.released[uuid] + 1;
+        const pdo = new Pdo(
+            'fake',
+            {},
+            {
+                max: 5,
+                async created(uuid: string): Promise<void> {
+                    events.created[uuid] = events.created[uuid] == null ? 1 : events.created[uuid] + 1;
+                },
+                async destroyed(uuid: string): Promise<void> {
+                    events.destroyed[uuid] = events.destroyed[uuid] == null ? 1 : events.destroyed[uuid] + 1;
+                },
+                acquired(uuid: string): void {
+                    events.acquired[uuid] = events.acquired[uuid] == null ? 1 : events.acquired[uuid] + 1;
+                },
+                released(uuid: string): void {
+                    events.released[uuid] = events.released[uuid] == null ? 1 : events.released[uuid] + 1;
+                }
             }
-        });
+        );
 
         expect(Object.keys(events.created).length).toBe(0);
         expect(Object.keys(events.destroyed).length).toBe(0);
@@ -123,42 +129,116 @@ describe('Pdo Pool', () => {
         expect(Math.max(...Object.values(events.destroyed))).toBe(1);
     });
 
-    if (mysqlTables.length > 0) {
-        it.each(mysqlTables)('Works $driver Connection Pool Kill', async ({ driver, config }) => {
-            console.log = jest.fn();
-            console.trace = jest.fn();
+    it('Works Connection Pool Kill', async () => {
+        console.log = jest.fn();
+        console.trace = jest.fn();
 
-            const events: {
-                killed: {
-                    [key: string]: number;
-                };
-            } = {
-                killed: {}
+        const events: {
+            killed: {
+                [key: string]: number;
             };
+        } = {
+            killed: {}
+        };
 
-            const pdo = new Pdo(
-                driver,
-                config,
-                {
-                    killTimeoutMillis: 500,
-                    killResource: true,
-                    max: 1,
-                    min: 1,
-                    acquired: () => {
-                        setTimeout(async () => {
-                            await pdo.disconnect();
-                        }, 1000);
-                    },
-                    killed(uuid: string): void {
-                        events.killed[uuid] = events.killed[uuid] == null ? 1 : events.killed[uuid] + 1;
-                    }
+        const pdo = new Pdo(
+            'fake',
+            {},
+            {
+                killTimeoutMillis: 500,
+                killResource: true,
+                max: 1,
+                min: 1,
+                acquired: () => {
+                    setTimeout(async () => {
+                        await pdo.disconnect();
+                    }, 1000);
                 },
-                { [ATTR_DEBUG]: DEBUG_ENABLED }
-            );
+                killed(uuid: string): void {
+                    events.killed[uuid] = events.killed[uuid] == null ? 1 : events.killed[uuid] + 1;
+                }
+            },
+            { [ATTR_DEBUG]: DEBUG_ENABLED }
+        );
 
-            await expect(pdo.query(`SELECT SLEEP(60);`)).rejects.toThrow(PdoError);
+        await expect(pdo.query(`SELECT SLEEP(60);`)).rejects.toThrow('Query execution was interrupted');
 
-            expect(console.log).toHaveBeenCalled();
-        });
-    }
+        expect(console.log).toHaveBeenCalled();
+    });
+
+    it('Works Query Will Be Rejected If resolved When Connection Killed', async () => {
+        console.log = jest.fn();
+        console.trace = jest.fn();
+
+        const events: {
+            killed: {
+                [key: string]: number;
+            };
+        } = {
+            killed: {}
+        };
+
+        const pdo = new Pdo(
+            'fake',
+            {},
+            {
+                killTimeoutMillis: 500,
+                killResource: true,
+                max: 1,
+                min: 1,
+                acquired: () => {
+                    setTimeout(async () => {
+                        await pdo.disconnect();
+                    }, 1000);
+                },
+                killed(uuid: string): void {
+                    events.killed[uuid] = events.killed[uuid] == null ? 1 : events.killed[uuid] + 1;
+                }
+            },
+            { [ATTR_DEBUG]: DEBUG_ENABLED }
+        );
+
+        await expect(pdo.query(`SELECT SLEEPRESOLVE(60);`)).rejects.toThrow('Data are compromised');
+
+        expect(console.log).toHaveBeenCalled();
+    });
+
+    it('Works Execute Will Be Rejected If resolved When Killed', async () => {
+        console.log = jest.fn();
+        console.trace = jest.fn();
+
+        const events: {
+            killed: {
+                [key: string]: number;
+            };
+        } = {
+            killed: {}
+        };
+
+        const pdo = new Pdo(
+            'fake',
+            {},
+            {
+                killTimeoutMillis: 500,
+                killResource: true,
+                max: 1,
+                min: 1,
+                acquired: () => {
+                    setTimeout(async () => {
+                        await pdo.disconnect();
+                    }, 1000);
+                },
+                killed(uuid: string): void {
+                    events.killed[uuid] = events.killed[uuid] == null ? 1 : events.killed[uuid] + 1;
+                }
+            },
+            { [ATTR_DEBUG]: DEBUG_ENABLED }
+        );
+
+        const stmt = await pdo.prepare(`SELECT SLEEPRESOLVE(60);`);
+
+        await expect(stmt.execute()).rejects.toThrow('Data are compromised');
+
+        expect(console.log).toHaveBeenCalled();
+    });
 });

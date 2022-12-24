@@ -14,7 +14,7 @@ export interface ObjectParamsDescriptor {
     aliases: string[];
 }
 
-export type ValidBindings = string | bigint | number | boolean | Date | Buffer | null;
+export type ValidBindings = string | bigint | number | boolean | Date | Buffer;
 export type ArrayParams = ValidBindings[];
 export type Params = ArrayParams | ObjectParams;
 
@@ -27,6 +27,15 @@ export type PdoPreparedStatementConstructor = new (
     attributes: PdoAttributes
 ) => PdoPreparedStatementI;
 
+export interface PdoTransactionPreparedStatementI extends PdoStatementI {
+    /**
+     * Numeric key must start from 1
+     */
+    bindValue: (key: string | number, value: ValidBindings) => void;
+
+    execute: (params?: Params) => Promise<void>;
+    close?: never;
+}
 export default interface PdoPreparedStatementI extends PdoStatementI {
     /**
      * Numeric key must start from 1
@@ -34,4 +43,5 @@ export default interface PdoPreparedStatementI extends PdoStatementI {
     bindValue: (key: string | number, value: ValidBindings) => void;
 
     execute: (params?: Params) => Promise<void>;
+    close: () => Promise<void>;
 }

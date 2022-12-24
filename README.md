@@ -3,16 +3,14 @@
 Lupdo is an abstraction layer used for accessing databases, similar to PHP Data Objects exposes a set of APIs.\
 Lupdo is not an ORM, Lupdo aims to be a stable layer through which to build an ORM or a Query Builder.\
 Lupdo create a Pool of connection By Default.
+Lupdo offers the possibility of creating drivers for any database that accepts sql like syntax.
 
 -   [Third Party Library](#third-party-library)
--   [Supported Databases](#supported-databases)
+-   [Available Drivers](#available-drivers)
 -   [Usage](#usage)
 -   [Pdo](#pdo)
     -   [Constants & Attributes](#pdo-constants--attributes)
     -   [Raw Pool Connection](#pdo-raw-pool-connection)
--   [Driver Options](#driver-options)
-    -   [mysql/mariadb](#mysql-options)
-    -   [sqlite/sqlite3](#sqlite-options)
 -   [Pool Options](#pool-options)
 -   [Transaction](#transaction)
 -   [Statement](#statement)
@@ -28,17 +26,15 @@ Lupdo create a Pool of connection By Default.
 
 Lupdo, under the hood, uses stable and performant npm packages:
 
--   [mysql2](https://github.com/sidorares/node-mysql2)
--   [better-sqlite3](https://github.com/WiseLibs/better-sqlite3)
 -   [tarn.js](https://github.com/vincit/tarn.js)
 
-## Supported Databases
+## Available Drivers
 
-Lupdo support:
+-   [lupdo-mysql](https://www.npmjs.com/package/lupdo-mysql)
+-   [lupdo-sqlite](https://www.npmjs.com/package/lupdo-sqlite)
 
--   [mysql](https://www.mysql.com/)
--   [mariadb](https://mariadb.org/)
--   [sqlite/sqlite3](https://www.sqlite.org/index.html)
+> **Note**
+> A Short Doc [How To Write A Driver](DRIVER.md)
 
 ## Usage
 
@@ -62,13 +58,16 @@ run();
 
 ## Pdo
 
--   constructor(driver: [PdoAvailableDriver[]](#supported-databases), driverOptions: [DriverOptions](#driver-options),PoolOptions: [PoolOptions](#pool-options), attributes: [PdoAttributes](#pdo-constants--attributes))
+-   constructor(driver: [string](#available-drivers), driverOptions: [DriverOptions](#driver-options),PoolOptions: [PoolOptions](#pool-options), attributes: [PdoAttributes](#pdo-constants--attributes))
 -   setLogger(logger: [PdoLogger](#logger)): void
--   getAvailableDrivers(): [PdoAvailableDriver[]](#supported-databases)
--   prototype.beginTransaction() :Promise<[PdoTransaction](#transaction)>
+-   getAvailableDrivers(): [string[]](#available-drivers)
+-   addDriver(driverName: string, driver: [PdoDriverConstructor](DRIVER.md)): void
+-   prototype.beginTransaction() :Promise<[PdoTransactionI](#transaction)>
 -   prototype.exec(sql: string): Promise<number>
--   prototype.prepare(sql: string): Promise<[PdoPreparedStatement](#prepared-statement)>
--   prototype.query(sql: string): Promise<[PdoStatement](#statement)>
+-   prototype.prepare(sql: string): Promise<[PdoPreparedStatementI](#prepared-statement)>
+-   prototype.query(sql: string): Promise<[PdoStatementI](#statement)>
+-   prototype.getAttribute([attribute](#pdo-attributes): string): string | number;
+-   prototype.setAttribute([attribute](#pdo-attributes): string, value: number | string): boolean;
 -   prototype.disconnect(): Promise<void>
 -   prototype.reconnect(): void
 -   prototype.getRawPoolConnection(): Promise<[RawPoolConnection](#pdo-raw-pool-connection)>
@@ -94,7 +93,7 @@ run();
 ### Pdo Raw Pool Connection
 
 Lupdo offers the possibility of retrieving a raw connection from the pool, to perform any unexposed operations.\
-The connection returned is the original [third-party](#driver-options) connection used behind the scenes by Lupdo.
+The connection returned is the original [Driver Connection](#available-drivers) used behind the scenes by Lupdo.
 
 > **Warning**
 > Once the connection has been used, the connection must be released, otherwise the pool will not be able to disconnect.
@@ -103,18 +102,6 @@ The connection returned is the original [third-party](#driver-options) connectio
 
 Each driver uses the connection options of the corresponding npm package.\
 Debug mode, is defined through Pdo Attributes, custom debug connection options, will be ignored.
-
-### Mysql Options
-
-[https://github.com/mysqljs/mysql#connection-options](https://github.com/mysqljs/mysql#connection-options)
-
-### Sqlite Options
-
-[https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md#new-databasepath-options](https://github.com/WiseLibs/better-sqlite3/blob/master/docs/api.md#new-databasepath-options)
-
-new option added:
-
--   path: string
 
 ## Pool Options
 
@@ -135,10 +122,10 @@ new option added:
 -   `killed` Define Custom Kill Callback.
 
 > **Warning**
-> property `killResource` should always be false, before activating this option, verify that you have committed or rolled back all transactions and verified that you have executed all prepared statments
+> property `killResource` should always be false, before activating this option, verify that you have committed or rolled back all transactions and verified that you have closed all prepared statments
 > When 'beginTransaction()' is called connection will be released to the pool only after 'commit()' or 'rollback()' is called.
-> When 'prepare()' is called, connection will be released to the pool only after first 'execute()' is called.
-> killResource is supported only on mysql/mariadb driver
+> When 'prepare()' is called, connection will be released to the pool only after 'close()' is called.
+> killResource might not be supported by all drivers
 
 > **Warning**
 > callback `created` should be used only to set session variables on the connection before it gets used.
@@ -156,7 +143,7 @@ new option added:
 -   prototype.commit(): Promise<void>;
 -   prototype.rollback(): Promise<void>;
 -   prototype.exec(sql: string): Promise<number>
--   prototype.prepare(sql: string): Promise<[PdoPreparedStatement](#prepared-statement)>
+-   prototype.prepare(sql: string): Promise<[PdoTransactionPreparedStatementI](#prepared-statement)>
 -   prototype.query(sql: string): Promise<[PdoStatement](#statement)>
 -   prototype.disconnect(): Promise<void>
 
@@ -195,6 +182,11 @@ extends [Statement](#statement)
 
 -   prototype.bindValue(key: string | number, value: [ValidBindings](#valid-bindings)): void;
 -   prototype.execute(params?: [Params](#params)): Promise<void>;
+-   prototype.close(): Promise<void>
+
+> **Warning**
+> Prepared Statement do not release the connection automatically to take advantage of cached statement. You must close manually the connection through `close()` method when you finish `execute()` sequences.
+> Prepared Statement inside a transaction doesn't expose `close()` method, connection will be release only on `commit()` or `rollback()`
 
 ### Valid Bindings
 
@@ -203,7 +195,6 @@ extends [Statement](#statement)
 -   bigint
 -   Buffer
 -   Date
--   null
 -   boolean
 
 ### Params

@@ -1,12 +1,12 @@
 'use strict';
 
 import PdoAttributes from '../types/pdo-attributes';
-import PdoPreparedStatementI from '../types/pdo-prepared-statement';
+import { PdoTransactionPreparedStatementI } from '../types/pdo-prepared-statement';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
 import PdoStatementI from '../types/pdo-statement';
 import PdoTransactionI from '../types/pdo-transaction';
-import PdoPreparedStatement from './pdo-prepared-statement';
 import PdoStatement from './pdo-statement';
+import PdoTransactionPreparedStatement from './pdo-transaction-prepared-statement';
 
 class PdoTransaction implements PdoTransactionI {
     constructor(protected readonly connection: PdoRawConnectionI, protected readonly attributes: PdoAttributes) {}
@@ -24,9 +24,9 @@ class PdoTransaction implements PdoTransactionI {
         return statement.rowCount();
     }
 
-    async prepare(sql: string, attributes: PdoAttributes = {}): Promise<PdoPreparedStatementI> {
+    async prepare(sql: string): Promise<PdoTransactionPreparedStatementI> {
         await this.connection.prepare(sql);
-        return new PdoPreparedStatement(this.connection, Object.assign({}, this.attributes, attributes));
+        return new PdoTransactionPreparedStatement(this.connection, this.attributes);
     }
 
     async query(sql: string): Promise<PdoStatementI> {

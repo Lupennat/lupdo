@@ -1,35 +1,45 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-const { PromiseConnection } = require('mysql2/promise');
-import Database from 'better-sqlite3';
 import { ATTR_DEBUG, DEBUG_ENABLED } from '../constants';
-import PdoPreparedStatement from '../drivers/pdo-prepared-statement';
-import PdoStatement from '../drivers/pdo-statement';
-import PdoTransaction from '../drivers/pdo-transaction';
-import Pdo from '../pdo';
-import { PdoLogger } from '../types/pdo';
-import { mysqlPoolConnection, sqlitePoolConnection } from '../types/pdo-pool';
-
 import { PdoError } from '../errors';
-import table, { isMysql, sqliteTables } from './fixtures/config';
+import Pdo from '../pdo';
+import { PdoPreparedStatement, PdoStatement, PdoTransaction } from '../support';
+import { PdoLogger } from '../types/pdo';
+import { PdoDriverConstructor } from '../types/pdo-driver';
+import FakeDBConnection from './fixtures/fake-db-connection';
+import FakeDriver from './fixtures/fake-driver';
 
 describe('Pdo Api', () => {
     it('Works Missing Driver', () => {
         expect(() => {
-            // @ts-expect-error Testing wrong constructor
-            new Pdo('fake', {});
-        }).toThrow('Driver [fake] not available.');
+            new Pdo('notexist', {});
+        }).toThrow('Driver [notexist] not available.');
     });
 
     it('Works GetAvailableDrivers', () => {
-        expect(Pdo.getAvailableDrivers()).toEqual(['mysql', 'mariadb', 'sqlite', 'sqlite3']);
+        expect(Pdo.getAvailableDrivers()).toEqual(['fake']);
     });
 
-    it.each(table)('Works $driver Constructor', ({ driver, config }) => {
-        const pdo = new Pdo(driver, config);
+    it('Works Add Driver', () => {
+        class MockPdo extends Pdo {
+            public static listDrivers(): { [key: string]: PdoDriverConstructor } {
+                return MockPdo.availableDrivers;
+            }
+        }
+
+        MockPdo.addDriver('fakeTestNotOverride', FakeDriver);
+        expect(MockPdo.getAvailableDrivers().includes('fakeTestNotOverride')).toBeTruthy();
+
+        class Test {}
+        // @ts-expect-error is not a valid driver constructor
+        MockPdo.addDriver('fakeTestNotOverride', Test);
+        expect(MockPdo.listDrivers()['fakeTestNotOverride']).toEqual(FakeDriver);
+    });
+
+    it('Works Constructor', () => {
+        const pdo = new Pdo('fake', {});
         expect(pdo).toBeInstanceOf(Pdo);
     });
 
-    it.each(table)('Works $driver Pdo Not Log By Default', async ({ driver, config }) => {
+    it('Works Pdo Not Log By Default', async () => {
         class PdoStub extends Pdo {
             static getLogger(): PdoLogger {
                 return this.logger;
@@ -43,24 +53,32 @@ describe('Pdo Api', () => {
             expect(originalLogger(message, level)).toBeUndefined();
         });
 
-        const pdo = new PdoStub(driver, config, {
-            destroyed: async () => {
-                throw err;
+        const pdo = new PdoStub(
+            'fake',
+            {},
+            {
+                destroyed: async () => {
+                    throw err;
+                }
             }
-        });
+        );
         await pdo.query('SELECT 1');
         await pdo.disconnect();
     });
 
-    it.each(table)('Works $driver SetLogger', async ({ driver, config }) => {
+    it('Works SetLogger', async () => {
         const err = new Error('Error to be logged');
         const mock = jest.fn();
         Pdo.setLogger(mock);
-        const pdo = new Pdo(driver, config, {
-            destroyed: async () => {
-                throw err;
+        const pdo = new Pdo(
+            'fake',
+            {},
+            {
+                destroyed: async () => {
+                    throw err;
+                }
             }
-        });
+        );
         await pdo.query('SELECT 1');
         await pdo.disconnect();
         expect(
@@ -69,32 +87,36 @@ describe('Pdo Api', () => {
         expect(mock.mock.lastCall[1]).toEqual('warning');
     });
 
-    it.each(table)('Works $driver Attributes', async ({ driver, config }) => {
-        const pdo = new Pdo(driver, config, {}, { TEST_ATTRS: 10 });
+    it('Works Attributes', async () => {
+        const pdo = new Pdo('fake', {}, {}, { TEST_ATTRS: 10 });
         expect(pdo.getAttribute('TEST_ATTRS')).toEqual(10);
         expect(pdo.setAttribute('TEST_ATTRR_NOT_DEFINED', 15)).toBeFalsy();
         expect(pdo.setAttribute('TEST_ATTRS', 15)).toBeTruthy();
         expect(pdo.getAttribute('TEST_ATTRS')).toEqual(15);
     });
 
-    it.each(table)('Works $driver BeginTransaction Return Transaction', async ({ driver, config }) => {
-        const pdo = new Pdo(driver, config);
+    it('Works BeginTransaction Return Transaction', async () => {
+        const pdo = new Pdo('fake', {});
         const trx = await pdo.beginTransaction();
         expect(trx).toBeInstanceOf(PdoTransaction);
         await trx.rollback();
         await pdo.disconnect();
     });
 
-    it.each(table)('Works $driver Disconnect', async ({ driver, config }) => {
+    it('Works Disconnect', async () => {
         let tmpUuid = '';
-        const pdo = new Pdo(driver, config, {
-            created: async uuid => {
-                tmpUuid = uuid;
-            },
-            destroyed: async uuid => {
-                expect(uuid).toEqual(tmpUuid);
+        const pdo = new Pdo(
+            'fake',
+            {},
+            {
+                created: async uuid => {
+                    tmpUuid = uuid;
+                },
+                destroyed: async uuid => {
+                    expect(uuid).toEqual(tmpUuid);
+                }
             }
-        });
+        );
         await pdo.query('SELECT 1');
         await pdo.disconnect();
         await expect(pdo.query('SELECT 1')).rejects.toThrow('Pdo is Disconnected from pool, please reconnect.');
@@ -104,8 +126,8 @@ describe('Pdo Api', () => {
         await expect(pdo.getRawPoolConnection()).rejects.toThrow('Pdo is Disconnected from pool, please reconnect.');
     });
 
-    it.each(table)('Works $driver Reconnect', async ({ driver, config }) => {
-        const pdo = new Pdo(driver, config);
+    it('Works Reconnect', async () => {
+        const pdo = new Pdo('fake', {});
         await pdo.query('SELECT 1');
         await pdo.disconnect();
         await expect(pdo.query('SELECT 1')).rejects.toThrow('Pdo is Disconnected from pool, please reconnect.');
@@ -114,60 +136,55 @@ describe('Pdo Api', () => {
         await pdo.disconnect();
     });
 
-    it.each(table)('Works $driver Exec Return Number', async ({ driver, config }) => {
-        const pdo = new Pdo(driver, config);
+    it('Works Exec Return Number', async () => {
+        const pdo = new Pdo('fake', {});
         const res = await pdo.exec('SELECT 1');
         expect(typeof res === 'number').toBeTruthy();
         expect(res).toEqual(0);
         await pdo.disconnect();
     });
 
-    it.each(table)('Works $driver Query Return PdoStatement', async ({ driver, config }) => {
-        const pdo = new Pdo(driver, config);
+    it('Works Query Return PdoStatement', async () => {
+        const pdo = new Pdo('fake', {});
         const stmt = await pdo.query('SELECT 1');
         expect(stmt).toBeInstanceOf(PdoStatement);
         await pdo.disconnect();
     });
 
-    it.each(table)('Works $driver Query Fails', async ({ driver, config }) => {
-        const pdo = new Pdo(driver, config);
+    it('Works Query Fails', async () => {
+        const pdo = new Pdo('fake', {});
         await expect(pdo.query('SELECT ?')).rejects.toThrow(PdoError);
         await pdo.disconnect();
     });
 
-    it.each(table)('Works $driver Prepare Return PdoPreparedStatement', async ({ driver, config }) => {
-        const pdo = new Pdo(driver, config);
+    it('Works Prepare Return PdoPreparedStatement', async () => {
+        const pdo = new Pdo('fake', {});
         const stmt = await pdo.prepare('SELECT 1');
         expect(stmt).toBeInstanceOf(PdoPreparedStatement);
         await stmt.execute();
+        await stmt.close();
         await pdo.disconnect();
     });
 
-    if (sqliteTables.length > 0) {
-        it.each(sqliteTables)('Works $driver Prepare Fails', async ({ driver, config }) => {
-            const pdo = new Pdo(driver, config);
-            await expect(pdo.prepare('SELECT ??')).rejects.toThrow(PdoError);
-            await pdo.disconnect();
-        });
-    }
+    it('Works Prepare Fails', async () => {
+        const pdo = new Pdo('fake', {});
+        await expect(pdo.prepare('SELECT ??')).rejects.toThrow(PdoError);
+        await pdo.disconnect();
+    });
 
-    it.each(table)('Works $driver Get Raw Pool Connection', async ({ driver, config }) => {
-        const pdo = new Pdo(driver, config, {});
+    it('Works Get Raw Pool Connection', async () => {
+        const pdo = new Pdo('fake', {}, {});
         const raw = await pdo.getRawPoolConnection();
-        if (isMysql(driver)) {
-            expect(raw.connection as mysqlPoolConnection).toBeInstanceOf(PromiseConnection);
-        } else {
-            expect(raw.connection as sqlitePoolConnection).toBeInstanceOf(Database);
-        }
+        expect(raw.connection).toBeInstanceOf(FakeDBConnection);
 
         await raw.release();
         await pdo.disconnect();
     });
 
-    it.each(table)('Works $driver Debug', async ({ driver, config }) => {
+    it('Works Debug', async () => {
         console.log = jest.fn();
         console.trace = jest.fn();
-        const pdo = new Pdo(driver, config, {}, { [ATTR_DEBUG]: DEBUG_ENABLED });
+        const pdo = new Pdo('fake', {}, {}, { [ATTR_DEBUG]: DEBUG_ENABLED });
         await pdo.query('SELECT 1');
         expect(console.log).toHaveBeenCalled();
         await pdo.disconnect();

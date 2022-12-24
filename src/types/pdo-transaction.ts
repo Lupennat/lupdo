@@ -1,5 +1,5 @@
 import PdoAttributes from './pdo-attributes';
-import PdoPreparedStatementI from './pdo-prepared-statement';
+import { PdoTransactionPreparedStatementI } from './pdo-prepared-statement';
 import PdoRawConnectionI from './pdo-raw-connection';
 import PdoStatementI from './pdo-statement';
 
@@ -15,7 +15,7 @@ export default interface PdoTransactionI {
 
     exec: (sql: string) => Promise<number>;
 
-    prepare: (sql: string, attributes?: PdoAttributes) => Promise<PdoPreparedStatementI>;
+    prepare: (sql: string) => Promise<PdoTransactionPreparedStatementI>;
 
     query: (sql: string) => Promise<PdoStatementI>;
 }

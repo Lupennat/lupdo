@@ -13,6 +13,8 @@ export default interface PdoRawConnectionI {
 
     execute: (params?: Params) => Promise<void>;
 
+    close: () => Promise<void>;
+
     bindValue: (key: string | number, value: ValidBindings) => void;
 
     query: (sql: string) => Promise<void>;

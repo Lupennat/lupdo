@@ -1,5 +1,3 @@
-import * as sqlite from 'better-sqlite3';
-import * as mysql from 'mysql2/promise';
 import { Pool as TarnPool, PoolOptions as TarnPoolOptions } from 'tarn/dist/Pool';
 import PdoConnectionI from './pdo-connection';
 
@@ -100,17 +98,11 @@ export interface PoolOptions {
     killed?: (uuid: string) => void;
 }
 
-export interface sqlitePoolConnection extends sqlite.Database {
+export interface PoolConnection {
     __lupdo_uuid: string;
     __lupdo_killed: boolean;
+    [key: string]: any;
 }
-
-export interface mysqlPoolConnection extends mysql.Connection {
-    __lupdo_uuid: string;
-    __lupdo_killed: boolean;
-}
-
-export type PoolConnection = sqlitePoolConnection | mysqlPoolConnection;
 
 export interface RawPoolConnection {
     release: () => Promise<void>;

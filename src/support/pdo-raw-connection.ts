@@ -3,13 +3,7 @@ import { PdoError } from '../errors';
 import PdoAffectingData from '../types/pdo-affecting-data';
 import PdoColumnData from '../types/pdo-column-data';
 import { PoolConnection, PoolI } from '../types/pdo-pool';
-import {
-    ArrayParams,
-    ObjectParams,
-    ObjectParamsDescriptor,
-    Params,
-    ValidBindings
-} from '../types/pdo-prepared-statement';
+import { ArrayParams, ObjectParams, Params, ValidBindings } from '../types/pdo-prepared-statement';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
 import PdoRowData from '../types/pdo-raw-data';
 
@@ -17,12 +11,11 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     protected connection: PoolConnection | null = null;
     protected inTransaction = false;
     protected statement: any = null;
+    protected statements: Map<string, any> = new Map();
     protected cursor: number | null = null;
 
     protected selectResults: PdoRowData[] = [];
     protected affectingResults: PdoAffectingData = {};
-    protected namedParameters: ObjectParamsDescriptor[] = [];
-    protected positionalParametersLength = 0;
 
     public params: Params | null = null;
     public columns: PdoColumnData[] = [];
@@ -33,6 +26,11 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     protected abstract doBeginTransaction(connection: PoolConnection): Promise<void>;
     protected abstract doCommit(connection: PoolConnection): Promise<void>;
     protected abstract doRollback(connection: PoolConnection): Promise<void>;
+    protected abstract doQuery(
+        connection: PoolConnection,
+        sql: string
+    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
+
     protected abstract getStatement(sql: string, connection: PoolConnection): Promise<any>;
     protected abstract executeStatement(
         statement: any,
@@ -41,20 +39,16 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
     protected abstract closeStatement(statement: any, connection: PoolConnection): Promise<void>;
 
-    protected abstract doQuery(
-        connection: PoolConnection,
-        sql: string
-    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
-
     protected abstract adaptBindValue(value: ValidBindings): ValidBindings;
 
     public async beginTransaction(): Promise<void> {
         try {
             await this.doBeginTransaction(await this.generateConnection());
+            this.inTransaction = true;
         } catch (error: any) {
+            await this.release();
             throw new PdoError(error);
         }
-        this.inTransaction = true;
     }
 
     public async commit(): Promise<void> {
@@ -63,7 +57,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         } catch (error: any) {
             throw new PdoError(error);
         } finally {
-            await this.close();
+            await this.release();
         }
     }
 
@@ -73,7 +67,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         } catch (error: any) {
             throw new PdoError(error);
         } finally {
-            await this.close();
+            await this.release();
         }
     }
 
@@ -81,13 +75,12 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         this.sql = sql;
 
         try {
-            this.statement = await this.getStatement(this.sql, await this.generateOrReuseConnection());
+            await this.generateStatement();
         } catch (error: any) {
-            throw new PdoError(error);
-        } finally {
             if (!this.inTransaction) {
-                await this.close();
+                await this.release();
             }
+            throw new PdoError(error);
         }
     }
 
@@ -98,10 +91,19 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
             if (this.params === null) {
                 this.params = [];
             }
+
+            if (!Array.isArray(this.params)) {
+                throw new PdoError('Mixed Params Numeric and Keyed are forbidden.');
+            }
+
             (this.params as ArrayParams)[index] = value;
         } else {
             if (this.params === null) {
                 this.params = {};
+            }
+
+            if (Array.isArray(this.params)) {
+                throw new PdoError('Mixed Params Numeric and Keyed are forbidden.');
             }
 
             (this.params as ObjectParams)[key] = value;
@@ -109,23 +111,18 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     }
 
     public async execute(params?: Params): Promise<void> {
-        if (this.statement === null) {
-            this.statement = await this.getStatement(this.sql, await this.generateOrReuseConnection());
-        }
-
-        if (params != null) {
-            if (Array.isArray(params)) {
-                for (let x = 0; x < params.length; x++) {
-                    this.bindValue(x + 1, params[x]);
-                }
-            } else {
-                for (const key in params) {
-                    this.bindValue(key, params[key]);
+        try {
+            if (params != null) {
+                if (Array.isArray(params)) {
+                    for (let x = 0; x < params.length; x++) {
+                        this.bindValue(x + 1, params[x]);
+                    }
+                } else {
+                    for (const key in params) {
+                        this.bindValue(key, params[key]);
+                    }
                 }
             }
-        }
-
-        try {
             const connection = await this.generateOrReuseConnection();
 
             [this.affectingResults, this.selectResults, this.columns] = await this.executeStatement(
@@ -135,16 +132,12 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
             );
 
             if (connection.__lupdo_killed) {
-                throw new Error('Query execution was interrupted');
+                throw new Error('Data are compromised');
             }
 
             this.resetCursor();
         } catch (error: any) {
             throw new PdoError(error);
-        } finally {
-            if (!this.inTransaction) {
-                await this.close();
-            }
         }
     }
 
@@ -156,11 +149,11 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
             [this.affectingResults, this.selectResults, this.columns] = await this.doQuery(connection, sql);
 
             if (connection.__lupdo_killed) {
-                throw new Error('Query execution was interrupted');
+                throw new Error('Data are compromised');
             }
 
             if (!this.inTransaction) {
-                await this.close();
+                await this.release();
             }
 
             this.resetCursor();
@@ -168,7 +161,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
             throw new PdoError(error);
         } finally {
             if (!this.inTransaction) {
-                await this.close();
+                await this.release();
             }
         }
     }
@@ -216,6 +209,29 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         this.setCursor(null);
     }
 
+    public async close(): Promise<void> {
+        await this.release();
+    }
+
+    protected async release(): Promise<void> {
+        if (this.connection !== null) {
+            for (const statement of this.statements.values()) {
+                await this.closeStatement(statement, this.connection);
+            }
+            this.statement = null;
+            this.statements.clear();
+            this.pool.release(this.connection);
+            this.connection = null;
+        }
+    }
+
+    protected async generateStatement(): Promise<void> {
+        if (!this.statements.has(this.sql)) {
+            this.statements.set(this.sql, await this.getStatement(this.sql, await this.generateOrReuseConnection()));
+        }
+        this.statement = this.statements.get(this.sql);
+    }
+
     protected setCursor(cursor: number | null): void {
         this.cursor = cursor;
     }
@@ -251,18 +267,6 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     protected async generateConnection(): Promise<PoolConnection> {
         this.connection = await this.pool.acquire().promise;
         return this.connection;
-    }
-
-    protected async close(): Promise<void> {
-        if (this.connection !== null) {
-            if (this.statement !== null) {
-                await this.closeStatement(this.connection, this.statement);
-                this.statement = null;
-            }
-
-            this.pool.release(this.connection);
-            this.connection = null;
-        }
     }
 }
 

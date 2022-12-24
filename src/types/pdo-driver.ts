@@ -1,24 +1,25 @@
-import * as sqlite from 'better-sqlite3';
-import * as mysql from 'mysql2/promise';
 import PdoAttributes from './pdo-attributes';
-import { RawPoolConnection } from './pdo-pool';
+import { PoolOptions, RawPoolConnection } from './pdo-pool';
 import PdoPreparedStatementI, { PdoPreparedStatementConstructor } from './pdo-prepared-statement';
 import PdoStatementI, { PdoStatementConstructor } from './pdo-statement';
 import PdoTransactionI, { PdoTransactionConstructor } from './pdo-transaction';
 
-export type MysqlOptions = mysql.ConnectionOptions;
-
-export interface SqliteOptions extends sqlite.Options {
-    path: string;
+export interface DriverOptions {
+    [key: string]: any;
 }
-
-export type DriverOptions = MysqlOptions | SqliteOptions;
 
 export interface instances {
     preparedStatement: PdoPreparedStatementConstructor;
     statement: PdoStatementConstructor;
     transaction: PdoTransactionConstructor;
 }
+
+export type PdoDriverConstructor = new (
+    driver: string,
+    options: DriverOptions,
+    poolOptions: PoolOptions,
+    attributes: PdoAttributes
+) => PdoDriverI;
 
 export default interface PdoDriverI {
     beginTransaction: () => Promise<PdoTransactionI>;

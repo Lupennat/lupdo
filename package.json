@@ -1,6 +1,6 @@
 {
     "name": "lupdo",
-    "version": "0.0.17",
+    "version": "1.0.0",
     "description": "Database Abstraction Layer for Node js",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",
@@ -12,11 +12,7 @@
         "database",
         "abstraction",
         "layer",
-        "pdo",
-        "mysql",
-        "mariadb",
-        "sqlite",
-        "sqlite3"
+        "pdo"
     ],
     "main": "dist/cjs/index.js",
     "module": "./dist/esm/index.js",
@@ -39,20 +35,10 @@
         "build:esm": "tsc -p ./typescript/tsconfig.esm.json",
         "build:types": "tsc -p ./typescript/tsconfig.types.json",
         "clean": "rimraf ./dist",
-        "test": "npm run lint && cross-env __PDODRIVER__=all jest --config test/jest.config.js",
-        "test:sqlite": "cross-env __PDODRIVER__=sqlite jest --config test/jest.config.js",
-        "test:sqlite3": "cross-env __PDODRIVER__=sqlite jest --config test/jest.config.js",
-        "test:mysql": "cross-env __PDODRIVER__=mysql jest --config test/jest.config.js",
-        "test:mariadb": "cross-env __PDODRIVER__=mariadb jest --config test/jest.config.js",
-        "test:coverage": "cross-env __PDODRIVER__=all jest --config test/jest.config.js --coverage",
+        "test": "npm run lint && jest --config test/jest.config.js",
+        "test:coverage": "npm run lint && jest --config test/jest.config.js --coverage",
         "lint": "eslint --ext \".js,.jsx,.ts,.tsx\" \"./src\"",
-        "lint:fix": "eslint --fix --ext \".js,.jsx,.ts,.tsx\" \"./src\"",
-        "sqlite:up": "sqlite3 .sqlite.db < src/__tests__/data/sqlite.sql && sqlite3 .sqlite3.db < src/__tests__/data/sqlite.sql",
-        "sqlite:down": "rimraf .sqlite*.db",
-        "docker:up": "docker compose -f docker-compose.yml up --build -d mysql mariadb && docker-compose -f docker-compose.yml up waitmysql waitmariadb",
-        "docker:down": "docker compose -f docker-compose.yml down",
-        "db:up": "npm run sqlite:up && npm run docker:up",
-        "db:down": "npm run sqlite:down && npm run docker:down"
+        "lint:fix": "eslint --fix --ext \".js,.jsx,.ts,.tsx\" \"./src\""
     },
     "engines": {
         "node": "^14.19.0 || ^16.10.0 || >=18.0.0"
@@ -74,11 +60,8 @@
         "typescript": "^4.9.4"
     },
     "dependencies": {
-        "@types/better-sqlite3": "^7.6.2",
         "@types/node": "^14.18.34",
         "@types/uuid": "^8.3.4",
-        "better-sqlite3": "^7.6.2",
-        "mysql2": "^2.3.3",
         "tarn": "^3.0.2",
         "tslib": "^2.4.1",
         "uuid": "^9.0.0"

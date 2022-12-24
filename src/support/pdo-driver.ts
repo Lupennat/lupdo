@@ -14,7 +14,6 @@ import {
     NULL_NATURAL
 } from '../constants';
 import { PdoError } from '../errors';
-import { PdoAvailableDriver } from '../types/pdo';
 import PdoAttributes from '../types/pdo-attributes';
 import PdoConnectionI from '../types/pdo-connection';
 import PdoDriverI, { instances } from '../types/pdo-driver';
@@ -50,7 +49,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
 
     protected disconnected = false;
 
-    constructor(driver: PdoAvailableDriver, poolOptions: PoolOptions, attributes: PdoAttributes) {
+    constructor(driver: string, poolOptions: PoolOptions, attributes: PdoAttributes) {
         super();
 
         Object.assign(this.attributes, attributes, {
@@ -119,9 +118,9 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
                     }
                 }
             },
-            log: (message: any, logLevel?: any): void => {
-                logLevel = logLevel != null ? (logLevel === 'warn' ? 'warning' : logLevel) : 'debug';
-                this.emit('log', message, logLevel);
+            log: (message: any): void => {
+                // tarn always log only 'warn' messages
+                this.emit('log', message, 'warning');
             }
         };
         this.pool = new PdoPool<PoolConnection>(this.pdoPoolOptions);

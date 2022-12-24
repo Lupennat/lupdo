@@ -5,8 +5,6 @@ import PdoTransactionI from './pdo-transaction';
 
 export type PdoLogger = (message: any, level: any) => any;
 
-export type PdoAvailableDriver = 'mysql' | 'mariadb' | 'sqlite' | 'sqlite3';
-
 export default interface PdoI {
     beginTransaction: () => Promise<PdoTransactionI>;
 

@@ -1,7 +1,7 @@
-import PdoPreparedStatementI, { Params, ValidBindings } from '../types/pdo-prepared-statement';
+import { Params, PdoTransactionPreparedStatementI, ValidBindings } from '../types/pdo-prepared-statement';
 import PdoStatement from './pdo-statement';
 
-class PdoPreparedStatement extends PdoStatement implements PdoPreparedStatementI {
+class PdoTransactionPreparedStatement extends PdoStatement implements PdoTransactionPreparedStatementI {
     public bindValue(key: string | number, value: ValidBindings): void {
         this.connection.bindValue(key, value);
     }
@@ -11,4 +11,4 @@ class PdoPreparedStatement extends PdoStatement implements PdoPreparedStatementI
     }
 }
 
-export default PdoPreparedStatement;
+export default PdoTransactionPreparedStatement;
