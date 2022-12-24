@@ -1,9 +1,9 @@
 <p align="center">
 	<a href="https://www.npmjs.com/package/lupdo" target="__blank"><img src="https://img.shields.io/npm/v/lupdo?color=0476bc&label=" alt="NPM version"></a>
 	<a href="https://www.npmjs.com/package/lupdo" target="__blank"><img alt="NPM Downloads" src="https://img.shields.io/npm/dm/lupdo?color=3890aa&label="></a>
-	<!-- <a href="https://codecov.io/gh/Lupennat/lupdo" >
-        <img src="https://codecov.io/gh/Lupennat/lupdo/branch/main/graph/badge.svg?token=l1fm5ZWd8O"/>
-    </a> -->
+<a href="https://codecov.io/github/Lupennat/lupdo" >
+<img src="https://codecov.io/github/Lupennat/lupdo/branch/main/graph/badge.svg?token=FOECLCWQ7F"/>
+</a>
 </p>
 
 # Lupdo
