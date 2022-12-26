@@ -11,6 +11,10 @@ interface FakeDriverOptions {
     [key: string]: any;
 }
 class FakeDriver extends PdoDriver {
+    protected driverAttributes: PdoAttributes = {
+        FAKE_DRIVER_ATTRS: 10
+    };
+
     constructor(
         driver: string,
         protected options: FakeDriverOptions,

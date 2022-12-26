@@ -1,4 +1,4 @@
-import { ATTR_DEBUG, DEBUG_ENABLED } from '../constants';
+import { ATTR_CASE, ATTR_DEBUG, CASE_LOWER, CASE_NATURAL, DEBUG_ENABLED } from '../constants';
 import { PdoError } from '../errors';
 import Pdo from '../pdo';
 import { PdoPreparedStatement, PdoStatement, PdoTransaction } from '../support';
@@ -88,11 +88,18 @@ describe('Pdo Api', () => {
     });
 
     it('Works Attributes', async () => {
-        const pdo = new Pdo('fake', {}, {}, { TEST_ATTRS: 10 });
-        expect(pdo.getAttribute('TEST_ATTRS')).toEqual(10);
+        const pdo = new Pdo('fake', {}, {}, { TEST_ATTRR_NOT_DEFINED: 10 });
+
+        expect(pdo.getAttribute('FAKE_DRIVER_ATTRS')).toEqual(10);
+        expect(pdo.getAttribute('TEST_ATTRR_NOT_DEFINED')).toBeUndefined();
         expect(pdo.setAttribute('TEST_ATTRR_NOT_DEFINED', 15)).toBeFalsy();
-        expect(pdo.setAttribute('TEST_ATTRS', 15)).toBeTruthy();
-        expect(pdo.getAttribute('TEST_ATTRS')).toEqual(15);
+        expect(pdo.getAttribute('TEST_ATTRR_NOT_DEFINED')).toBeUndefined();
+        expect(pdo.setAttribute('FAKE_DRIVER_ATTRS', 15)).toBeTruthy();
+        expect(pdo.getAttribute('FAKE_DRIVER_ATTRS')).toEqual(15);
+        expect(pdo.getAttribute(ATTR_CASE)).toEqual(CASE_NATURAL);
+        expect(pdo.setAttribute(ATTR_CASE, CASE_LOWER)).toBeTruthy();
+        expect(pdo.getAttribute(ATTR_CASE)).toEqual(CASE_LOWER);
+        expect(pdo.setAttribute(ATTR_CASE, CASE_NATURAL)).toBeTruthy();
     });
 
     it('Works BeginTransaction Return Transaction', async () => {
