@@ -90,7 +90,10 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     public bindValue(key: string | number, value: ValidBindings): void {
         value = this.adaptBindValue(value);
         if (typeof key === 'number') {
-            const index = key - 1 < 0 ? 0 : key - 1;
+            if (key - 1 < 0) {
+                throw new PdoError('Bind position must be greater than 0.');
+            }
+            const index = key - 1;
             if (this.params === null) {
                 this.params = [];
             }
