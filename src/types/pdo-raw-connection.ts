@@ -17,6 +17,8 @@ export default interface PdoRawConnectionI {
 
     bindValue: (key: string | number, value: ValidBindings) => void;
 
+    exec: (sql: string) => Promise<number>;
+
     query: (sql: string) => Promise<void>;
 
     fetch: (cursorOrientation: number) => PdoRowData | null;

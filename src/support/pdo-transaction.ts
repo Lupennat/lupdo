@@ -20,8 +20,7 @@ class PdoTransaction implements PdoTransactionI {
     }
 
     async exec(sql: string): Promise<number> {
-        const statement = await this.query(sql);
-        return statement.rowCount();
+        return await this.connection.exec(sql);
     }
 
     async prepare(sql: string): Promise<PdoTransactionPreparedStatementI> {

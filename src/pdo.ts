@@ -60,8 +60,7 @@ class Pdo implements PdoI {
     }
 
     public async exec(sql: string): Promise<number> {
-        const statement = await this.query(sql);
-        return statement.rowCount();
+        return await this.driver.exec(sql);
     }
 
     public async prepare(sql: string): Promise<PdoPreparedStatementI> {

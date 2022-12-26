@@ -141,6 +141,13 @@ describe('Pdo Api', () => {
         const res = await pdo.exec('SELECT 1');
         expect(typeof res === 'number').toBeTruthy();
         expect(res).toEqual(0);
+        expect(await pdo.exec('INSERT INTO `user` (`name`, `gender`) VALUES ("Claudio", "All");')).toEqual(1);
+        await pdo.disconnect();
+    });
+
+    it('Works Exec Fails', async () => {
+        const pdo = new Pdo('fake', {});
+        await expect(pdo.exec('SELECT ?')).rejects.toThrow(PdoError);
         await pdo.disconnect();
     });
 

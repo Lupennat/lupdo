@@ -26,6 +26,8 @@ export default interface PdoDriverI {
 
     prepare: (sql: string, attributes?: PdoAttributes) => Promise<PdoPreparedStatementI>;
 
+    exec: (sql: string) => Promise<number>;
+
     query: (sql: string) => Promise<PdoStatementI>;
 
     on: (eventName: 'log', handler: (level: string, message: string) => void) => void;
