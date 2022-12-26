@@ -5,7 +5,17 @@ All notable changes to this project from 1.0.0 forward will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.1.0] - 2022-12-24
+## [1.1.2] - 2022-12-26
+
+### Fixed
+
+-   Pdo extra `Attributes` now can be defined only through Driver Implementation
+
+### Changed
+
+-   Pdo driver constructor refactoring to use custom `driverAttributes` object
+
+## [1.1.1] - 2022-12-26
 
 ### Changed
 
