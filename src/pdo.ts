@@ -1,7 +1,7 @@
 import { PdoError } from './errors';
 import PdoI, { PdoLogger } from './types/pdo';
 import PdoAttributes from './types/pdo-attributes';
-import PdoDriverI, { DriverOptions, PdoDriverConstructor } from './types/pdo-driver';
+import PdoDriverI, { PdoDriverConstructor } from './types/pdo-driver';
 import { PoolOptions, RawPoolConnection } from './types/pdo-pool';
 import PdoPreparedStatementI from './types/pdo-prepared-statement';
 import PdoStatementI from './types/pdo-statement';
@@ -32,7 +32,7 @@ class Pdo implements PdoI {
 
     constructor(
         protected driverName: string,
-        options: DriverOptions,
+        options: any,
         poolOptions: PoolOptions = {},
         attributes: PdoAttributes = {}
     ) {

@@ -2,14 +2,21 @@ import { ATTR_DEBUG, DEBUG_ENABLED } from '../../constants';
 import { PdoDriver } from '../../support';
 import { PdoConnectionI, PdoRawConnectionI } from '../../types';
 import PdoAttributes from '../../types/pdo-attributes';
-import { DriverOptions } from '../../types/pdo-driver';
 import { PoolOptions } from '../../types/pdo-pool';
 import FakeConnection from './fake-connection';
 import JsonConnection from './fake-db-connection';
 import FakeRawConnection from './fake-raw-connection';
 
+interface FakeDriverOptions {
+    [key: string]: any;
+}
 class FakeDriver extends PdoDriver {
-    constructor(driver: string, protected options: DriverOptions, poolOptions: PoolOptions, attributes: PdoAttributes) {
+    constructor(
+        driver: string,
+        protected options: FakeDriverOptions,
+        poolOptions: PoolOptions,
+        attributes: PdoAttributes
+    ) {
         super(driver, poolOptions, attributes);
     }
 
