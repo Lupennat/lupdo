@@ -127,6 +127,56 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
         this.assignPoolEvents();
     }
 
+    public async beginTransaction(): Promise<PdoTransactionI> {
+        this.throwIfDisconnected();
+        const connection = this.getRawConnection();
+        await connection.beginTransaction();
+        return new this.instances.transaction(connection, this.attributes);
+    }
+
+    public async prepare(sql: string, attributes: PdoAttributes = {}): Promise<PdoPreparedStatementI> {
+        this.throwIfDisconnected();
+        const connection = this.getRawConnection();
+        await connection.prepare(sql);
+        return new this.instances.preparedStatement(connection, Object.assign({}, this.attributes, attributes));
+    }
+
+    public async exec(sql: string): Promise<number> {
+        this.throwIfDisconnected();
+        const connection = this.getRawConnection();
+        return await connection.exec(sql);
+    }
+
+    public async query(sql: string): Promise<PdoStatementI> {
+        this.throwIfDisconnected();
+        const connection = this.getRawConnection();
+        await connection.query(sql);
+        return new this.instances.statement(connection, this.attributes);
+    }
+
+    public getAttribute(attribute: string): string | number {
+        return this.attributes[attribute];
+    }
+
+    public setAttribute(attribute: string, value: number | string): boolean {
+        if (attribute in this.attributes) {
+            this.attributes[attribute] = value;
+            return true;
+        }
+        return false;
+    }
+
+    public async getRawPoolConnection(): Promise<RawPoolConnection> {
+        this.throwIfDisconnected();
+        const connection = await this.pool.acquire().promise;
+        return {
+            connection,
+            release: async () => {
+                await this.pool.release(connection);
+            }
+        };
+    }
+
     protected assignPoolEvents(): void {
         this.pool.on('acquireSuccess', (eventId: number, connection: PoolConnection) => {
             if (typeof this.pdoPoolEvents.acquired === 'function') {
@@ -175,50 +225,6 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
         if (this.disconnected) {
             throw new PdoError('Pdo is Disconnected from pool, please reconnect.');
         }
-    }
-
-    public async beginTransaction(): Promise<PdoTransactionI> {
-        this.throwIfDisconnected();
-        const connection = this.getRawConnection();
-        await connection.beginTransaction();
-        return new this.instances.transaction(connection, this.attributes);
-    }
-
-    public async prepare(sql: string, attributes: PdoAttributes = {}): Promise<PdoPreparedStatementI> {
-        this.throwIfDisconnected();
-        const connection = this.getRawConnection();
-        await connection.prepare(sql);
-        return new this.instances.preparedStatement(connection, Object.assign({}, this.attributes, attributes));
-    }
-
-    public async query(sql: string): Promise<PdoStatementI> {
-        this.throwIfDisconnected();
-        const connection = this.getRawConnection();
-        await connection.query(sql);
-        return new this.instances.statement(connection, this.attributes);
-    }
-
-    public getAttribute(attribute: string): string | number {
-        return this.attributes[attribute];
-    }
-
-    public setAttribute(attribute: string, value: number | string): boolean {
-        if (attribute in this.attributes) {
-            this.attributes[attribute] = value;
-            return true;
-        }
-        return false;
-    }
-
-    public async getRawPoolConnection(): Promise<RawPoolConnection> {
-        this.throwIfDisconnected();
-        const connection = await this.pool.acquire().promise;
-        return {
-            connection,
-            release: async () => {
-                await this.pool.release(connection);
-            }
-        };
     }
 }
 

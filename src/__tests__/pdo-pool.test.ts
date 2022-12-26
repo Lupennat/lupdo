@@ -241,4 +241,43 @@ describe('Pdo Pool', () => {
 
         expect(console.log).toHaveBeenCalled();
     });
+
+    it('Works Exec Will Be Rejected If resolved When Killed', async () => {
+        console.log = jest.fn();
+        console.trace = jest.fn();
+
+        const events: {
+            killed: {
+                [key: string]: number;
+            };
+        } = {
+            killed: {}
+        };
+
+        const pdo = new Pdo(
+            'fake',
+            {},
+            {
+                killTimeoutMillis: 500,
+                killResource: true,
+                max: 1,
+                min: 1,
+                acquired: () => {
+                    setTimeout(async () => {
+                        await pdo.disconnect();
+                    }, 1000);
+                },
+                killed(uuid: string): void {
+                    events.killed[uuid] = events.killed[uuid] == null ? 1 : events.killed[uuid] + 1;
+                }
+            },
+            { [ATTR_DEBUG]: DEBUG_ENABLED }
+        );
+
+        await expect(pdo.exec('INSERT INTO `user` (`name`, `gender`) VALUES ("SleepResolve", "All");')).rejects.toThrow(
+            'Data are compromised'
+        );
+
+        expect(console.log).toHaveBeenCalled();
+    });
 });

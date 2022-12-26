@@ -26,10 +26,13 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     protected abstract doBeginTransaction(connection: PoolConnection): Promise<void>;
     protected abstract doCommit(connection: PoolConnection): Promise<void>;
     protected abstract doRollback(connection: PoolConnection): Promise<void>;
+
     protected abstract doQuery(
         connection: PoolConnection,
         sql: string
     ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
+
+    protected abstract doExec(connection: PoolConnection, sql: string): Promise<PdoAffectingData>;
 
     protected abstract getStatement(sql: string, connection: PoolConnection): Promise<any>;
     protected abstract executeStatement(
@@ -138,6 +141,33 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
             this.resetCursor();
         } catch (error: any) {
             throw new PdoError(error);
+        }
+    }
+
+    public async exec(sql: string): Promise<number> {
+        this.sql = sql;
+
+        try {
+            const connection = await this.generateOrReuseConnection();
+            const affecting = await this.doExec(connection, sql);
+
+            if (connection.__lupdo_killed) {
+                throw new Error('Data are compromised');
+            }
+
+            if (!this.inTransaction) {
+                await this.release();
+            }
+
+            this.resetCursor();
+
+            return affecting.affectedRows ?? 0;
+        } catch (error: any) {
+            throw new PdoError(error);
+        } finally {
+            if (!this.inTransaction) {
+                await this.release();
+            }
         }
     }
 

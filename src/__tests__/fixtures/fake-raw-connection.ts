@@ -33,6 +33,10 @@ class FakeRawConnection extends PdoRawConnection {
         connection.unprepare(statement.query);
     }
 
+    protected async doExec(connection: FakeDBConnection, sql: string): Promise<PdoAffectingData> {
+        return (await connection.query(sql))[0];
+    }
+
     protected async doQuery(
         connection: FakeDBConnection,
         sql: string

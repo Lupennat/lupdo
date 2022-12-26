@@ -300,6 +300,11 @@ async function processSql(
         return [{ lastInsertRowid: id, affectedRows: 1 }, [], []];
     }
 
+    if (sql.startsWith('insert into `user` (`name`, `gender`) values ("sleepresolve", "all")')) {
+        sleeps[threadId] = true;
+        await sleep(threadId, true);
+    }
+
     if (sql.startsWith('delete from users where (`id` =')) {
         const id = sql.replace('delete from users where (`id` =', '').replace(')', '').replace(';', '').trim();
         const index = database.users.data.findIndex(item => item.id === Number(id));
