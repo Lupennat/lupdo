@@ -4,10 +4,6 @@ import PdoPreparedStatementI, { PdoPreparedStatementConstructor } from './pdo-pr
 import PdoStatementI, { PdoStatementConstructor } from './pdo-statement';
 import PdoTransactionI, { PdoTransactionConstructor } from './pdo-transaction';
 
-export interface DriverOptions {
-    [key: string]: any;
-}
-
 export interface instances {
     preparedStatement: PdoPreparedStatementConstructor;
     statement: PdoStatementConstructor;
@@ -16,7 +12,7 @@ export interface instances {
 
 export type PdoDriverConstructor = new (
     driver: string,
-    options: DriverOptions,
+    options: any,
     poolOptions: PoolOptions,
     attributes: PdoAttributes
 ) => PdoDriverI;
