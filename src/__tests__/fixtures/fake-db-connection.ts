@@ -294,13 +294,13 @@ async function processSql(
         ];
     }
 
-    if (sql.startsWith('insert into `user` (`name`, `gender`) values ("claudio", "all")')) {
+    if (sql.startsWith('insert into `users` (`name`, `gender`) values ("claudio", "all")')) {
         const id = database.users.data.length + 1;
         database.users.data.push({ id, name: 'Claudio', gender: 'all' });
         return [{ lastInsertRowid: id, affectedRows: 1 }, [], []];
     }
 
-    if (sql.startsWith('insert into `user` (`name`, `gender`) values ("sleepresolve", "all")')) {
+    if (sql.startsWith('insert into `users` (`name`, `gender`) values ("sleepresolve", "all")')) {
         sleeps[threadId] = true;
         await sleep(threadId, true);
     }
@@ -314,9 +314,9 @@ async function processSql(
         }
     }
 
-    if (sql.startsWith('select * from company where opened >')) {
+    if (sql.startsWith('select * from companies where opened >')) {
         const dateString = sql
-            .replace('select * from company where opened >', '')
+            .replace('select * from companies where opened >', '')
             .replace(')', '')
             .replace(';', '')
             .trim();
@@ -345,8 +345,12 @@ async function processSql(
         ];
     }
 
-    if (sql.startsWith('select * from company where active =')) {
-        const value = sql.replace('select * from company where active =', '').replace(')', '').replace(';', '').trim();
+    if (sql.startsWith('select * from companies where active =')) {
+        const value = sql
+            .replace('select * from companies where active =', '')
+            .replace(')', '')
+            .replace(';', '')
+            .trim();
 
         const columns = database.companies.columns;
         return [
@@ -442,7 +446,7 @@ class FakeDBConnection {
     protected statements: Map<string, FakeDBStatement> = new Map();
     protected queryToBeExecuted = [];
 
-    constructor(protected options = { debug: false }) {
+    constructor(public options: { notSafe?: boolean; debug: boolean } = { debug: false }) {
         this.threadId = Date.now();
         databases[this.threadId] = JSON.parse(JSON.stringify(db));
         FakeDBConnection.connections.push(this);

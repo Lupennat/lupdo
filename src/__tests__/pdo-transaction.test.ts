@@ -63,7 +63,7 @@ describe('Pdo Transactions', () => {
         const counter = countBefore.fetchColumn<number>(0).get() as number;
         let trx = await pdo.beginTransaction();
         expect(trx).toBeInstanceOf(PdoTransaction);
-        let executed = await trx.exec('INSERT INTO `user` (`name`, `gender`) VALUES ("Claudio", "All");');
+        let executed = await trx.exec('INSERT INTO `users` (`name`, `gender`) VALUES ("Claudio", "All");');
         expect(executed).toBe(1);
         await trx.rollback();
         let countAfter = await pdo.query('SELECT count(*) as total from users');
@@ -71,7 +71,7 @@ describe('Pdo Transactions', () => {
 
         trx = await pdo.beginTransaction();
         expect(trx).toBeInstanceOf(PdoTransaction);
-        executed = await trx.exec('INSERT INTO `user` (`name`, `gender`) VALUES ("Claudio", "All");');
+        executed = await trx.exec('INSERT INTO `users` (`name`, `gender`) VALUES ("Claudio", "All");');
         expect(executed).toBe(1);
         await trx.commit();
         countAfter = await pdo.query('SELECT count(*) as total from users');

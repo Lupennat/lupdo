@@ -20,6 +20,8 @@ export default interface PdoI {
 
     getRawPoolConnection: () => Promise<RawPoolConnection>;
 
+    getRawDriverConnection: <T>() => Promise<T>;
+
     disconnect: () => Promise<void>;
 
     reconnect: () => void;

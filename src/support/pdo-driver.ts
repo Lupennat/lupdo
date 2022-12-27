@@ -220,6 +220,10 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
         };
     }
 
+    public async getRawDriverConnection<T>(): Promise<T> {
+        return (await this.createConnection(true)) as T;
+    }
+
     protected assignPoolEvents(): void {
         this.pool.on('acquireSuccess', (eventId: number, connection: PoolConnection) => {
             if (typeof this.poolEvents.acquired === 'function') {
@@ -242,7 +246,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
         });
     }
 
-    protected abstract createConnection(): Promise<PoolConnection>;
+    protected abstract createConnection(unsecure?: boolean): Promise<PoolConnection>;
     protected abstract getRawConnection(): PdoRawConnectionI;
     protected abstract closeConnection(connection: PoolConnection): Promise<void>;
     protected abstract destroyConnection(connection: PoolConnection): Promise<void>;

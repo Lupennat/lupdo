@@ -51,7 +51,7 @@ describe('Pdo Statement', () => {
         stmt = await trx.query('SELECT count(*) as total from users');
         const lastId = stmt.fetchColumn<number>(0).get() as number;
 
-        stmt = await trx.query('INSERT INTO `user` (`name`, `gender`) VALUES ("Claudio", "All");');
+        stmt = await trx.query('INSERT INTO `users` (`name`, `gender`) VALUES ("Claudio", "All");');
         expect(stmt.lastInsertId()).toBeGreaterThan(lastId);
         await trx.rollback();
     });
@@ -60,7 +60,7 @@ describe('Pdo Statement', () => {
         const trx = await pdo.beginTransaction();
         let stmt = await trx.query('SELECT * FROM users limit 5;');
         expect(stmt.rowCount()).toBe(0);
-        stmt = await trx.query('INSERT INTO `user` (`name`, `gender`) VALUES ("Claudio", "All");');
+        stmt = await trx.query('INSERT INTO `users` (`name`, `gender`) VALUES ("Claudio", "All");');
         expect(stmt.rowCount()).toBe(1);
         await trx.rollback();
     });
