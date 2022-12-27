@@ -81,7 +81,7 @@ run();
 -   prototype.disconnect(): Promise<void>
 -   prototype.reconnect(): void
 -   prototype.getRawPoolConnection(): Promise<[RawPoolConnection](#pdo-raw-pool-connection)>
--   [prototype.getRawDriverConnection<T>(): Promise<T>](<(#pdo-raw-driver-connection)>)
+-   [prototype.getRawDriverConnection<T>(): Promise<T>](#pdo-raw-driver-connection)
 
 ### Pdo Constants & Attributes
 
