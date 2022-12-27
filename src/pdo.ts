@@ -77,6 +77,10 @@ class Pdo implements PdoI {
         return await this.driver.getRawPoolConnection();
     }
 
+    public async getRawDriverConnection<T>(): Promise<T> {
+        return await this.driver.getRawDriverConnection<T>();
+    }
+
     public getAttribute(attribute: string): string | number {
         return this.driver.getAttribute(attribute);
     }

@@ -156,7 +156,7 @@ describe('Pdo Statement', () => {
     });
 
     it('Works Statement Bind Date', async () => {
-        let stmt = await pdo.prepare('SELECT * FROM company where opened > ?;');
+        let stmt = await pdo.prepare('SELECT * FROM companies where opened > ?;');
         const date = new Date('2014-01-01');
         stmt.bindValue(1, date);
         await stmt.execute();
@@ -169,7 +169,7 @@ describe('Pdo Statement', () => {
     });
 
     it('Works Statement Bind Boolean', async () => {
-        let stmt = await pdo.prepare('SELECT * FROM company where active = ?;');
+        let stmt = await pdo.prepare('SELECT * FROM companies where active = ?;');
         stmt.bindValue(1, false);
         await stmt.execute();
         expect(stmt.fetchArray().all().length).toBe(5);

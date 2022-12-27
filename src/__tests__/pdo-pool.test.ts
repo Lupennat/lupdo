@@ -274,9 +274,9 @@ describe('Pdo Pool', () => {
             { [ATTR_DEBUG]: DEBUG_ENABLED }
         );
 
-        await expect(pdo.exec('INSERT INTO `user` (`name`, `gender`) VALUES ("SleepResolve", "All");')).rejects.toThrow(
-            'Data are compromised'
-        );
+        await expect(
+            pdo.exec('INSERT INTO `users` (`name`, `gender`) VALUES ("SleepResolve", "All");')
+        ).rejects.toThrow('Data are compromised');
 
         expect(console.log).toHaveBeenCalled();
     });

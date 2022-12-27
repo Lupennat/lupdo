@@ -37,4 +37,6 @@ export default interface PdoDriverI {
     setAttribute: (attribute: string, value: number | string) => boolean;
 
     getRawPoolConnection: () => Promise<RawPoolConnection>;
+
+    getRawDriverConnection: <T>() => Promise<T>;
 }

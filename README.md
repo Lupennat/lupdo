@@ -50,8 +50,10 @@ Base Example
 
 ```js
 const Pdo = require('lupdo');
+require('lupdo-sqlite');
 // ES6 or Typescrypt
 import Pdo from 'lupdo';
+import 'lupdo-sqlite';
 
 const pdo = new Pdo('sqlite', { path: ':memory' }, { min: 2, max: 3 });
 const run = async () => {
@@ -79,6 +81,7 @@ run();
 -   prototype.disconnect(): Promise<void>
 -   prototype.reconnect(): void
 -   prototype.getRawPoolConnection(): Promise<[RawPoolConnection](#pdo-raw-pool-connection)>
+-   [prototype.getRawDriverConnection<T>(): Promise<T>](<(#pdo-raw-driver-connection)>)
 
 ### Pdo Constants & Attributes
 
@@ -103,8 +106,41 @@ run();
 Lupdo offers the possibility of retrieving a raw connection from the pool, to perform any unexposed operations.\
 The connection returned is the original [Driver Connection](#available-drivers) used behind the scenes by Lupdo.
 
+```ts
+interface RawPoolConnection {
+    release: () => Promise<void>;
+    connection: PoolConnection;
+}
+```
+
 > **Warning**
 > Once the connection has been used, the connection must be released, otherwise the pool will not be able to disconnect.
+
+> **Note**
+> Because connection is acquired from the pool and should be resusable by Lupdo, integrated Drivers may ignore/force certain third-party driver configuration properties in order to work correctly with Lupdo.
+
+### Pdo Raw Driver Connection
+
+Lupdo offers the possibility of retrieving a raw connection from the driver, to perform any unexposed operations.\
+The connection returned is the original [Driver Connection](#available-drivers) used behind the scenes by Lupdo.
+
+> **Note**
+> Since the connection does not come from the pool, it is possible to terminate the job correctly even without invoking pdo.disconnect().
+> All third-party driver configuration properties defined by the user are respected.
+
+> **Warning**
+> Once the connection has been used, you should manually close the connection.
+
+```ts
+const pdo = new Pdo('sqlite', { path: ':memory' }, { min: 2, max: 3 });
+const run = async () => {
+    const rawConnection = await pdo.getRawDriverConnection<Database>();
+    // do whatever you want
+    rawConnection.close();
+};
+
+run();
+```
 
 ## Driver Options
 

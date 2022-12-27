@@ -24,13 +24,14 @@ class FakeDriver extends PdoDriver {
         super(driver, poolOptions, attributes);
     }
 
-    protected async createConnection(): Promise<JsonConnection> {
-        const { ...mysqlOptions } = this.options;
+    protected async createConnection(unsecure = false): Promise<JsonConnection> {
         const debugMode = this.getAttribute(ATTR_DEBUG) as number;
 
-        mysqlOptions.queryFormat = undefined;
-
-        return new JsonConnection({ debug: debugMode === DEBUG_ENABLED });
+        return new JsonConnection({
+            ...this.options,
+            ...(unsecure ? {} : { notSafe: false }),
+            debug: debugMode === DEBUG_ENABLED
+        });
     }
 
     protected createPdoConnection(connection: JsonConnection): PdoConnectionI {

@@ -148,7 +148,7 @@ describe('Pdo Api', () => {
         const res = await pdo.exec('SELECT 1');
         expect(typeof res === 'number').toBeTruthy();
         expect(res).toEqual(0);
-        expect(await pdo.exec('INSERT INTO `user` (`name`, `gender`) VALUES ("Claudio", "All");')).toEqual(1);
+        expect(await pdo.exec('INSERT INTO `users` (`name`, `gender`) VALUES ("Claudio", "All");')).toEqual(1);
         await pdo.disconnect();
     });
 
@@ -187,12 +187,19 @@ describe('Pdo Api', () => {
     });
 
     it('Works Get Raw Pool Connection', async () => {
-        const pdo = new Pdo('fake', {}, {});
+        const pdo = new Pdo('fake', { notSafe: true }, {});
         const raw = await pdo.getRawPoolConnection();
         expect(raw.connection).toBeInstanceOf(FakeDBConnection);
-
+        expect(raw.connection.options.notSafe).toBeFalsy();
         await raw.release();
         await pdo.disconnect();
+    });
+
+    it('Works Get Raw Driver Connection With Unsecure', async () => {
+        const pdo = new Pdo('fake', { notSafe: true }, {});
+        const raw = await pdo.getRawDriverConnection<FakeDBConnection>();
+        expect(raw.options.notSafe).toBeTruthy();
+        await raw.end();
     });
 
     it('Works Debug', async () => {
