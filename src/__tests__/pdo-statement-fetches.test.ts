@@ -127,9 +127,9 @@ describe('Fetch Mode', () => {
         const stmt = await pdo.query('SELECT * FROM users limit 5;');
         const newStmt = await pdo.query('SELECT * FROM companies limit 5;');
         expect(stmt.fetchArray().get()).toEqual([1, 'Edmund', 'Multigender']);
-        expect(newStmt.fetchArray().get()).toEqual([1, 'Satterfield Inc', '2022-10-22T00:00:00.000Z', 1]);
+        expect(newStmt.fetchArray().get()).toEqual([1, 'Satterfield Inc', '2022-10-22T00:00:00.000Z', 1, null]);
         expect(stmt.fetchArray().get()).toEqual([2, 'Kyleigh', 'Cis man']);
-        expect(newStmt.fetchArray().get()).toEqual([2, 'Grimes - Reinger', '2022-11-22T00:00:00.000Z', 0]);
+        expect(newStmt.fetchArray().get()).toEqual([2, 'Grimes - Reinger', '2022-11-22T00:00:00.000Z', 0, null]);
     });
 
     it('Works Fetch Group', async () => {

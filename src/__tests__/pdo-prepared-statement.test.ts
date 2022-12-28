@@ -204,4 +204,26 @@ describe('Pdo Statement', () => {
         expect(stmt.fetchColumn(0).get()).toEqual(buffer.toString().toLowerCase());
         await stmt.close();
     });
+
+    it('Works Statement Bind null', async () => {
+        let stmt = await pdo.prepare(
+            'INSERT INTO `companies` (`name`, `opened`, `active`, `binary`) VALUES (?,?,?,?);'
+        );
+        stmt.bindValue(1, 'Test');
+        stmt.bindValue(2, '2000-12-26T00:00:00.000Z');
+        stmt.bindValue(3, 1);
+        stmt.bindValue(4, null);
+        await stmt.execute();
+        await stmt.close();
+        const id = await stmt.lastInsertId();
+        stmt = await pdo.prepare('SELECT * FROM companies where id = ?');
+        await stmt.execute([id]);
+        expect(stmt.fetchArray().all()).toEqual([[20, 'test', '2000-12-26t00:00:00.000z', 1, null]]);
+        // expect(stmt.fetchArray().all().length).toBe(19);
+        await stmt.close();
+        stmt = await pdo.prepare('SELECT ?;');
+        await stmt.execute([null]);
+        expect(stmt.fetchColumn(0).get()).toEqual(null);
+        await stmt.close();
+    });
 });

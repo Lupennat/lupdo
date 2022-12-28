@@ -35,27 +35,27 @@ export default {
         ]
     },
     companies: {
-        columns: ['id', 'name', 'opened', 'active'],
+        columns: ['id', 'name', 'opened', 'active', 'binary'],
         data: [
-            { id: 1, name: 'Satterfield Inc', opened: '2022-10-22T00:00:00.000Z', active: 1 },
-            { id: 2, name: 'Grimes - Reinger', opened: '2022-11-22T00:00:00.000Z', active: 0 },
-            { id: 3, name: 'Skiles LLC', opened: '2022-12-12T00:00:00.000Z', active: 0 },
-            { id: 4, name: 'White, Hermiston and Kihn', opened: '2020-10-01T00:00:00.000Z', active: 1 },
-            { id: 5, name: 'Huel LLC', opened: '2018-12-22T00:00:00.000Z', active: 1 },
-            { id: 6, name: 'Aufderhar - Schroeder', opened: '2019-12-22T00:00:00.000Z', active: 1 },
-            { id: 7, name: 'Powlowski - VonRueden', opened: '2014-12-22T00:00:00.000Z', active: 1 },
-            { id: 8, name: 'Murray - Hagenes', opened: '2015-12-22T00:00:00.000Z', active: 1 },
-            { id: 9, name: 'Bednar LLC', opened: '2013-12-22T00:00:00.000Z', active: 1 },
-            { id: 10, name: 'Kirlin - Bednar', opened: '2011-12-22T00:00:00.000Z', active: 1 },
-            { id: 11, name: 'Kassulke - Auer', opened: '2010-12-22T00:00:00.000Z', active: 1 },
-            { id: 12, name: 'Orn - Pouros', opened: '2021-12-22T00:00:00.000Z', active: 1 },
-            { id: 13, name: 'Greenfelder - Paucek', opened: '2009-12-22T00:00:00.000Z', active: 1 },
-            { id: 14, name: 'Hand, Effertz and Shields', opened: '2000-12-22T00:00:00.000Z', active: 1 },
-            { id: 15, name: 'Harber - Heidenreich', opened: '2001-12-22T00:00:00.000Z', active: 0 },
-            { id: 16, name: 'Greenholt - Durgan', opened: '2000-12-22T00:00:00.000Z', active: 1 },
-            { id: 17, name: 'Hauck - Murazik', opened: '2000-12-22T00:00:00.000Z', active: 0 },
-            { id: 18, name: 'Beier and Sons', opened: '1999-12-22T00:00:00.000Z', active: 0 },
-            { id: 19, name: 'Harvey Inc', opened: '2022-12-22T00:00:00.000Z', active: 1 }
+            { id: 1, name: 'Satterfield Inc', opened: '2022-10-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 2, name: 'Grimes - Reinger', opened: '2022-11-22T00:00:00.000Z', active: 0, binary: null },
+            { id: 3, name: 'Skiles LLC', opened: '2022-12-12T00:00:00.000Z', active: 0, binary: null },
+            { id: 4, name: 'White, Hermiston and Kihn', opened: '2020-10-01T00:00:00.000Z', active: 1, binary: null },
+            { id: 5, name: 'Huel LLC', opened: '2018-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 6, name: 'Aufderhar - Schroeder', opened: '2019-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 7, name: 'Powlowski - VonRueden', opened: '2014-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 8, name: 'Murray - Hagenes', opened: '2015-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 9, name: 'Bednar LLC', opened: '2013-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 10, name: 'Kirlin - Bednar', opened: '2011-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 11, name: 'Kassulke - Auer', opened: '2010-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 12, name: 'Orn - Pouros', opened: '2021-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 13, name: 'Greenfelder - Paucek', opened: '2009-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 14, name: 'Hand, Effertz and Shields', opened: '2000-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 15, name: 'Harber - Heidenreich', opened: '2001-12-22T00:00:00.000Z', active: 0, binary: null },
+            { id: 16, name: 'Greenholt - Durgan', opened: '2000-12-22T00:00:00.000Z', active: 1, binary: null },
+            { id: 17, name: 'Hauck - Murazik', opened: '2000-12-22T00:00:00.000Z', active: 0, binary: null },
+            { id: 18, name: 'Beier and Sons', opened: '1999-12-22T00:00:00.000Z', active: 0, binary: null },
+            { id: 19, name: 'Harvey Inc', opened: '2022-12-22T00:00:00.000Z', active: 1, binary: null }
         ]
     }
 };
