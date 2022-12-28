@@ -77,7 +77,7 @@ export default interface PdoStatementI {
 
     rowCount: () => number;
 
-    lastInsertId: () => string | number | bigint | null;
+    lastInsertId: (name?: string) => Promise<string | number | bigint | null>;
 
     columnCount: () => number;
 

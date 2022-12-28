@@ -6,6 +6,13 @@ import PdoRowData from '../../types/pdo-raw-data';
 import FakeDBConnection, { FakeDBStatement } from './fake-db-connection';
 
 class FakeRawConnection extends PdoRawConnection {
+    public async lastInsertId(name?: string): Promise<string | number | bigint | null> {
+        if (name != null) {
+            return name;
+        }
+        return super.lastInsertId();
+    }
+
     protected async doBeginTransaction(connection: FakeDBConnection): Promise<void> {
         await connection.beginTransaction();
     }

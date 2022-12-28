@@ -230,7 +230,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         return 0;
     }
 
-    public lastInsertId(): string | number | bigint | null {
+    public async lastInsertId(): Promise<string | number | bigint | null> {
         if (typeof this.affectingResults.lastInsertRowid === 'undefined') {
             return null;
         }
