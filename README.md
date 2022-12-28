@@ -240,6 +240,7 @@ extends [Statement](#statement)
 -   Buffer
 -   Date
 -   boolean
+-   null
 
 ### Params
 

@@ -14,7 +14,7 @@ export interface ObjectParamsDescriptor {
     aliases: string[];
 }
 
-export type ValidBindings = string | bigint | number | boolean | Date | Buffer;
+export type ValidBindings = string | bigint | number | boolean | Date | Buffer | null;
 export type ArrayParams = ValidBindings[];
 export type Params = ArrayParams | ObjectParams;
 

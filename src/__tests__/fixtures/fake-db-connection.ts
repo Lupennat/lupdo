@@ -379,6 +379,56 @@ async function processSql(
         return [{}, [[database.companies.data.length]], [{ name: 'count(*)', table: 'companies' }]];
     }
 
+    if (sql.startsWith('insert into `companies` (`name`, `opened`, `active`, `binary`) values ')) {
+        const values = sql
+            .replace('insert into `companies` (`name`, `opened`, `active`, `binary`) values ', '')
+            .replace('(', '')
+            .replace(')', '')
+            .replace(';', '')
+            .trim()
+            .split(',')
+            .map(value => value.trim());
+        const id = database.companies.data.length + 1;
+        database.companies.data.push({
+            id,
+            name: values[0],
+            opened: values[1],
+            active: Number(values[2]),
+            binary: null
+        });
+        return [{ lastInsertRowid: id, affectedRows: 1 }, [], []];
+    }
+
+    if (sql.startsWith('select * from companies where id =')) {
+        const id = Number(
+            sql
+                .replace('select * from companies where id =', '')
+                .replace(/"/g, '')
+                .replace(/'/g, '')
+                .replace(';', '')
+                .trim()
+        );
+        const columns = database.companies.columns;
+        return [
+            {},
+            database.companies.data
+                .filter(company => company.id === id)
+                .map(item => {
+                    const res = [];
+                    for (const column of columns) {
+                        res.push((item as any)[column]);
+                    }
+                    return res;
+                }),
+            columns.map(column => {
+                return {
+                    name: column,
+                    table: 'companies'
+                };
+            })
+        ];
+    }
+
     if (sql.startsWith('select * from companies')) {
         const columns = database.companies.columns;
         return [
@@ -397,6 +447,10 @@ async function processSql(
                 };
             })
         ];
+    }
+
+    if (sql.startsWith('select null')) {
+        return [{}, [[null]], []];
     }
 
     return [{}, [], []];
