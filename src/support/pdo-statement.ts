@@ -38,8 +38,8 @@ class PdoStatement implements PdoStatementI {
         return this.connection.rowCount();
     }
 
-    public lastInsertId(): string | bigint | number | null {
-        return this.connection.lastInsertId();
+    public async lastInsertId(name?: string): Promise<string | bigint | number | null> {
+        return await this.connection.lastInsertId(name);
     }
 
     public getAttribute(attribute: string): string | number {

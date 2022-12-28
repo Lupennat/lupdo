@@ -5,6 +5,12 @@ All notable changes to this project from 1.0.0 forward will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2022-12-28
+
+### Changed
+
+-   `Statement.lastInsertId()` accept a parameter `name :string` and return a Promise. (this should allow the integration of drivers using sequences)
+
 ## [1.2.1] - 2022-12-27
 
 ### Added

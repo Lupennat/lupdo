@@ -31,5 +31,5 @@ export default interface PdoRawConnectionI {
     rollback: () => Promise<void>;
 
     rowCount: () => number;
-    lastInsertId: () => string | number | bigint | null;
+    lastInsertId: (name?: string) => Promise<string | number | bigint | null>;
 }

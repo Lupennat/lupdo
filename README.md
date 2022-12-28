@@ -208,7 +208,7 @@ Debug mode, is defined through Pdo Attributes, custom debug connection options, 
 -   prototype.resetCursor(): void;
 -   prototype.getColumnMeta(column: number): ColumnData | null;
 -   prototype.rowCount(): number;
--   prototype.lastInsertId(): string | bigint | number | null;
+-   prototype.lastInsertId(name?: string): Promise<string | bigint | number | null>;
 
 ### Fetched Object
 
