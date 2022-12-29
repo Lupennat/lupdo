@@ -40,6 +40,7 @@ Lupdo, under the hood, uses stable and performant npm packages:
 
 -   [lupdo-mysql](https://www.npmjs.com/package/lupdo-mysql)
 -   [lupdo-sqlite](https://www.npmjs.com/package/lupdo-sqlite)
+-   [lupdo-postgres](https://www.npmjs.com/package/lupdo-postgres)
 
 > **Note**
 > A Short Doc [How To Write A Driver](DRIVER.md)
