@@ -1,12 +1,37 @@
+## Available Drivers
+
+-   [lupdo-mysql](https://www.npmjs.com/package/lupdo-mysql)
+-   [lupdo-sqlite](https://www.npmjs.com/package/lupdo-sqlite)
+-   [lupdo-postgres](https://www.npmjs.com/package/lupdo-postgres)
+
 # WRITE CUSTOM DRIVER
 
 Custom Lupdo Driver must implements a sql syntax; only string can be used to perform query against a database.
 
+Please follow this rules if you can:
+
+-   supports all Lupdo validBindings
+
+    -   number
+    -   string
+    -   bigint
+    -   Buffer
+    -   Date
+    -   boolean
+    -   null
+
+-   date from database should be returned as javascript `string` not javascript `Date`.
+-   bigint from database should be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
+-   you should only expose custom Driver APIs if necessary to integrate basic database functionality.
+-   you should override/suppress third party configuration if they can change lupdo core behaviour based on unsecure parameter of createConnection (see example).
+-   you are free to add ATTRIBUTES if necessary.
+-   you must avoid to override any core funtionality, you can open a discussion or propose a pull-request.
+-   import or require of the library must automatically register the driver within Lupdo.
+-   you can create a new version of existing driver using another thirdy party library, you should avoid to implements duplicated version with same third party driver, instead try to improve the existing one.
 
 ## FULL EXAMPLE
 
 ```ts
-
 import {
     ATTR_DEBUG,
     DEBUG_ENABLED,
@@ -99,14 +124,28 @@ class FakeRawConnection extends PdoRawConnection {
 }
 
 class FakeDriver extends PdoDriver {
-    constructor(driver: string, protected options: ThirdPartyConnectionOptions, poolOptions: PoolOptions, attributes: PdoAttributes) {
+    constructor(
+        driver: string,
+        protected options: ThirdPartyConnectionOptions,
+        poolOptions: PoolOptions,
+        attributes: PdoAttributes
+    ) {
         super(driver, poolOptions, attributes);
     }
 
-    protected async createConnection(): Promise<ThirdPartyConnectionToDB> {
+    protected async createConnection(unsecure?: boolean): Promise<ThirdPartyConnectionToDB> {
         const { ...thirdPartyOptions } = this.options;
         // debugmode must be enabled only through ATTR_DEBUG
         const debugMode = this.getAttribute(ATTR_DEBUG) as number;
+
+        if (!unsecure) {
+            // unsecure is true only if pdo.getRawDriverConnection() is called
+            // in that case the connection it's not acquired from the pool
+            // so it will never be reused by lupdo core apis
+            // and you can skip overrides, it's up to the user manage connection 
+            thirdPartyOptions.doNotReturnColumns = false;
+            thirdPartyOptions.numberAlwaysString = false;
+        }
 
         return new ThirdPartyConnectionToDB({
             ...thirdPartyOptions,

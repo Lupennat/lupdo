@@ -14,7 +14,7 @@ Lupdo create a Pool of connection By Default.
 Lupdo offers the possibility of creating drivers for any database that accepts sql like syntax.
 
 -   [Third Party Library](#third-party-library)
--   [Available Drivers](#available-drivers)
+-   [Available Drivers](DRIVER.md)
 -   [Usage](#usage)
 -   [Pdo](#pdo)
     -   [Constants & Attributes](#pdo-constants--attributes)
@@ -35,15 +35,6 @@ Lupdo offers the possibility of creating drivers for any database that accepts s
 Lupdo, under the hood, uses stable and performant npm packages:
 
 -   [tarn.js](https://github.com/vincit/tarn.js)
-
-## Available Drivers
-
--   [lupdo-mysql](https://www.npmjs.com/package/lupdo-mysql)
--   [lupdo-sqlite](https://www.npmjs.com/package/lupdo-sqlite)
--   [lupdo-postgres](https://www.npmjs.com/package/lupdo-postgres)
-
-> **Note**
-> A Short Doc [How To Write A Driver](DRIVER.md)
 
 ## Usage
 
