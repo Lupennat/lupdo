@@ -1,4 +1,3 @@
-import PdoAttributes from './pdo-attributes';
 import PdoRawConnectionI from './pdo-raw-connection';
 import PdoStatementI from './pdo-statement';
 
@@ -22,10 +21,7 @@ export type Placeholder = '?';
 export type Identifiers = Array<':' | '@' | '$'>;
 export type NegativeLooks = Array<'"' | "'" | '`' | '%'>;
 
-export type PdoPreparedStatementConstructor = new (
-    connection: PdoRawConnectionI,
-    attributes: PdoAttributes
-) => PdoPreparedStatementI;
+export type PdoPreparedStatementConstructor = new (connection: PdoRawConnectionI) => PdoPreparedStatementI;
 
 export interface PdoTransactionPreparedStatementI extends PdoStatementI {
     /**

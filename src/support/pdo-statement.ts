@@ -1,14 +1,5 @@
-import {
-    ATTR_CASE,
-    ATTR_FETCH_DIRECTION,
-    ATTR_NULLS,
-    CASE_LOWER,
-    CASE_NATURAL,
-    NULL_EMPTY_STRING,
-    NULL_NATURAL
-} from '../constants';
+import { ATTR_CASE, ATTR_NULLS, CASE_LOWER, CASE_NATURAL, NULL_EMPTY_STRING, NULL_NATURAL } from '../constants';
 import { PdoError } from '../errors';
-import PdoAttributes from '../types/pdo-attributes';
 import PdoColumnData from '../types/pdo-column-data';
 import PdoColumnValue from '../types/pdo-column-value';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
@@ -16,11 +7,7 @@ import PdoRowData from '../types/pdo-raw-data';
 import PdoStatementI, { Both, Dictionary, Fetched, Group, Named, Newable, Pair, Unique } from '../types/pdo-statement';
 
 class PdoStatement implements PdoStatementI {
-    protected attributes: PdoAttributes;
-
-    constructor(protected readonly connection: PdoRawConnectionI, attributes: PdoAttributes) {
-        this.attributes = { ...attributes };
-    }
+    constructor(protected readonly connection: PdoRawConnectionI) {}
 
     public columnCount(): number {
         return this.connection.columns.length;
@@ -43,15 +30,11 @@ class PdoStatement implements PdoStatementI {
     }
 
     public getAttribute(attribute: string): string | number {
-        return this.attributes[attribute];
+        return this.connection.getAttribute(attribute);
     }
 
     public setAttribute(attribute: string, value: number | string): boolean {
-        if (attribute in this.attributes) {
-            this.attributes[attribute] = value;
-            return true;
-        }
-        return false;
+        return this.connection.setAttribute(attribute, value);
     }
 
     /**
@@ -164,7 +147,7 @@ class PdoStatement implements PdoStatementI {
 
         const map: Pair<T, U> = new Map();
 
-        for (const row of this.connection.fetchAll(this.getAttribute(ATTR_FETCH_DIRECTION) as number)) {
+        for (const row of this.connection.fetchAll()) {
             map.set(row[0] as T, row[1] as U);
         }
 
@@ -181,7 +164,7 @@ class PdoStatement implements PdoStatementI {
     ): Fetched<T> {
         return {
             get: () => {
-                const row = this.connection.fetch(this.getAttribute(ATTR_FETCH_DIRECTION) as number);
+                const row = this.connection.fetch();
                 if (row === null) {
                     return undefined;
                 }
@@ -192,21 +175,19 @@ class PdoStatement implements PdoStatementI {
                 );
             },
             all: () => {
-                return this.connection
-                    .fetchAll(this.getAttribute(ATTR_FETCH_DIRECTION) as number)
-                    .map((row: PdoRowData) => {
-                        return callable(
-                            this.getRowNulled(row),
-                            this.getCasedColumnsName(),
-                            withDuplicated ? this.getDuplicatedColumns() : []
-                        );
-                    });
+                return this.connection.fetchAll().map((row: PdoRowData) => {
+                    return callable(
+                        this.getRowNulled(row),
+                        this.getCasedColumnsName(),
+                        withDuplicated ? this.getDuplicatedColumns() : []
+                    );
+                });
             },
             group: () => {
                 const columns = this.getCasedColumnsName();
                 const duplicated = this.getDuplicatedColumns();
                 const map: Group<T> = new Map();
-                for (const row of this.connection.fetchAll(this.getAttribute(ATTR_FETCH_DIRECTION) as number)) {
+                for (const row of this.connection.fetchAll()) {
                     const key = row.shift() as PdoColumnValue;
                     const values = map.get(key) ?? [];
                     values.push(callable(this.getRowNulled(row), columns, duplicated));
@@ -218,7 +199,7 @@ class PdoStatement implements PdoStatementI {
                 const columns = this.getCasedColumnsName();
                 const duplicated = this.getDuplicatedColumns();
                 const map: Unique<T> = new Map();
-                for (const row of this.connection.fetchAll(this.getAttribute(ATTR_FETCH_DIRECTION) as number)) {
+                for (const row of this.connection.fetchAll()) {
                     map.set(row.shift() as PdoColumnValue, callable(this.getRowNulled(row), columns, duplicated));
                 }
                 return map;
@@ -255,7 +236,7 @@ class PdoStatement implements PdoStatementI {
     }
 
     protected getCasedColumnsName(): string[] {
-        const columnCase = this.attributes[ATTR_CASE] as number;
+        const columnCase = this.getAttribute(ATTR_CASE) as number;
         return this.connection.columns.map(column => {
             return (columnCase & CASE_NATURAL) !== 0
                 ? column.name

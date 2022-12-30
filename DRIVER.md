@@ -20,14 +20,19 @@ Please follow this rules if you can:
     -   boolean
     -   null
 
--   date from database should be returned as javascript `string` not javascript `Date`.
--   bigint from database should be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
+-   **date** from database should be returned as javascript `string` not javascript `Date`.
+-   **bigint** from database should be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
+-   **decimal** from database should be returned as javascript `string` not javascript `Number` to not loose precision.
+-   **numeric** from database shold be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
 -   you should only expose custom Driver APIs if necessary to integrate basic database functionality.
 -   you should override/suppress third party configuration if they can change lupdo core behaviour based on unsecure parameter of createConnection (see example).
--   you are free to add ATTRIBUTES if necessary.
+-   you are free to add ATTRIBUTES if necessary _please prefix all attributes with unique driver name_.
 -   you must avoid to override any core funtionality, you can open a discussion or propose a pull-request.
 -   import or require of the library must automatically register the driver within Lupdo.
 -   you can create a new version of existing driver using another thirdy party library, you should avoid to implements duplicated version with same third party driver, instead try to improve the existing one.
+
+> **Note**
+> As soon as it will be stable, Lupdo will accept [Temporal](https://tc39.es/proposal-temporal/docs/) as validBindings and db date should be returned as Temporal.
 
 ## FULL EXAMPLE
 
@@ -142,7 +147,7 @@ class FakeDriver extends PdoDriver {
             // unsecure is true only if pdo.getRawDriverConnection() is called
             // in that case the connection it's not acquired from the pool
             // so it will never be reused by lupdo core apis
-            // and you can skip overrides, it's up to the user manage connection 
+            // and you can skip overrides, it's up to the user manage connection
             thirdPartyOptions.doNotReturnColumns = false;
             thirdPartyOptions.numberAlwaysString = false;
         }

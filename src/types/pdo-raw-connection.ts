@@ -1,3 +1,4 @@
+import PdoAttributes from './pdo-attributes';
 import PdoColumnData from './pdo-column-data';
 import { Params, ValidBindings } from './pdo-prepared-statement';
 import PdoRowData from './pdo-raw-data';
@@ -21,11 +22,15 @@ export default interface PdoRawConnectionI {
 
     query: (sql: string) => Promise<void>;
 
-    fetch: (cursorOrientation: number) => PdoRowData | null;
+    fetch: () => PdoRowData | null;
 
-    fetchAll: (cursorOrientation: number) => PdoRowData[];
+    fetchAll: () => PdoRowData[];
 
     resetCursor: () => void;
+
+    getAttribute: (attribute: string) => string | number;
+    setAttribute: (attribute: string, value: number | string) => boolean;
+    setAttributes: (attributes: PdoAttributes) => void;
 
     commit: () => Promise<void>;
     rollback: () => Promise<void>;
