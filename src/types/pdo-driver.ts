@@ -24,7 +24,7 @@ export default interface PdoDriverI {
 
     reconnect: () => void;
 
-    prepare: (sql: string, attributes?: PdoAttributes) => Promise<PdoPreparedStatementI>;
+    prepare: (sql: string) => Promise<PdoPreparedStatementI>;
 
     exec: (sql: string) => Promise<number>;
 

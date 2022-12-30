@@ -1,9 +1,8 @@
-import PdoAttributes from './pdo-attributes';
 import PdoColumnData from './pdo-column-data';
 import PdoColumnValue from './pdo-column-value';
 import PdoRawConnectionI from './pdo-raw-connection';
 
-export type PdoStatementConstructor = new (connection: PdoRawConnectionI, attributes: PdoAttributes) => PdoStatementI;
+export type PdoStatementConstructor = new (connection: PdoRawConnectionI) => PdoStatementI;
 
 export type Dictionary = { [key: string]: PdoColumnValue };
 export type Both = { [key: string | number]: PdoColumnValue };

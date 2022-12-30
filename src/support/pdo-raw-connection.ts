@@ -1,6 +1,7 @@
-import { FETCH_BACKWARD } from '../constants';
+import { ATTR_FETCH_DIRECTION, FETCH_BACKWARD } from '../constants';
 import { PdoError } from '../errors';
 import PdoAffectingData from '../types/pdo-affecting-data';
+import PdoAttributes from '../types/pdo-attributes';
 import PdoColumnData from '../types/pdo-column-data';
 import { PoolConnection, PoolI } from '../types/pdo-pool';
 import { ArrayParams, ObjectParams, Params, ValidBindings } from '../types/pdo-prepared-statement';
@@ -8,6 +9,7 @@ import PdoRawConnectionI from '../types/pdo-raw-connection';
 import PdoRowData from '../types/pdo-raw-data';
 
 abstract class PdoRawConnection implements PdoRawConnectionI {
+    protected attributes: PdoAttributes = {};
     protected connection: PoolConnection | null = null;
     protected inTransaction = false;
     protected statement: any = null;
@@ -199,7 +201,8 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         }
     }
 
-    public fetch(cursorOrientation: number): PdoRowData | null {
+    public fetch(): PdoRowData | null {
+        const cursorOrientation = this.getAttribute(ATTR_FETCH_DIRECTION) as number;
         const cursor = this.getTempCursorForFetch(cursorOrientation);
 
         if (!this.isValidCursor(cursor, cursorOrientation)) {
@@ -212,7 +215,8 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         return this.selectResults[cursor];
     }
 
-    public fetchAll(cursorOrientation: number): PdoRowData[] {
+    public fetchAll(): PdoRowData[] {
+        const cursorOrientation = this.getAttribute(ATTR_FETCH_DIRECTION) as number;
         const cursor = this.getTempCursorForFetch(cursorOrientation);
         if (cursorOrientation === FETCH_BACKWARD) {
             this.setCursorToStart();
@@ -244,6 +248,22 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
 
     public async close(): Promise<void> {
         await this.release();
+    }
+
+    public getAttribute(attribute: string): string | number {
+        return this.attributes[attribute];
+    }
+
+    public setAttribute(attribute: string, value: number | string): boolean {
+        if (attribute in this.attributes) {
+            this.attributes[attribute] = value;
+            return true;
+        }
+        return false;
+    }
+
+    public setAttributes(attributes: PdoAttributes): void {
+        this.attributes = { ...attributes };
     }
 
     protected async release(): Promise<void> {

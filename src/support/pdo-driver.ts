@@ -173,28 +173,32 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
     public async beginTransaction(): Promise<PdoTransactionI> {
         this.throwIfDisconnected();
         const connection = this.getRawConnection();
+        connection.setAttributes(this.attributes);
         await connection.beginTransaction();
-        return new this.instances.transaction(connection, this.attributes);
+        return new this.instances.transaction(connection);
     }
 
-    public async prepare(sql: string, attributes: PdoAttributes = {}): Promise<PdoPreparedStatementI> {
+    public async prepare(sql: string): Promise<PdoPreparedStatementI> {
         this.throwIfDisconnected();
         const connection = this.getRawConnection();
+        connection.setAttributes(this.attributes);
         await connection.prepare(sql);
-        return new this.instances.preparedStatement(connection, Object.assign({}, this.attributes, attributes));
+        return new this.instances.preparedStatement(connection);
     }
 
     public async exec(sql: string): Promise<number> {
         this.throwIfDisconnected();
         const connection = this.getRawConnection();
+        connection.setAttributes(this.attributes);
         return await connection.exec(sql);
     }
 
     public async query(sql: string): Promise<PdoStatementI> {
         this.throwIfDisconnected();
         const connection = this.getRawConnection();
+        connection.setAttributes(this.attributes);
         await connection.query(sql);
-        return new this.instances.statement(connection, this.attributes);
+        return new this.instances.statement(connection);
     }
 
     public getAttribute(attribute: string): string | number {
