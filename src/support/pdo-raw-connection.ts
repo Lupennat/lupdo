@@ -1,10 +1,9 @@
-import { ATTR_FETCH_DIRECTION, FETCH_BACKWARD } from '../constants';
 import { PdoError } from '../errors';
 import PdoAffectingData from '../types/pdo-affecting-data';
 import PdoAttributes from '../types/pdo-attributes';
 import PdoColumnData from '../types/pdo-column-data';
 import { PoolConnection, PoolI } from '../types/pdo-pool';
-import { ArrayParams, ObjectParams, Params, ValidBindings } from '../types/pdo-prepared-statement';
+import { Params, ValidBindings } from '../types/pdo-prepared-statement';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
 import PdoRowData from '../types/pdo-raw-data';
 
@@ -14,14 +13,6 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     protected inTransaction = false;
     protected statement: any = null;
     protected statements: Map<string, any> = new Map();
-    protected cursor: number | null = null;
-
-    protected selectResults: PdoRowData[] = [];
-    protected affectingResults: PdoAffectingData = {};
-
-    public params: Params | null = null;
-    public columns: PdoColumnData[] = [];
-    public sql = '';
 
     constructor(protected readonly pool: PoolI<PoolConnection>) {}
 
@@ -77,10 +68,8 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     }
 
     public async prepare(sql: string): Promise<void> {
-        this.sql = sql;
-
         try {
-            await this.generateStatement();
+            await this.generateStatement(sql);
         } catch (error: any) {
             if (!this.inTransaction) {
                 await this.release();
@@ -89,53 +78,17 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         }
     }
 
-    public bindValue(key: string | number, value: ValidBindings): void {
-        value = this.adaptBindValue(value);
-        if (typeof key === 'number') {
-            if (key - 1 < 0) {
-                throw new PdoError('Bind position must be greater than 0.');
-            }
-            const index = key - 1;
-            if (this.params === null) {
-                this.params = [];
-            }
-
-            if (!Array.isArray(this.params)) {
-                throw new PdoError('Mixed Params Numeric and Keyed are forbidden.');
-            }
-
-            (this.params as ArrayParams)[index] = value;
-        } else {
-            if (this.params === null) {
-                this.params = {};
-            }
-
-            if (Array.isArray(this.params)) {
-                throw new PdoError('Mixed Params Numeric and Keyed are forbidden.');
-            }
-
-            (this.params as ObjectParams)[key] = value;
-        }
+    public bindValue(value: ValidBindings): ValidBindings {
+        return this.adaptBindValue(value);
     }
 
-    public async execute(params?: Params): Promise<void> {
+    public async execute(params: Params | null): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
         try {
-            if (params != null) {
-                if (Array.isArray(params)) {
-                    for (let x = 0; x < params.length; x++) {
-                        this.bindValue(x + 1, params[x]);
-                    }
-                } else {
-                    for (const key in params) {
-                        this.bindValue(key, params[key]);
-                    }
-                }
-            }
             const connection = await this.generateOrReuseConnection();
 
-            [this.affectingResults, this.selectResults, this.columns] = await this.executeStatement(
+            const [affectingResults, selectResults, columns] = await this.executeStatement(
                 this.statement,
-                this.params === null ? [] : this.params,
+                params === null ? [] : params,
                 connection
             );
 
@@ -143,15 +96,13 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
                 throw new Error('Data are compromised');
             }
 
-            this.resetCursor();
+            return [affectingResults, selectResults, columns];
         } catch (error: any) {
             throw new PdoError(error);
         }
     }
 
     public async exec(sql: string): Promise<number> {
-        this.sql = sql;
-
         try {
             const connection = await this.generateOrReuseConnection();
             const affecting = await this.doExec(connection, sql);
@@ -164,8 +115,6 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
                 await this.release();
             }
 
-            this.resetCursor();
-
             return affecting.affectedRows ?? 0;
         } catch (error: any) {
             throw new PdoError(error);
@@ -176,12 +125,10 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         }
     }
 
-    public async query(sql: string): Promise<void> {
-        this.sql = sql;
-
+    public async query(sql: string): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
         try {
             const connection = await this.generateOrReuseConnection();
-            [this.affectingResults, this.selectResults, this.columns] = await this.doQuery(connection, sql);
+            const [affectingResults, selectResults, columns] = await this.doQuery(connection, sql);
 
             if (connection.__lupdo_killed) {
                 throw new Error('Data are compromised');
@@ -191,7 +138,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
                 await this.release();
             }
 
-            this.resetCursor();
+            return [affectingResults, selectResults, columns];
         } catch (error: any) {
             throw new PdoError(error);
         } finally {
@@ -201,49 +148,16 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         }
     }
 
-    public fetch(): PdoRowData | null {
-        const cursorOrientation = this.getAttribute(ATTR_FETCH_DIRECTION) as number;
-        const cursor = this.getTempCursorForFetch(cursorOrientation);
-
-        if (!this.isValidCursor(cursor, cursorOrientation)) {
-            cursorOrientation === FETCH_BACKWARD ? this.setCursorToStart() : this.setCursorToEnd();
+    public async lastInsertId({
+        affectingResults
+    }: {
+        affectingResults: PdoAffectingData;
+    }): Promise<string | number | bigint | null> {
+        if (typeof affectingResults.lastInsertRowid === 'undefined') {
             return null;
         }
 
-        this.setCursor(cursor);
-
-        return this.selectResults[cursor];
-    }
-
-    public fetchAll(): PdoRowData[] {
-        const cursorOrientation = this.getAttribute(ATTR_FETCH_DIRECTION) as number;
-        const cursor = this.getTempCursorForFetch(cursorOrientation);
-        if (cursorOrientation === FETCH_BACKWARD) {
-            this.setCursorToStart();
-            return this.selectResults.slice(0, cursor + 1).reverse();
-        }
-
-        this.setCursorToEnd();
-        return this.selectResults.slice(cursor);
-    }
-
-    public rowCount(): number {
-        if (typeof this.affectingResults.affectedRows !== 'undefined') {
-            return this.affectingResults.affectedRows;
-        }
-        return 0;
-    }
-
-    public async lastInsertId(): Promise<string | number | bigint | null> {
-        if (typeof this.affectingResults.lastInsertRowid === 'undefined') {
-            return null;
-        }
-
-        return this.affectingResults.lastInsertRowid;
-    }
-
-    public resetCursor(): void {
-        this.setCursor(null);
+        return affectingResults.lastInsertRowid;
     }
 
     public async close(): Promise<void> {
@@ -278,36 +192,11 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         }
     }
 
-    protected async generateStatement(): Promise<void> {
-        if (!this.statements.has(this.sql)) {
-            this.statements.set(this.sql, await this.getStatement(this.sql, await this.generateOrReuseConnection()));
+    protected async generateStatement(sql: string): Promise<void> {
+        if (!this.statements.has(sql)) {
+            this.statements.set(sql, await this.getStatement(sql, await this.generateOrReuseConnection()));
         }
-        this.statement = this.statements.get(this.sql);
-    }
-
-    protected setCursor(cursor: number | null): void {
-        this.cursor = cursor;
-    }
-
-    protected setCursorToEnd(): void {
-        this.setCursor(this.selectResults.length);
-    }
-
-    protected setCursorToStart(): void {
-        this.setCursor(-1);
-    }
-
-    protected getTempCursorForFetch(cursorOrientation: number): number {
-        let cursor = this.cursor;
-        if (cursor === null) {
-            cursor = cursorOrientation === FETCH_BACKWARD ? this.selectResults.length : -1;
-        }
-
-        return cursorOrientation === FETCH_BACKWARD ? cursor - 1 : cursor + 1;
-    }
-
-    protected isValidCursor(cursor: number, cursorOrientation: number): boolean {
-        return cursorOrientation === FETCH_BACKWARD ? cursor > -1 : cursor < this.selectResults.length;
+        this.statement = this.statements.get(sql);
     }
 
     protected async generateOrReuseConnection(): Promise<PoolConnection> {

@@ -1,8 +1,16 @@
+import PdoAffectingData from './pdo-affecting-data';
 import PdoColumnData from './pdo-column-data';
 import PdoColumnValue from './pdo-column-value';
 import PdoRawConnectionI from './pdo-raw-connection';
+import PdoRowData from './pdo-raw-data';
 
-export type PdoStatementConstructor = new (connection: PdoRawConnectionI) => PdoStatementI;
+export type PdoStatementConstructor = new (
+    connection: PdoRawConnectionI,
+    sql: string,
+    affectingResults: PdoAffectingData,
+    selectResults: PdoRowData[],
+    columns: PdoColumnData[]
+) => PdoStatementI;
 
 export type Dictionary = { [key: string]: PdoColumnValue };
 export type Both = { [key: string | number]: PdoColumnValue };

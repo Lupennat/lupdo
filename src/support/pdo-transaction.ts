@@ -3,11 +3,16 @@
 import { PdoTransactionPreparedStatementI } from '../types/pdo-prepared-statement';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
 import PdoStatementI from '../types/pdo-statement';
-import PdoTransactionI from '../types/pdo-transaction';
+import PdoTransactionI, { TransactionInstances } from '../types/pdo-transaction';
 import PdoStatement from './pdo-statement';
 import PdoTransactionPreparedStatement from './pdo-transaction-prepared-statement';
 
 class PdoTransaction implements PdoTransactionI {
+    protected instances: TransactionInstances = {
+        preparedStatement: PdoTransactionPreparedStatement,
+        statement: PdoStatement
+    };
+
     constructor(protected readonly connection: PdoRawConnectionI) {}
 
     async commit(): Promise<void> {
@@ -24,12 +29,11 @@ class PdoTransaction implements PdoTransactionI {
 
     async prepare(sql: string): Promise<PdoTransactionPreparedStatementI> {
         await this.connection.prepare(sql);
-        return new PdoTransactionPreparedStatement(this.connection);
+        return new this.instances.preparedStatement(this.connection, sql);
     }
 
     async query(sql: string): Promise<PdoStatementI> {
-        await this.connection.query(sql);
-        return new PdoStatement(this.connection);
+        return new this.instances.statement(this.connection, sql, ...(await this.connection.query(sql)));
     }
 }
 

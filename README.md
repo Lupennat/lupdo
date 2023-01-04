@@ -29,6 +29,7 @@ Lupdo offers the possibility of creating drivers for any database that accepts s
     -   [Params](#params)
 -   [Logger](#logger)
 -   [Debug](#debug)
+-   [BigInt & JSON](#bigint--json)
 
 ## Third Party Library
 
@@ -38,7 +39,7 @@ Lupdo, under the hood, uses stable and performant npm packages:
 
 ## Usage
 
-Base Example
+Base Example with sqlite driver, here you can find the list of [Available Drivers](DRIVER.md)
 
 ```js
 const Pdo = require('lupdo');
@@ -257,3 +258,8 @@ Pdo.setLogger((message: any, level?: any) => {
 If you are running into problems, one thing that may help is enabling the debug mode for the connection.\
 You can enable debug using [ATTR_DEBUG](#pdo-constants--attributes).\
 This will print extra information on stdout.
+
+
+## BigInt & JSON
+`BigInt` can not be serialized into a JSON string, Lupdo does not implement any serialization Logic.\
+[Here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt#use_within_json) you can find some info about it.

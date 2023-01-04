@@ -4,7 +4,7 @@ import PdoPreparedStatementI, { PdoPreparedStatementConstructor } from './pdo-pr
 import PdoStatementI, { PdoStatementConstructor } from './pdo-statement';
 import PdoTransactionI, { PdoTransactionConstructor } from './pdo-transaction';
 
-export interface instances {
+export interface DriverInstances {
     preparedStatement: PdoPreparedStatementConstructor;
     statement: PdoStatementConstructor;
     transaction: PdoTransactionConstructor;

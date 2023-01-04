@@ -1,6 +1,11 @@
-import { PdoTransactionPreparedStatementI } from './pdo-prepared-statement';
+import { PdoTransactionPreparedStatementConstructor, PdoTransactionPreparedStatementI } from './pdo-prepared-statement';
 import PdoRawConnectionI from './pdo-raw-connection';
-import PdoStatementI from './pdo-statement';
+import PdoStatementI, { PdoStatementConstructor } from './pdo-statement';
+
+export interface TransactionInstances {
+    preparedStatement: PdoTransactionPreparedStatementConstructor;
+    statement: PdoStatementConstructor;
+}
 
 export type PdoTransactionConstructor = new (connection: PdoRawConnectionI) => PdoTransactionI;
 

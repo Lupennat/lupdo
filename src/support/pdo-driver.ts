@@ -16,7 +16,7 @@ import {
 import { PdoError } from '../errors';
 import { PdoConnectionI, PdoPreparedStatementI, PdoRawConnectionI, PdoStatementI, PdoTransactionI } from '../types';
 import PdoAttributes from '../types/pdo-attributes';
-import PdoDriverI, { instances } from '../types/pdo-driver';
+import PdoDriverI, { DriverInstances } from '../types/pdo-driver';
 import { InternalPdoPoolOptions, PoolConnection, PoolI, PoolOptions, RawPoolConnection } from '../types/pdo-pool';
 import PdoPool from './pdo-pool';
 import PdoPreparedStatement from './pdo-prepared-statement';
@@ -24,7 +24,7 @@ import PdoStatement from './pdo-statement';
 import PdoTransaction from './pdo-transaction';
 
 abstract class PdoDriver extends EventEmitter implements PdoDriverI {
-    protected instances: instances = {
+    protected instances: DriverInstances = {
         transaction: PdoTransaction,
         preparedStatement: PdoPreparedStatement,
         statement: PdoStatement
@@ -183,7 +183,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
         const connection = this.getRawConnection();
         connection.setAttributes(this.attributes);
         await connection.prepare(sql);
-        return new this.instances.preparedStatement(connection);
+        return new this.instances.preparedStatement(connection, sql);
     }
 
     public async exec(sql: string): Promise<number> {
@@ -197,8 +197,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
         this.throwIfDisconnected();
         const connection = this.getRawConnection();
         connection.setAttributes(this.attributes);
-        await connection.query(sql);
-        return new this.instances.statement(connection);
+        return new this.instances.statement(connection, sql, ...(await connection.query(sql)));
     }
 
     public getAttribute(attribute: string): string | number {

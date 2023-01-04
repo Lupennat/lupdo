@@ -131,6 +131,69 @@ describe('Pdo Statement', () => {
         await stmt.close();
     });
 
+    it('Works Statment Execute Preserve Binded Value', async () => {
+        const stmt = await pdo.prepare('SELECT * FROM users limit :limit;');
+        stmt.bindValue('limit', 3);
+        await stmt.execute();
+        expect(stmt.fetchArray().all().length).toBe(3);
+        await stmt.execute();
+        expect(stmt.fetchArray().all().length).toBe(3);
+        await stmt.execute({ limit: 5 });
+        expect(stmt.fetchArray().all().length).toBe(5);
+        await stmt.execute();
+        expect(stmt.fetchArray().all().length).toBe(3);
+        await stmt.close();
+    });
+
+    it('Works Statment Debug Return Correct Parameters', async () => {
+        const stmt = await pdo.prepare('SELECT * FROM users limit :limit;');
+        stmt.bindValue('limit', 3);
+        await stmt.execute();
+        expect(stmt.debug()).toBe(
+            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '3' }, null, 2)
+        );
+        expect(stmt.fetchArray().all().length).toBe(3);
+        await stmt.execute();
+        expect(stmt.debug()).toBe(
+            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '3' }, null, 2)
+        );
+        expect(stmt.fetchArray().all().length).toBe(3);
+        await stmt.execute({ limit: 5 });
+        expect(stmt.debug()).toBe(
+            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '5' }, null, 2)
+        );
+        expect(stmt.fetchArray().all().length).toBe(5);
+        await stmt.execute();
+        expect(stmt.debug()).toBe(
+            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '3' }, null, 2)
+        );
+        expect(stmt.fetchArray().all().length).toBe(3);
+        await stmt.close();
+    });
+
+    it('Works Statment Prepare Statement Isolation', async () => {
+        const trx = await pdo.beginTransaction();
+
+        const stmt = await trx.prepare('SELECT * FROM users limit :limit;');
+        stmt.bindValue('limit', 3);
+        await stmt.execute();
+        expect(stmt.debug()).toBe(
+            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '3' }, null, 2)
+        );
+
+        const stmt2 = await trx.prepare('SELECT * FROM users limit :limit;');
+        stmt2.bindValue('limit', 5);
+        await stmt2.execute();
+        expect(stmt2.debug()).toBe(
+            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '5' }, null, 2)
+        );
+
+        expect(stmt.fetchArray().all().length).toBe(3);
+        expect(stmt2.fetchArray().all().length).toBe(5);
+
+        await trx.rollback();
+    });
+
     it('Works Statement Bind Number', async () => {
         let stmt = await pdo.prepare('SELECT * FROM users limit :limit;');
         stmt.bindValue('limit', BigInt(3));
