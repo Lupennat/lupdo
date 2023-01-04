@@ -1,32 +1,58 @@
-import { ATTR_CASE, ATTR_NULLS, CASE_LOWER, CASE_NATURAL, NULL_EMPTY_STRING, NULL_NATURAL } from '../constants';
+import {
+    ATTR_CASE,
+    ATTR_FETCH_DIRECTION,
+    ATTR_NULLS,
+    CASE_LOWER,
+    CASE_NATURAL,
+    FETCH_BACKWARD,
+    NULL_EMPTY_STRING,
+    NULL_NATURAL
+} from '../constants';
 import { PdoError } from '../errors';
+import PdoAffectingData from '../types/pdo-affecting-data';
 import PdoColumnData from '../types/pdo-column-data';
 import PdoColumnValue from '../types/pdo-column-value';
+import { Params } from '../types/pdo-prepared-statement';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
 import PdoRowData from '../types/pdo-raw-data';
 import PdoStatementI, { Both, Dictionary, Fetched, Group, Named, Newable, Pair, Unique } from '../types/pdo-statement';
 
 class PdoStatement implements PdoStatementI {
-    constructor(protected readonly connection: PdoRawConnectionI) {}
+    protected params: Params | null = null;
+    protected cursor: number | null = null;
+
+    constructor(
+        protected readonly connection: PdoRawConnectionI,
+        protected readonly sql: string,
+        protected affectingResults: PdoAffectingData,
+        protected selectResults: PdoRowData[],
+        protected columns: PdoColumnData[]
+    ) {}
 
     public columnCount(): number {
-        return this.connection.columns.length;
+        return this.columns.length;
     }
 
     public debug(): string {
-        return `SQL: ${this.connection.sql}\nPARAMS:${JSON.stringify(this.connection.params ?? [], null, 2)}`;
+        return `SQL: ${this.sql}\nPARAMS:${JSON.stringify(this.params ?? [], null, 2)}`;
     }
 
     public getColumnMeta(column: number): PdoColumnData | null {
-        return this.connection.columns.length > column ? this.connection.columns[column] : null;
+        return this.columns.length > column ? this.columns[column] : null;
     }
 
     public rowCount(): number {
-        return this.connection.rowCount();
+        if (typeof this.affectingResults.affectedRows !== 'undefined') {
+            return this.affectingResults.affectedRows;
+        }
+        return 0;
     }
 
     public async lastInsertId(name?: string): Promise<string | bigint | number | null> {
-        return await this.connection.lastInsertId(name);
+        return await this.connection.lastInsertId(
+            { affectingResults: this.affectingResults, selectResults: this.selectResults, columns: this.columns },
+            name
+        );
     }
 
     public getAttribute(attribute: string): string | number {
@@ -147,7 +173,7 @@ class PdoStatement implements PdoStatementI {
 
         const map: Pair<T, U> = new Map();
 
-        for (const row of this.connection.fetchAll()) {
+        for (const row of this.fetchAll()) {
             map.set(row[0] as T, row[1] as U);
         }
 
@@ -155,7 +181,7 @@ class PdoStatement implements PdoStatementI {
     }
 
     public resetCursor(): void {
-        this.connection.resetCursor();
+        this.setCursor(null);
     }
 
     protected fetched<T>(
@@ -164,7 +190,7 @@ class PdoStatement implements PdoStatementI {
     ): Fetched<T> {
         return {
             get: () => {
-                const row = this.connection.fetch();
+                const row = this.fetch();
                 if (row === null) {
                     return undefined;
                 }
@@ -175,7 +201,7 @@ class PdoStatement implements PdoStatementI {
                 );
             },
             all: () => {
-                return this.connection.fetchAll().map((row: PdoRowData) => {
+                return this.fetchAll().map((row: PdoRowData) => {
                     return callable(
                         this.getRowNulled(row),
                         this.getCasedColumnsName(),
@@ -187,7 +213,7 @@ class PdoStatement implements PdoStatementI {
                 const columns = this.getCasedColumnsName();
                 const duplicated = this.getDuplicatedColumns();
                 const map: Group<T> = new Map();
-                for (const row of this.connection.fetchAll()) {
+                for (const row of this.fetchAll()) {
                     const key = row.shift() as PdoColumnValue;
                     const values = map.get(key) ?? [];
                     values.push(callable(this.getRowNulled(row), columns, duplicated));
@@ -199,7 +225,7 @@ class PdoStatement implements PdoStatementI {
                 const columns = this.getCasedColumnsName();
                 const duplicated = this.getDuplicatedColumns();
                 const map: Unique<T> = new Map();
-                for (const row of this.connection.fetchAll()) {
+                for (const row of this.fetchAll()) {
                     map.set(row.shift() as PdoColumnValue, callable(this.getRowNulled(row), columns, duplicated));
                 }
                 return map;
@@ -237,7 +263,7 @@ class PdoStatement implements PdoStatementI {
 
     protected getCasedColumnsName(): string[] {
         const columnCase = this.getAttribute(ATTR_CASE) as number;
-        return this.connection.columns.map(column => {
+        return this.columns.map(column => {
             return (columnCase & CASE_NATURAL) !== 0
                 ? column.name
                 : (columnCase & CASE_LOWER) !== 0
@@ -271,6 +297,57 @@ class PdoStatement implements PdoStatementI {
                 throw new PdoError(error);
             }
         }
+    }
+
+    protected fetch(): PdoRowData | null {
+        const cursorOrientation = this.getAttribute(ATTR_FETCH_DIRECTION) as number;
+        const cursor = this.getTempCursorForFetch(cursorOrientation);
+
+        if (!this.isValidCursor(cursor, cursorOrientation)) {
+            cursorOrientation === FETCH_BACKWARD ? this.setCursorToStart() : this.setCursorToEnd();
+            return null;
+        }
+
+        this.setCursor(cursor);
+
+        return this.selectResults[cursor];
+    }
+
+    protected fetchAll(): PdoRowData[] {
+        const cursorOrientation = this.getAttribute(ATTR_FETCH_DIRECTION) as number;
+        const cursor = this.getTempCursorForFetch(cursorOrientation);
+        if (cursorOrientation === FETCH_BACKWARD) {
+            this.setCursorToStart();
+            return this.selectResults.slice(0, cursor + 1).reverse();
+        }
+
+        this.setCursorToEnd();
+        return this.selectResults.slice(cursor);
+    }
+
+    protected setCursor(cursor: number | null): void {
+        this.cursor = cursor;
+    }
+
+    protected setCursorToEnd(): void {
+        this.setCursor(this.selectResults.length);
+    }
+
+    protected setCursorToStart(): void {
+        this.setCursor(-1);
+    }
+
+    protected getTempCursorForFetch(cursorOrientation: number): number {
+        let cursor = this.cursor;
+        if (cursor === null) {
+            cursor = cursorOrientation === FETCH_BACKWARD ? this.selectResults.length : -1;
+        }
+
+        return cursorOrientation === FETCH_BACKWARD ? cursor - 1 : cursor + 1;
+    }
+
+    protected isValidCursor(cursor: number, cursorOrientation: number): boolean {
+        return cursorOrientation === FETCH_BACKWARD ? cursor > -1 : cursor < this.selectResults.length;
     }
 }
 

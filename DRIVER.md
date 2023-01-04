@@ -22,8 +22,12 @@ Please follow this rules if you can:
 
 -   **date** from database should be returned as javascript `string` not javascript `Date`.
 -   **bigint** from database should be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
--   **decimal** from database should be returned as javascript `string` not javascript `Number` to not loose precision.
--   **numeric** from database shold be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
+-   **decimal** from database should be returned as javascript `string` not javascript `Number` to not loose precision, even if driver can't guarantee the precision it is better to return a `string` as standard.
+-   **numeric int** from database shold be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
+-   **numeric float** should be returned as `Number` whenever is possible to preserve precision, otherwise as `string`.
+-   **boolean** should be returned as `Number` 1 or 0.
+-   **json** should be always returned as `String` not an `Object``
+
 -   you should only expose custom Driver APIs if necessary to integrate basic database functionality.
 -   you should override/suppress third party configuration if they can change lupdo core behaviour based on unsecure parameter of createConnection (see example).
 -   you are free to add ATTRIBUTES if necessary _please prefix all attributes with unique driver name_.

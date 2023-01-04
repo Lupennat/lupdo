@@ -5,6 +5,17 @@ All notable changes to this project from 1.0.0 forward will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.3] - 2022-01-04
+
+### Fixed
+
+-   `statements` isolation, now you can generate new statement inside a transaction without override previous statement
+-   prepared statement `execute` now reflect correctly parameters arguments, if parameters are passed to execute, the statement will use only received parameters, otherwise it will reuse bindedParameters.
+
+### Changed
+
+-   support `pdo-statement` and `pdo-raw-connection` are changed to fix statements, please ensure your driver is updated for lupdo version 2.0.3
+
 ## [2.0.2] - 2022-12-28
 
 ### Changed

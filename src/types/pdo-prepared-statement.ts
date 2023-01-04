@@ -21,7 +21,12 @@ export type Placeholder = '?';
 export type Identifiers = Array<':' | '@' | '$'>;
 export type NegativeLooks = Array<'"' | "'" | '`' | '%'>;
 
-export type PdoPreparedStatementConstructor = new (connection: PdoRawConnectionI) => PdoPreparedStatementI;
+export type PdoPreparedStatementConstructor = new (connection: PdoRawConnectionI, sql: string) => PdoPreparedStatementI;
+
+export type PdoTransactionPreparedStatementConstructor = new (
+    connection: PdoRawConnectionI,
+    sql: string
+) => PdoTransactionPreparedStatementI;
 
 export interface PdoTransactionPreparedStatementI extends PdoStatementI {
     /**
