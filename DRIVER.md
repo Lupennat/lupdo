@@ -10,8 +10,6 @@ Custom Lupdo Driver must implements a sql syntax; only string can be used to per
 
 Please follow this rules if you can:
 
--   lupdo dependency on driver should be <= latest minor tested on package when released. Every change to API exposed by support classes will be released as Minor.
-
 -   supports all Lupdo validBindings
 
     -   number
@@ -112,8 +110,8 @@ class FakeRawConnection extends PdoRawConnection {
         statement: ThirdPartyStatement,
         bindings: string[] | { [key: string]: string },
         connection: ThirdPartyConnectionToDB
-    ): Promise<[string,PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
-        // return adapted data from third party statement execution 
+    ): Promise<[string, PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+        // return adapted data from third party statement execution
         // sql returned must be sql string propagated to the driver
         return [sql, {}, [], []];
     }
