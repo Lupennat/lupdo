@@ -1,7 +1,7 @@
 import { PdoRawConnection } from '../../support';
 import PdoAffectingData from '../../types/pdo-affecting-data';
 import PdoColumnData from '../../types/pdo-column-data';
-import { ValidBindings } from '../../types/pdo-prepared-statement';
+import { ValidBindingsSingle } from '../../types/pdo-prepared-statement';
 import PdoRowData from '../../types/pdo-raw-data';
 import FakeDBConnection, { FakeDBStatement } from './fake-db-connection';
 
@@ -35,8 +35,8 @@ class FakeRawConnection extends PdoRawConnection {
     protected async executeStatement(
         statement: FakeDBStatement,
         bindings: string[] | { [key: string]: string }
-    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
-        return await statement.execute(bindings);
+    ): Promise<[string, PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+        return [statement.query, ...(await statement.execute(bindings))];
     }
 
     protected async closeStatement(statement: FakeDBStatement, connection: FakeDBConnection): Promise<void> {
@@ -54,7 +54,7 @@ class FakeRawConnection extends PdoRawConnection {
         return await connection.query(sql);
     }
 
-    protected adaptBindValue(value: ValidBindings): string {
+    protected adaptBindValue(value: ValidBindingsSingle): string {
         if (value === null) {
             return 'null';
         }

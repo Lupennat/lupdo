@@ -16,25 +16,35 @@ import { Params } from '../types/pdo-prepared-statement';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
 import PdoRowData from '../types/pdo-raw-data';
 import PdoStatementI, { Both, Dictionary, Fetched, Group, Named, Newable, Pair, Unique } from '../types/pdo-statement';
+import { paramsToString } from '../utils';
 
 class PdoStatement implements PdoStatementI {
+    protected sql: string;
+
+    protected rawParams: Params | null = null;
     protected params: Params | null = null;
     protected cursor: number | null = null;
 
     constructor(
         protected readonly connection: PdoRawConnectionI,
-        protected readonly sql: string,
+        protected readonly rawSql: string,
         protected affectingResults: PdoAffectingData,
         protected selectResults: PdoRowData[],
         protected columns: PdoColumnData[]
-    ) {}
+    ) {
+        this.sql = this.rawSql;
+    }
 
     public columnCount(): number {
         return this.columns.length;
     }
 
     public debug(): string {
-        return `SQL: ${this.sql}\nPARAMS:${JSON.stringify(this.params ?? [], null, 2)}`;
+        return `SQL: ${this.rawSql}\nPARAMS:${paramsToString(this.rawParams ?? [], 2)}`;
+    }
+
+    public debugSent(): string {
+        return `PROCESSED SQL: ${this.sql}\nPARAMS:${paramsToString(this.params ?? [], 2)}`;
     }
 
     public getColumnMeta(column: number): PdoColumnData | null {
@@ -69,9 +79,9 @@ class PdoStatement implements PdoStatementI {
      * If the result set contains multiple columns with the same name,
      * it returns only a single value per column name.
      */
-    public fetchDictionary(): Fetched<Dictionary> {
-        return this.fetched((row: PdoRowData, columns: string[]): Dictionary => {
-            return row.reduce((carry: Dictionary, val: PdoColumnValue, currentIndex: number) => {
+    public fetchDictionary<T = Dictionary>(): Fetched<T> {
+        return this.fetched((row: PdoRowData, columns: string[]): T => {
+            return row.reduce((carry: any, val: PdoColumnValue, currentIndex: number) => {
                 carry[columns[currentIndex]] = val;
                 return carry;
             }, {});

@@ -51,6 +51,45 @@ async function processSql(
         }
     }
 
+    if (sql.startsWith('select ["3","4","5"] as first, ["10","15"] as second')) {
+        return [
+            {},
+            [
+                [
+                    [3, 4, 5],
+                    [10, 15]
+                ]
+            ],
+            [
+                {
+                    name: 'first',
+                    table: ''
+                },
+                {
+                    name: 'second',
+                    table: ''
+                }
+            ]
+        ];
+    }
+
+    if (sql.startsWith('select 1 as first, 2 as second')) {
+        return [
+            {},
+            [[1, 2]],
+            [
+                {
+                    name: 'first',
+                    table: ''
+                },
+                {
+                    name: 'second',
+                    table: ''
+                }
+            ]
+        ];
+    }
+
     if (sql.startsWith('select sleepresolve(60)')) {
         sleeps[threadId] = true;
         await sleep(threadId, true);
@@ -473,21 +512,22 @@ export class FakeDBStatement {
     }
 
     public async execute(
-        params: string[] | { [key: string]: string }
+        params: string[] | string[][] | { [key: string]: string | string[] }
     ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
         this.logIfDebug('Execute', params);
         let sql = this.query;
         if (Array.isArray(params)) {
             for (const param of params) {
-                sql = sql.replace('?', param);
+                sql = sql.replace('?', Array.isArray(param) ? JSON.stringify(param) : param);
             }
         } else {
             for (const key in params) {
-                sql = sql.replace(':' + key, params[key]);
+                const value = Array.isArray(params[key]) ? JSON.stringify(params[key]) : (params[key] as string);
+                sql = sql.replace(':' + key, value);
             }
         }
 
-        return await processSql(this.threadId, sql, this.inTransaction);
+        return [...(await processSql(this.threadId, sql, this.inTransaction))];
     }
 }
 

@@ -7,9 +7,9 @@ import PdoRowData from './pdo-raw-data';
 export default interface PdoRawConnectionI {
     beginTransaction: () => Promise<void>;
 
-    prepare: (sql: string) => Promise<void>;
+    prepare: (sql: string) => Promise<any>;
 
-    execute: (params: Params | null) => Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
+    execute: (sql: string, params: Params | null) => Promise<[string, PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
 
     close: () => Promise<void>;
 

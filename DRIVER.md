@@ -10,6 +10,8 @@ Custom Lupdo Driver must implements a sql syntax; only string can be used to per
 
 Please follow this rules if you can:
 
+-   lupdo dependency on driver should be <= latest minor tested on package when released. Every change to API exposed by support classes will be released as Minor.
+
 -   supports all Lupdo validBindings
 
     -   number
@@ -19,14 +21,18 @@ Please follow this rules if you can:
     -   Date
     -   boolean
     -   null
+    -   (number|string|bigint|Buffer|Date|boolean|null)[]
+
+-   supports the syntax of named parameters `:key` and the syntax of numeric parameters `?`, adds documentation for other syntax types.
 
 -   **date** from database should be returned as javascript `string` not javascript `Date`.
 -   **bigint** from database should be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
 -   **decimal** from database should be returned as javascript `string` not javascript `Number` to not loose precision, even if driver can't guarantee the precision it is better to return a `string` as standard.
 -   **numeric int** from database shold be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
--   **numeric float** should be returned as `Number` whenever is possible to preserve precision, otherwise as `string`.
+-   **numeric float** from database should be returned as javascript `string` not javascript `Number` to not loose precision, even if driver can't guarantee the precision it is better to return a `string` as standard.
 -   **boolean** should be returned as `Number` 1 or 0.
--   **json** should be always returned as `String` not an `Object``
+-   **json** should be always returned as `String` not an `Object`.
+-   **array** should be returned as Javascript `Array` and value of array should respect rules above.
 
 -   you should only expose custom Driver APIs if necessary to integrate basic database functionality.
 -   you should override/suppress third party configuration if they can change lupdo core behaviour based on unsecure parameter of createConnection (see example).
@@ -56,7 +62,7 @@ import PdoAttributes from 'lupdo/dist/typings/types/pdo-attributes';
 import PdoColumnData from 'lupdo/dist/typings/types/pdo-column-data';
 import { DriverOptions } from 'lupdo/dist/typings/types/pdo-driver';
 import { PoolConnection, PoolOptions } from 'lupdo/dist/typings/types/pdo-pool';
-import { ValidBindings } from 'lupdo/dist/typings/types/pdo-prepared-statement';
+import { ValidBindingsSingle } from 'lupdo/dist/typings/types/pdo-prepared-statement';
 import PdoRowData from 'lupdo/dist/typings/types/pdo-raw-data';
 
 interface ThirdPartyConnectionOptions extends DriverOptions {
@@ -106,9 +112,10 @@ class FakeRawConnection extends PdoRawConnection {
         statement: ThirdPartyStatement,
         bindings: string[] | { [key: string]: string },
         connection: ThirdPartyConnectionToDB
-    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
-        // return adapted data from third party statement execution
-        return [{}, [], []];
+    ): Promise<[string,PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+        // return adapted data from third party statement execution 
+        // sql returned must be sql string propagated to the driver
+        return [sql, {}, [], []];
     }
 
     protected async closeStatement(
@@ -126,7 +133,7 @@ class FakeRawConnection extends PdoRawConnection {
         return [{}, [], []];
     }
 
-    protected adaptBindValue(value: ValidBindings): ValidBindings {
+    protected adaptBindValue(value: ValidBindingsSingle): ValidBindingsSingle {
         // adapt parameter bindings before execute third party statement
         return value;
     }
