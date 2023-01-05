@@ -190,6 +190,7 @@ Debug mode, is defined through Pdo Attributes, custom debug connection options, 
 -   prototype.setAttribute([attribute](#pdo-attributes): string, value: number | string): boolean;
 -   prototype.columnCount(): number;
 -   prototype.debug(): string;
+-   prototype.debugSent(): string;
 -   prototype.fetchDictionary(): [Fetched](#fetched-object)<Dictionary>;
 -   prototype.fetchArray(): [Fetched](#fetched-object)<PdoColumnValue[]>;
 -   prototype.fetchBoth(): [Fetched](#fetched-object)<Both>;
@@ -202,6 +203,9 @@ Debug mode, is defined through Pdo Attributes, custom debug connection options, 
 -   prototype.getColumnMeta(column: number): ColumnData | null;
 -   prototype.rowCount(): number;
 -   prototype.lastInsertId(name?: string): Promise<string | bigint | number | null>;
+
+> **Note**
+> statement.debug() will return SQL and Params Reflecting user input, statement.debugSent() will return SQL and Params Adapted by the Driver.
 
 ### Fetched Object
 
@@ -259,7 +263,7 @@ If you are running into problems, one thing that may help is enabling the debug 
 You can enable debug using [ATTR_DEBUG](#pdo-constants--attributes).\
 This will print extra information on stdout.
 
-
 ## BigInt & JSON
+
 `BigInt` can not be serialized into a JSON string, Lupdo does not implement any serialization Logic.\
 [Here](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt#use_within_json) you can find some info about it.

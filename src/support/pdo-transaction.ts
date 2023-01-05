@@ -28,8 +28,7 @@ class PdoTransaction implements PdoTransactionI {
     }
 
     async prepare(sql: string): Promise<PdoTransactionPreparedStatementI> {
-        await this.connection.prepare(sql);
-        return new this.instances.preparedStatement(this.connection, sql);
+        return new this.instances.preparedStatement(this.connection, sql, await this.connection.prepare(sql));
     }
 
     async query(sql: string): Promise<PdoStatementI> {

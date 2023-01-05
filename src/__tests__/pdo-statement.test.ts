@@ -23,6 +23,11 @@ describe('Pdo Statement', () => {
         expect(stmt.debug()).toBe('SQL: SELECT * FROM users limit 5;\nPARAMS:[]');
     });
 
+    it('Works Statement Debug Sent', async () => {
+        const stmt = await pdo.query('SELECT * FROM users limit 5;');
+        expect(stmt.debugSent()).toBe('PROCESSED SQL: SELECT * FROM users limit 5;\nPARAMS:[]');
+    });
+
     it('Works Statement Get Attribute is Localized', async () => {
         const stmt = await pdo.query('SELECT * FROM users limit 5;');
         const stmtFetchMode = stmt.getAttribute(ATTR_CASE);

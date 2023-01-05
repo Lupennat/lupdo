@@ -3,7 +3,7 @@ import PdoAffectingData from '../types/pdo-affecting-data';
 import PdoAttributes from '../types/pdo-attributes';
 import PdoColumnData from '../types/pdo-column-data';
 import { PoolConnection, PoolI } from '../types/pdo-pool';
-import { Params, ValidBindings } from '../types/pdo-prepared-statement';
+import { Params, ValidBindings, ValidBindingsSingle } from '../types/pdo-prepared-statement';
 import PdoRawConnectionI from '../types/pdo-raw-connection';
 import PdoRowData from '../types/pdo-raw-data';
 
@@ -11,7 +11,6 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     protected attributes: PdoAttributes = {};
     protected connection: PoolConnection | null = null;
     protected inTransaction = false;
-    protected statement: any = null;
     protected statements: Map<string, any> = new Map();
 
     constructor(protected readonly pool: PoolI<PoolConnection>) {}
@@ -28,14 +27,15 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     protected abstract doExec(connection: PoolConnection, sql: string): Promise<PdoAffectingData>;
 
     protected abstract getStatement(sql: string, connection: PoolConnection): Promise<any>;
+
     protected abstract executeStatement(
         statement: any,
         bindings: Params,
         connection: PoolConnection
-    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
+    ): Promise<[string, PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
     protected abstract closeStatement(statement: any, connection: PoolConnection): Promise<void>;
 
-    protected abstract adaptBindValue(value: ValidBindings): ValidBindings;
+    protected abstract adaptBindValue(value: ValidBindingsSingle): ValidBindingsSingle;
 
     public async beginTransaction(): Promise<void> {
         try {
@@ -67,9 +67,9 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         }
     }
 
-    public async prepare(sql: string): Promise<void> {
+    public async prepare(sql: string): Promise<any> {
         try {
-            await this.generateStatement(sql);
+            return await this.generateStatement(sql);
         } catch (error: any) {
             if (!this.inTransaction) {
                 await this.release();
@@ -79,15 +79,25 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     }
 
     public bindValue(value: ValidBindings): ValidBindings {
+        if (Array.isArray(value)) {
+            const values = [];
+            for (const val of value) {
+                values.push(this.adaptBindValue(val));
+            }
+            return values;
+        }
         return this.adaptBindValue(value);
     }
 
-    public async execute(params: Params | null): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+    public async execute(
+        sql: string,
+        params: Params | null
+    ): Promise<[string, PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
         try {
             const connection = await this.generateOrReuseConnection();
 
-            const [affectingResults, selectResults, columns] = await this.executeStatement(
-                this.statement,
+            const [sqlProcessed, affectingResults, selectResults, columns] = await this.executeStatement(
+                this.statements.get(sql),
                 params === null ? [] : params,
                 connection
             );
@@ -96,7 +106,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
                 throw new Error('Data are compromised');
             }
 
-            return [affectingResults, selectResults, columns];
+            return [sqlProcessed, affectingResults, selectResults, columns];
         } catch (error: any) {
             throw new PdoError(error);
         }
@@ -185,18 +195,18 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
             for (const statement of this.statements.values()) {
                 await this.closeStatement(statement, this.connection);
             }
-            this.statement = null;
+
             this.statements.clear();
             this.pool.release(this.connection);
             this.connection = null;
         }
     }
 
-    protected async generateStatement(sql: string): Promise<void> {
+    protected async generateStatement(sql: string): Promise<[string, any]> {
         if (!this.statements.has(sql)) {
             this.statements.set(sql, await this.getStatement(sql, await this.generateOrReuseConnection()));
         }
-        this.statement = this.statements.get(sql);
+        return this.statements.get(sql);
     }
 
     protected async generateOrReuseConnection(): Promise<PoolConnection> {

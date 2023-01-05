@@ -182,8 +182,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
         this.throwIfDisconnected();
         const connection = this.getRawConnection();
         connection.setAttributes(this.attributes);
-        await connection.prepare(sql);
-        return new this.instances.preparedStatement(connection, sql);
+        return new this.instances.preparedStatement(connection, sql, await connection.prepare(sql));
     }
 
     public async exec(sql: string): Promise<number> {

@@ -1,5 +1,6 @@
 import Pdo from '../pdo';
 import { PdoI } from '../types';
+import { paramsToString } from '../utils';
 
 describe('Pdo Statement', () => {
     let pdo: PdoI;
@@ -50,6 +51,29 @@ describe('Pdo Statement', () => {
         stmt.bindValue(1, 1);
         stmt.bindValue(2, 2);
         await stmt.execute();
+        const res = stmt.fetchArray().all();
+        expect(res.length).toBe(1);
+        expect(res).toEqual([[1, 2]]);
+        await stmt.close();
+    });
+
+    it('Works Statement Prepared Statement Bind Numeric Array Value', async () => {
+        const stmt = await pdo.prepare('SELECT ? as first, ? as second;');
+
+        interface TestArray {
+            first: number[];
+            second: number[];
+        }
+
+        stmt.bindValue(1, [3, 4, 5]);
+        stmt.bindValue(2, [BigInt(10), BigInt(15)]);
+        await stmt.execute();
+
+        const res = stmt.fetchDictionary<TestArray>().all();
+
+        expect(res.length).toBe(1);
+        expect(res[0].first).toEqual([3, 4, 5]);
+        expect(res[0].second).toEqual([10, 15]);
 
         await stmt.close();
     });
@@ -72,6 +96,29 @@ describe('Pdo Statement', () => {
         stmt.bindValue('first', 1);
         stmt.bindValue('second', 2);
         await stmt.execute();
+        const res = stmt.fetchArray().all();
+        expect(res.length).toBe(1);
+        expect(res).toEqual([[1, 2]]);
+        await stmt.close();
+    });
+
+    it('Works Statement Prepared Statement Bind Key Array Value', async () => {
+        const stmt = await pdo.prepare('SELECT :first as first, :second as second;');
+
+        interface TestArray {
+            first: number[];
+            second: number[];
+        }
+
+        stmt.bindValue('first', [3, 4, 5]);
+        stmt.bindValue('second', [BigInt(10), BigInt(15)]);
+        await stmt.execute();
+
+        const res = stmt.fetchDictionary<TestArray>().all();
+
+        expect(res.length).toBe(1);
+        expect(res[0].first).toEqual([3, 4, 5]);
+        expect(res[0].second).toEqual([10, 15]);
 
         await stmt.close();
     });
@@ -117,6 +164,28 @@ describe('Pdo Statement', () => {
         await stmt.close();
     });
 
+    it('Works Statement Execute With Numeric Array Value', async () => {
+        const stmt = await pdo.prepare('SELECT ? as first, ? as second;');
+
+        interface TestArray {
+            first: number[];
+            second: number[];
+        }
+
+        await stmt.execute([
+            [3, 4, 5],
+            [BigInt(10), BigInt(15)]
+        ]);
+
+        const res = stmt.fetchDictionary<TestArray>().all();
+
+        expect(res.length).toBe(1);
+        expect(res[0].first).toEqual([3, 4, 5]);
+        expect(res[0].second).toEqual([10, 15]);
+
+        await stmt.close();
+    });
+
     it('Works Statement Execute With Key Value', async () => {
         const stmt = await pdo.prepare('SELECT * FROM users limit :limit;');
 
@@ -127,6 +196,28 @@ describe('Pdo Statement', () => {
 
         expect(stmt.fetchArray().all().length).toBe(5);
         expect(stmt.fetchArray().all().length).toBe(0);
+
+        await stmt.close();
+    });
+
+    it('Works Statement Execute With Key Array Value', async () => {
+        const stmt = await pdo.prepare('SELECT :first as first, :second as second;');
+
+        interface TestArray {
+            first: number[];
+            second: number[];
+        }
+
+        await stmt.execute({
+            first: [3, 4, 5],
+            second: [BigInt(10), BigInt(15)]
+        });
+
+        const res = stmt.fetchDictionary<TestArray>().all();
+
+        expect(res.length).toBe(1);
+        expect(res[0].first).toEqual([3, 4, 5]);
+        expect(res[0].second).toEqual([10, 15]);
 
         await stmt.close();
     });
@@ -146,29 +237,89 @@ describe('Pdo Statement', () => {
     });
 
     it('Works Statment Debug Return Correct Parameters', async () => {
-        const stmt = await pdo.prepare('SELECT * FROM users limit :limit;');
-        stmt.bindValue('limit', 3);
+        const stmt = await pdo.prepare('SELECT ?, ?, ?, ?, ?, ?;');
+        stmt.bindValue(1, 3);
+        stmt.bindValue(2, Buffer.from('bufferone'));
+        stmt.bindValue(3, new Date('2022-12-12'));
+        stmt.bindValue(4, BigInt('4'));
+        stmt.bindValue(5, null);
+        stmt.bindValue(6, true);
+        stmt.bindValue(7, 'stringa');
+
+        expect(stmt.debug()).toBe(
+            'SQL: SELECT ?, ?, ?, ?, ?, ?;\nPARAMS:' +
+                paramsToString(
+                    [3, Buffer.from('bufferone'), new Date('2022-12-12'), BigInt('4'), null, true, 'stringa'],
+                    2
+                )
+        );
+
         await stmt.execute();
-        expect(stmt.debug()).toBe(
-            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '3' }, null, 2)
+
+        const stmt2 = await pdo.prepare('SELECT ?, ?, ?, ?, ?, ?;');
+
+        expect(stmt2.debug()).toBe('SQL: SELECT ?, ?, ?, ?, ?, ?;\nPARAMS:[]');
+
+        await stmt2.execute([
+            4,
+            Buffer.from('bufferone2'),
+            new Date('2022-12-11'),
+            BigInt('5'),
+            null,
+            false,
+            'stringa2'
+        ]);
+
+        expect(stmt2.debug()).toBe(
+            'SQL: SELECT ?, ?, ?, ?, ?, ?;\nPARAMS:' +
+                paramsToString(
+                    [4, Buffer.from('bufferone2'), new Date('2022-12-11'), BigInt('5'), null, false, 'stringa2'],
+                    2
+                )
         );
-        expect(stmt.fetchArray().all().length).toBe(3);
-        await stmt.execute();
-        expect(stmt.debug()).toBe(
-            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '3' }, null, 2)
-        );
-        expect(stmt.fetchArray().all().length).toBe(3);
-        await stmt.execute({ limit: 5 });
-        expect(stmt.debug()).toBe(
-            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '5' }, null, 2)
-        );
-        expect(stmt.fetchArray().all().length).toBe(5);
-        await stmt.execute();
-        expect(stmt.debug()).toBe(
-            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '3' }, null, 2)
-        );
-        expect(stmt.fetchArray().all().length).toBe(3);
+
         await stmt.close();
+        await stmt2.close();
+    });
+
+    it('Works Statment Debug Sent return Correct Parameters', async () => {
+        const stmt = await pdo.prepare('SELECT ?, ?, ?, ?, ?, ?;');
+        stmt.bindValue(1, 3);
+        stmt.bindValue(2, Buffer.from('bufferone'));
+        stmt.bindValue(3, new Date('2022-12-12'));
+        stmt.bindValue(4, BigInt('4'));
+        stmt.bindValue(5, null);
+        stmt.bindValue(6, true);
+        stmt.bindValue(7, 'stringa');
+
+        expect(stmt.debugSent()).toBe(
+            'PROCESSED SQL: SELECT ?, ?, ?, ?, ?, ?;\nPARAMS:' +
+                paramsToString(['3', 'bufferone', '2022-12-12T00:00:00.000Z', '4', 'null', '1', 'stringa'], 2)
+        );
+
+        await stmt.execute();
+
+        const stmt2 = await pdo.prepare('SELECT ?, ?, ?, ?, ?, ?;');
+
+        expect(stmt2.debugSent()).toBe('PROCESSED SQL: SELECT ?, ?, ?, ?, ?, ?;\nPARAMS:[]');
+
+        await stmt2.execute([
+            4,
+            Buffer.from('bufferone2'),
+            new Date('2022-12-11'),
+            BigInt('5'),
+            null,
+            false,
+            'stringa2'
+        ]);
+
+        expect(stmt2.debugSent()).toBe(
+            'PROCESSED SQL: SELECT ?, ?, ?, ?, ?, ?;\nPARAMS:' +
+                paramsToString(['4', 'bufferone2', '2022-12-11T00:00:00.000Z', '5', 'null', '0', 'stringa2'], 2)
+        );
+
+        await stmt.close();
+        await stmt2.close();
     });
 
     it('Works Statment Prepare Statement Isolation', async () => {
@@ -178,14 +329,14 @@ describe('Pdo Statement', () => {
         stmt.bindValue('limit', 3);
         await stmt.execute();
         expect(stmt.debug()).toBe(
-            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '3' }, null, 2)
+            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: 3 }, null, 2)
         );
 
         const stmt2 = await trx.prepare('SELECT * FROM users limit :limit;');
         stmt2.bindValue('limit', 5);
         await stmt2.execute();
         expect(stmt2.debug()).toBe(
-            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: '5' }, null, 2)
+            'SQL: SELECT * FROM users limit :limit;\nPARAMS:' + JSON.stringify({ limit: 5 }, null, 2)
         );
 
         expect(stmt.fetchArray().all().length).toBe(3);

@@ -6,7 +6,7 @@ import PdoRowData from './pdo-raw-data';
 
 export type PdoStatementConstructor = new (
     connection: PdoRawConnectionI,
-    sql: string,
+    rawSql: string,
     affectingResults: PdoAffectingData,
     selectResults: PdoRowData[],
     columns: PdoColumnData[]
@@ -34,7 +34,7 @@ export default interface PdoStatementI {
      * If the result set contains multiple columns with the same name,
      * it returns only a single value per column name.
      */
-    fetchDictionary: () => Fetched<Dictionary>;
+    fetchDictionary: <T = Dictionary>() => Fetched<T>;
 
     /**
      * Specifies that the fetch method shall return each row as an array indexed by
@@ -93,6 +93,8 @@ export default interface PdoStatementI {
     setAttribute: (attribute: string, value: number | string) => boolean;
 
     debug: () => string;
+
+    debugSent(): string;
 
     resetCursor: () => void;
 }

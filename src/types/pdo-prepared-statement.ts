@@ -13,19 +13,28 @@ export interface ObjectParamsDescriptor {
     aliases: string[];
 }
 
-export type ValidBindings = string | bigint | number | boolean | Date | Buffer | null;
+export type ValidBindings = ValidBindingsSingle | ValidBindingsArray;
+export type ValidBindingsSingle = string | bigint | number | boolean | Date | Buffer | null;
+export type ValidBindingsArray = ValidBindingsSingle[];
+
 export type ArrayParams = ValidBindings[];
+
 export type Params = ArrayParams | ObjectParams;
 
 export type Placeholder = '?';
 export type Identifiers = Array<':' | '@' | '$'>;
 export type NegativeLooks = Array<'"' | "'" | '`' | '%'>;
 
-export type PdoPreparedStatementConstructor = new (connection: PdoRawConnectionI, sql: string) => PdoPreparedStatementI;
+export type PdoPreparedStatementConstructor = new (
+    connection: PdoRawConnectionI,
+    rawSql: string,
+    statement: any
+) => PdoPreparedStatementI;
 
 export type PdoTransactionPreparedStatementConstructor = new (
     connection: PdoRawConnectionI,
-    sql: string
+    rawSql: string,
+    statement: any
 ) => PdoTransactionPreparedStatementI;
 
 export interface PdoTransactionPreparedStatementI extends PdoStatementI {
