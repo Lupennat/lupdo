@@ -26,6 +26,8 @@ Lupdo offers the possibility of creating drivers for any database that accepts s
     -   [Fetch Examples](FETCH.md)
 -   [Prepared Statement](#prepared-statement)
     -   [Valid Bindings](#valid-bindings)
+        -   [Primitive Binding](#primitive-binding)
+        -   [Typed Binding](#typed-binding)
     -   [Params](#params)
 -   [Logger](#logger)
 -   [Debug](#debug)
@@ -42,10 +44,10 @@ Lupdo, under the hood, uses stable and performant npm packages:
 Base Example with sqlite driver, here you can find the list of [Available Drivers](DRIVER.md)
 
 ```js
-const Pdo = require('lupdo');
+const { Pdo } = require('lupdo');
 require('lupdo-sqlite');
 // ES6 or Typescrypt
-import Pdo from 'lupdo';
+import { Pdo } from 'lupdo';
 import 'lupdo-sqlite';
 
 const pdo = new Pdo('sqlite', { path: ':memory' }, { min: 2, max: 3 });
@@ -231,6 +233,11 @@ extends [Statement](#statement)
 
 ### Valid Bindings
 
+-   [Primitives](#primitives-binding)
+-   [TypedBinding](#typed-binding)
+
+#### Primitives Binding
+
 -   number
 -   string
 -   bigint
@@ -238,6 +245,54 @@ extends [Statement](#statement)
 -   Date
 -   boolean
 -   null
+
+#### Typed Binding
+
+In some cases, it is not possible to perform parameter binding, relying solely on the javascript type of the value passed, using TypedBinding it is possible to identify the type of database column for which the value is being bound.
+
+```ts
+const { Pdo, TypedBinding, PARAM_INTEGER, PARAM_FLOAT, PARAM_VARBINARY } = require('lupdo');
+require('lupdo-sqlite');
+// ES6 or Typescrypt
+import { Pdo, TypedBinding, PARAM_INTEGER, PARAM_FLOAT, PARAM_VARBINARY } from 'lupdo';
+import 'lupdo-sqlite';
+
+const pdo = new Pdo('sqlite', { path: ':memory' }, { min: 2, max: 3 });
+const run = async () => {
+    const statement = await pdo.prepare('INSERT "test" (`int`,`real`, `nullable_blob`) VALUES (?,?,?)');
+    await statment.execute([
+        TypedBinding.create(PARAM_INTEGER, '10'),
+        new TypedBinding(PARAM_FLOAT, '103232.231232112'),
+        TypedBinding.create(PARAM_VARBINARY, null)
+    ]);
+    console.log(res);
+    await pdo.disconnect();
+};
+
+run();
+```
+
+this is the list of bindings supported by Lupdo
+
+-   PARAM_BIGINT
+-   PARAM_INTEGER
+-   PARAM_DECIMAL
+-   PARAM_NUMERIC
+-   PARAM_FLOAT
+-   PARAM_BOOLEAN
+-   PARAM_TEXT
+-   PARAM_CHAR
+-   PARAM_VARCHAR
+-   PARAM_GEOMETRY
+-   PARAM_DATE
+-   PARAM_DATETIME
+-   PARAM_TIMESTAMP
+-   PARAM_TIME
+-   PARAM_BINARY
+-   PARAM_VARBINARY
+
+> **Note**
+> some drivers may ignore the type, or may only support a subset of types, or may support additional types.
 
 ### Params
 
@@ -249,9 +304,9 @@ or a key-value object
 Lupdo by default doesn't log anything, you can assign a custom log for Lupdo to intercept messages.
 
 ```js
-const Pdo = require('lupdo');
+const { Pdo } = require('lupdo');
 // ES6 or Typescrypt
-import Pdo from 'lupdo';
+import { Pdo } from 'lupdo';
 Pdo.setLogger((message: any, level?: any) => {
     console.log(message, level);
 });

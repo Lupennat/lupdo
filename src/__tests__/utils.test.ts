@@ -1,3 +1,5 @@
+import { PARAM_BIGINT } from '../constants';
+import TypedBinding from '../typed-binding';
 import { isFunctionConstructor, paramsToString } from '../utils';
 
 describe('Utils', () => {
@@ -21,6 +23,7 @@ describe('Utils', () => {
 
     it('Works Params To String', () => {
         let json = paramsToString([
+            TypedBinding.create(PARAM_BIGINT, BigInt(10)),
             new Date('2022-12-25'),
             1,
             BigInt(10),
@@ -28,14 +31,24 @@ describe('Utils', () => {
             Buffer.from('string'),
             null,
             true,
-            [new Date('2022-12-25'), 1, BigInt(10), 'text', Buffer.from('string'), null, true]
+            [
+                TypedBinding.create(PARAM_BIGINT, BigInt(10)),
+                new Date('2022-12-25'),
+                1,
+                BigInt(10),
+                'text',
+                Buffer.from('string'),
+                null,
+                true
+            ]
         ]);
 
         expect(json).toBe(
-            '[{"type":"Date","data":"2022-12-25T00:00:00.000Z"},1,{"type":"BigInt","data":"10"},"text",{"type":"Buffer","data":[115,116,114,105,110,103]},null,true,[{"type":"Date","data":"2022-12-25T00:00:00.000Z"},1,{"type":"BigInt","data":"10"},"text",{"type":"Buffer","data":[115,116,114,105,110,103]},null,true]]'
+            '[{"type":"BigInt","data":"10"},{"type":"Date","data":"2022-12-25T00:00:00.000Z"},1,{"type":"BigInt","data":"10"},"text",{"type":"Buffer","data":[115,116,114,105,110,103]},null,true,[{"type":"BigInt","data":"10"},{"type":"Date","data":"2022-12-25T00:00:00.000Z"},1,{"type":"BigInt","data":"10"},"text",{"type":"Buffer","data":[115,116,114,105,110,103]},null,true]]'
         );
 
         json = paramsToString({
+            typed: TypedBinding.create(PARAM_BIGINT, BigInt(10)),
             date: new Date('2022-12-25'),
             number: 1,
             bigint: BigInt(10),
@@ -43,11 +56,20 @@ describe('Utils', () => {
             buffer: Buffer.from('string'),
             nullable: null,
             boolean: true,
-            array: [new Date('2022-12-25'), 1, BigInt(10), 'text', Buffer.from('string'), null, true]
+            array: [
+                TypedBinding.create(PARAM_BIGINT, BigInt(10)),
+                new Date('2022-12-25'),
+                1,
+                BigInt(10),
+                'text',
+                Buffer.from('string'),
+                null,
+                true
+            ]
         });
 
         expect(json).toBe(
-            '{"date":{"type":"Date","data":"2022-12-25T00:00:00.000Z"},"number":1,"bigint":{"type":"BigInt","data":"10"},"string":"text","buffer":{"type":"Buffer","data":[115,116,114,105,110,103]},"nullable":null,"boolean":true,"array":[{"type":"Date","data":"2022-12-25T00:00:00.000Z"},1,{"type":"BigInt","data":"10"},"text",{"type":"Buffer","data":[115,116,114,105,110,103]},null,true]}'
+            '{"typed":{"type":"BigInt","data":"10"},"date":{"type":"Date","data":"2022-12-25T00:00:00.000Z"},"number":1,"bigint":{"type":"BigInt","data":"10"},"string":"text","buffer":{"type":"Buffer","data":[115,116,114,105,110,103]},"nullable":null,"boolean":true,"array":[{"type":"BigInt","data":"10"},{"type":"Date","data":"2022-12-25T00:00:00.000Z"},1,{"type":"BigInt","data":"10"},"text",{"type":"Buffer","data":[115,116,114,105,110,103]},null,true]}'
         );
     });
 });

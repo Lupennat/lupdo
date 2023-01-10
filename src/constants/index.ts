@@ -89,3 +89,68 @@ export const FETCH_FORWARD = 0b00000000000000001;
  * Fetch the previous row in the result set.
  */
 export const FETCH_BACKWARD = 0b00000000000000010;
+
+/**
+ * Param type Bigint
+ */
+export const PARAM_BIGINT = 'BIGINT';
+/**
+ * Param type Integer
+ */
+export const PARAM_INTEGER = 'INTEGER';
+/**
+ * Param type Decimal
+ */
+export const PARAM_DECIMAL = 'DECIMAL';
+/**
+ * Param type Numeric
+ */
+export const PARAM_NUMERIC = 'NUMERIC';
+/**
+ * Param type Float
+ */
+export const PARAM_FLOAT = 'FLOAT';
+/**
+ * Param type Boolean
+ */
+export const PARAM_BOOLEAN = 'BOOLEAN';
+/**
+ * Param type Text
+ */
+export const PARAM_TEXT = 'TEXT';
+/**
+ * Param type Char
+ */
+export const PARAM_CHAR = 'CHAR';
+/**
+ * Param type Char
+ */
+export const PARAM_VARCHAR = 'VARCHAR';
+/**
+ * Param type Geometry
+ */
+export const PARAM_GEOMETRY = 'GEOMETRY';
+/**
+ * Param type Date
+ */
+export const PARAM_DATE = 'DATE';
+/**
+ * Param type Datetime
+ */
+export const PARAM_DATETIME = 'DATETIME';
+/**
+ * Param type Timestamp
+ */
+export const PARAM_TIMESTAMP = 'TIMESTAMP';
+/**
+ * Param type Time
+ */
+export const PARAM_TIME = 'TIME';
+/**
+ * Param type Binary
+ */
+export const PARAM_BINARY = 'BINARY';
+/**
+ * Param type Binary
+ */
+export const PARAM_VARBINARY = 'VARBINARY';

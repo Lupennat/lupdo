@@ -1,3 +1,4 @@
+import TypedBinding from '../typed-binding';
 import PdoRawConnectionI from './pdo-raw-connection';
 import PdoStatementI from './pdo-statement';
 
@@ -14,7 +15,8 @@ export interface ObjectParamsDescriptor {
 }
 
 export type ValidBindings = ValidBindingsSingle | ValidBindingsArray;
-export type ValidBindingsSingle = string | bigint | number | boolean | Date | Buffer | null;
+export type ValidBindingsPrimitive = string | bigint | number | boolean | Date | Buffer | null;
+export type ValidBindingsSingle = TypedBinding | ValidBindingsPrimitive;
 export type ValidBindingsArray = ValidBindingsSingle[];
 
 export type ArrayParams = ValidBindings[];

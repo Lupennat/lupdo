@@ -1,4 +1,6 @@
+import { PARAM_BIGINT } from '../constants';
 import Pdo from '../pdo';
+import TypedBinding from '../typed-binding';
 import { PdoI } from '../types';
 import { paramsToString } from '../utils';
 
@@ -343,6 +345,20 @@ describe('Pdo Statement', () => {
         expect(stmt2.fetchArray().all().length).toBe(5);
 
         await trx.rollback();
+    });
+
+    it('Works Statement Bind Typed', async () => {
+        let stmt = await pdo.prepare('SELECT * FROM users limit :limit;');
+        stmt.bindValue('limit', TypedBinding.create(PARAM_BIGINT, BigInt(3)));
+        await stmt.execute();
+        expect(stmt.fetchArray().all().length).toBe(3);
+        await stmt.execute();
+        expect(stmt.fetchArray().all().length).toBe(3);
+        await stmt.close();
+        stmt = await pdo.prepare('SELECT ?;');
+        await stmt.execute([TypedBinding.create(PARAM_BIGINT, BigInt(1))]);
+        expect(stmt.fetchColumn(0).get()).toBe(1);
+        await stmt.close();
     });
 
     it('Works Statement Bind Number', async () => {

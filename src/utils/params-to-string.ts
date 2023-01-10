@@ -1,3 +1,4 @@
+import TypedBinding from '../typed-binding';
 import { Params } from '../types/pdo-prepared-statement';
 
 class JsonDate extends Date {
@@ -14,6 +15,9 @@ class JsonBigInt {
 }
 
 const toJsonable = (value: any): any => {
+    if (value instanceof TypedBinding) {
+        return toJsonable(value.value);
+    }
     if (value instanceof Date) {
         return new JsonDate(value.toString());
     }
