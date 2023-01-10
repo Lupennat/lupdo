@@ -1,6 +1,6 @@
 {
     "name": "lupdo",
-    "version": "2.1.0",
+    "version": "3.0.0",
     "description": "Database Abstraction Layer for Node js",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",

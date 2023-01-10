@@ -1,4 +1,5 @@
 import { PdoRawConnection } from '../../support';
+import TypedBinding from '../../typed-binding';
 import PdoAffectingData from '../../types/pdo-affecting-data';
 import PdoColumnData from '../../types/pdo-column-data';
 import { ValidBindingsSingle } from '../../types/pdo-prepared-statement';
@@ -57,6 +58,10 @@ class FakeRawConnection extends PdoRawConnection {
     protected adaptBindValue(value: ValidBindingsSingle): string {
         if (value === null) {
             return 'null';
+        }
+
+        if (value instanceof TypedBinding) {
+            return this.adaptBindValue(value.value);
         }
 
         if (typeof value === 'boolean') {
