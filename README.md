@@ -26,7 +26,7 @@ Lupdo offers the possibility of creating drivers for any database that accepts s
     -   [Fetch Examples](FETCH.md)
 -   [Prepared Statement](#prepared-statement)
     -   [Valid Bindings](#valid-bindings)
-        -   [Primitive Binding](#primitive-binding)
+        -   [Primitives Binding](#primitives-binding)
         -   [Typed Binding](#typed-binding)
     -   [Params](#params)
 -   [Logger](#logger)
