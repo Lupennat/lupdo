@@ -51,6 +51,11 @@ async function processSql(
         }
     }
 
+    if (sql.startsWith('select array')) {
+        const arrays = sql.match(/\[\[(.*?)\]\]/g);
+        return [{}, arrays ? [arrays.map(item => item.slice(1, item.length - 1))] : [], []];
+    }
+
     if (sql.startsWith('select ["3","4","5"] as first, ["10","15"] as second')) {
         return [
             {},

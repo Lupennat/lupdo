@@ -1,4 +1,4 @@
-import { PARAM_BIGINT } from '../constants';
+import { PARAM_BIGINT, PARAM_DECIMAL } from '../constants';
 import Pdo from '../pdo';
 import TypedBinding from '../typed-binding';
 import { PdoI } from '../types';
@@ -358,6 +358,53 @@ describe('Pdo Statement', () => {
         stmt = await pdo.prepare('SELECT ?;');
         await stmt.execute([TypedBinding.create(PARAM_BIGINT, BigInt(1))]);
         expect(stmt.fetchColumn(0).get()).toBe(1);
+        await stmt.close();
+    });
+
+    it('Works Statement Bind Array', async () => {
+        let stmt = await pdo.prepare('SELECT ARRAY[?], ARRAY[?], ARRAY[?];');
+        await stmt.execute([
+            [
+                TypedBinding.create(PARAM_BIGINT, BigInt(1)),
+                TypedBinding.create(PARAM_BIGINT, BigInt(2)),
+                TypedBinding.create(PARAM_BIGINT, BigInt(3))
+            ],
+            [
+                TypedBinding.create(PARAM_DECIMAL, '12345.678', { precision: 10, scale: 4 }),
+                TypedBinding.create(PARAM_DECIMAL, '123.456789', { precision: 10, scale: 4 }),
+                TypedBinding.create(PARAM_DECIMAL, '1234567890', { precision: 10, scale: 4 })
+            ],
+            ['hi', 'to', 'friends']
+        ]);
+        expect(stmt.fetchArray().get()).toEqual([
+            '["1","2","3"]',
+            '["12345.67800","123.4568000","1234567890"]',
+            '["hi","to","friends"]'
+        ]);
+
+        await stmt.close();
+
+        stmt = await pdo.prepare('SELECT ARRAY[:bigints], ARRAY[:decimals], ARRAY[:strings];');
+        await stmt.execute({
+            bigints: [
+                TypedBinding.create(PARAM_BIGINT, BigInt(4)),
+                TypedBinding.create(PARAM_BIGINT, BigInt(5)),
+                TypedBinding.create(PARAM_BIGINT, BigInt(6))
+            ],
+            decimals: [
+                TypedBinding.create(PARAM_DECIMAL, '12345.678', { precision: 12, scale: 3 }),
+                TypedBinding.create(PARAM_DECIMAL, '123.456789', { precision: 12, scale: 3 }),
+                TypedBinding.create(PARAM_DECIMAL, '1234567890', { precision: 12, scale: 3 })
+            ],
+            strings: ['friends', 'say', 'hi']
+        });
+
+        expect(stmt.fetchArray().get()).toEqual([
+            '["4","5","6"]',
+            '["12345.6780000","123.457000000","1234567890.00"]',
+            '["friends","say","hi"]'
+        ]);
+
         await stmt.close();
     });
 
