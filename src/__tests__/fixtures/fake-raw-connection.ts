@@ -61,7 +61,28 @@ class FakeRawConnection extends PdoRawConnection {
         }
 
         if (value instanceof TypedBinding) {
-            return this.adaptBindValue(value.value);
+            let val = value.value;
+            if (value.options != null) {
+                val = val == null ? '' : val.toString();
+                if ('scale' in value.options) {
+                    val = parseFloat(val).toFixed(value.options.scale);
+                }
+                if ('precision' in value.options) {
+                    const isDecimal = val.includes('.');
+                    const valLength = isDecimal ? val.length - 1 : val.length;
+
+                    if (valLength < value.options.precision) {
+                        val = (isDecimal ? val : val + '.').padEnd(value.options.precision + 1, '0');
+                    }
+
+                    if (valLength > value.options.precision) {
+                        val = val.slice(0, value.options.precision + (isDecimal ? 1 : 0));
+                    }
+                    val = val.endsWith('.') ? val.slice(0, val.length - 1) : val;
+                }
+            }
+
+            return this.adaptBindValue(val);
         }
 
         if (typeof value === 'boolean') {

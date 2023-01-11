@@ -269,8 +269,8 @@ const run = async () => {
     const statement = await pdo.prepare('INSERT "test" (`int`,`real`, `nullable_blob`) VALUES (?,?,?)');
     await statment.execute([
         TypedBinding.create(PARAM_INTEGER, '10'),
-        new TypedBinding(PARAM_FLOAT, '103232.231232112'),
-        TypedBinding.create(PARAM_VARBINARY, null)
+        new TypedBinding(PARAM_FLOAT, '103232.231232112', { precision: 10, scale: 5 }),
+        TypedBinding.create(PARAM_VARBINARY, null, { max_length: 'max' })
     ]);
     console.log(res);
     await pdo.disconnect();
@@ -299,7 +299,8 @@ this is the list of bindings supported by Lupdo
 -   PARAM_VARBINARY
 
 > **Note**
-> some drivers may ignore the type, or may only support a subset of types, or may support additional types.
+> Some drivers may ignore the type, or may only support a subset of types, or may support additional types.
+> Each drivers may support custom options.
 
 ### Params
 
