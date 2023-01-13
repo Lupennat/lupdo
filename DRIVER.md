@@ -3,6 +3,7 @@
 -   [lupdo-mysql](https://www.npmjs.com/package/lupdo-mysql)
 -   [lupdo-sqlite](https://www.npmjs.com/package/lupdo-sqlite)
 -   [lupdo-postgres](https://www.npmjs.com/package/lupdo-postgres)
+-   [lupdo-mssql](https://www.npmjs.com/package/lupdo-mssql)
 
 ## WRITE CUSTOM DRIVER
 
@@ -39,7 +40,7 @@ Please follow this rules if you can:
 -   you must avoid to override any core funtionality, you can open a discussion or propose a pull-request.
 -   import or require of the library must automatically register the driver within Lupdo.
 -   you can create a new version of existing driver using another thirdy party library, you should avoid to implements duplicated version with same third party driver, instead try to improve the existing one.
--   you can add new param type to use on `TypedBinding` and you should implements `TypedBindingOptions` for all `TypeBinding`; please document any options and new type accepted.
+-   you can add a new type parameter to be used on `TypedBinding` and implement `TypedBindingOptions` for all `TypeBinding`, please document all options and the new accepted type.
 
 > **Note**
 > As soon as it will be stable, Lupdo will accept [Temporal](https://tc39.es/proposal-temporal/docs/) as validBindings and db date should be returned as Temporal.

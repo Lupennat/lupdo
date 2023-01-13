@@ -293,6 +293,7 @@ this is the list of bindings supported by Lupdo
 -   PARAM_GEOMETRY
 -   PARAM_DATE
 -   PARAM_DATETIME
+-   PARAM_DATETIMEZONE
 -   PARAM_TIMESTAMP
 -   PARAM_TIME
 -   PARAM_BINARY
