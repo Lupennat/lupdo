@@ -5,6 +5,12 @@ All notable changes to this project from 1.0.0 forward will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.1.2] - 2023-01-13
+
+### Added
+
+-   Added new param `PARAM_DATETIMEZONE`.
+
 ## [3.1.1] - 2023-01-11
 
 ### Added

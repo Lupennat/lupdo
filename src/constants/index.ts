@@ -143,6 +143,10 @@ export const PARAM_DATETIME = 'DATETIME';
  */
 export const PARAM_TIMESTAMP = 'TIMESTAMP';
 /**
+ * Param type Datetimezone
+ */
+export const PARAM_DATETIMEZONE = 'DATETIMEZONE';
+/**
  * Param type Time
  */
 export const PARAM_TIME = 'TIME';
