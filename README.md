@@ -53,13 +53,11 @@ Lupdo, under the hood, uses stable and performant npm packages:
 Base Example with sqlite driver, here you can find the list of [Available Drivers](DRIVER.md)
 
 ```js
-const { Pdo } = require('lupdo');
-require('lupdo-sqlite');
+const { createSqlitePdo } = require('lupdo-sqlite');
 // ES6 or Typescrypt
-import { Pdo } from 'lupdo';
-import 'lupdo-sqlite';
+import { createSqlitePdo } from 'ludpo-sqlite';
 
-const pdo = new Pdo('sqlite', { path: ':memory' }, { min: 2, max: 3 });
+const pdo = createSqlitePdo({ path: ':memory' }, { min: 2, max: 3 });
 const run = async () => {
     const statement = await pdo.query('SELECT 2');
     const res = statement.fetchArray().all();
@@ -136,7 +134,11 @@ The connection returned is the original [Driver Connection](#available-drivers) 
 > Once the connection has been used, you should manually close the connection.
 
 ```ts
-const pdo = new Pdo('sqlite', { path: ':memory' }, { min: 2, max: 3 });
+const { createSqlitePdo } = require('lupdo-sqlite');
+// ES6 or Typescrypt
+import { createSqlitePdo } from 'ludpo-sqlite';
+
+const pdo = createSqlitePdo({ path: ':memory' }, { min: 2, max: 3 });
 const run = async () => {
     const rawConnection = await pdo.getRawDriverConnection<Database>();
     // do whatever you want
@@ -260,13 +262,13 @@ extends [Statement](#statement)
 In some cases, it is not possible to perform parameter binding, relying solely on the javascript type of the value passed, using TypedBinding it is possible to identify the type of database column for which the value is being bound.
 
 ```ts
-const { Pdo, TypedBinding, PARAM_INTEGER, PARAM_FLOAT, PARAM_VARBINARY } = require('lupdo');
-require('lupdo-sqlite');
+const { TypedBinding, PARAM_INTEGER, PARAM_FLOAT, PARAM_VARBINARY } = require('lupdo');
+const { createSqlitePdo } = require('lupdo-sqlite');
 // ES6 or Typescrypt
-import { Pdo, TypedBinding, PARAM_INTEGER, PARAM_FLOAT, PARAM_VARBINARY } from 'lupdo';
-import 'lupdo-sqlite';
+import { TypedBinding, PARAM_INTEGER, PARAM_FLOAT, PARAM_VARBINARY } from 'lupdo';
+import { createSqlitePdo } from 'ludpo-sqlite';
 
-const pdo = new Pdo('sqlite', { path: ':memory' }, { min: 2, max: 3 });
+const pdo = createSqlitePdo({ path: ':memory' }, { min: 2, max: 3 });
 const run = async () => {
     const statement = await pdo.prepare('INSERT "test" (`int`,`real`, `nullable_blob`) VALUES (?,?,?)');
     await statment.execute([

@@ -39,6 +39,7 @@ Please follow this rules if you can:
 -   you are free to add ATTRIBUTES if necessary _please prefix all attributes with unique driver name_.
 -   you must avoid to override any core funtionality, you can open a discussion or propose a pull-request.
 -   import or require of the library must automatically register the driver within Lupdo.
+-   driver should export a function `create{driver}Pdo` that return a new instance of Pdo for the driver to improve options typing.
 -   you can create a new version of existing driver using another thirdy party library, you should avoid to implements duplicated version with same third party driver, instead try to improve the existing one.
 -   you can add a new type parameter to be used on `TypedBinding` and implement `TypedBindingOptions` for all `TypeBinding`, please document all options and the new accepted type.
 
@@ -197,4 +198,12 @@ class FakeDriver extends PdoDriver {
 }
 
 Pdo.addDriver('fake', FakeDriver);
+
+export function createFakePdo(
+    options: ThirdPartyConnectionOptions,
+    poolOptions?: PoolOptions,
+    attributes?: PdoAttributes
+): Pdo {
+    return new Pdo('fake', options, poolOptions, attributes);
+}
 ```

@@ -1,9 +1,10 @@
-import { ATTR_CASE, ATTR_DEBUG, CASE_LOWER, CASE_NATURAL, DEBUG_ENABLED } from '../constants';
+import { ATTR_CASE, ATTR_DEBUG, ATTR_DRIVER_NAME, CASE_LOWER, CASE_NATURAL, DEBUG_ENABLED } from '../constants';
 import { PdoError } from '../errors';
 import Pdo from '../pdo';
 import { PdoPreparedStatement, PdoStatement, PdoTransaction } from '../support';
 import { PdoLogger } from '../types/pdo';
 import { PdoDriverConstructor } from '../types/pdo-driver';
+import { createFakePdo } from './fixtures';
 import FakeDBConnection from './fixtures/fake-db-connection';
 import FakeDriver from './fixtures/fake-driver';
 
@@ -208,6 +209,15 @@ describe('Pdo Api', () => {
         const pdo = new Pdo('fake', {}, {}, { [ATTR_DEBUG]: DEBUG_ENABLED });
         await pdo.query('SELECT 1');
         expect(console.log).toHaveBeenCalled();
+        await pdo.disconnect();
+    });
+
+    it('Works createFakePdo', async () => {
+        const pdo = createFakePdo({
+            notSafe: false
+        });
+        expect(pdo).toBeInstanceOf(Pdo);
+        expect(pdo.getAttribute(ATTR_DRIVER_NAME)).toBe('fake');
         await pdo.disconnect();
     });
 });
