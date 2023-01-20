@@ -7,7 +7,7 @@ import FakeConnection from './fake-connection';
 import JsonConnection from './fake-db-connection';
 import FakeRawConnection from './fake-raw-connection';
 
-interface FakeDriverOptions {
+export interface FakeDriverOptions {
     [key: string]: any;
 }
 class FakeDriver extends PdoDriver {
