@@ -23,4 +23,12 @@ describe('Type Binding', () => {
         expect(typeBinding.value).toBe('12323.2132312');
         expect(typeBinding.options).toEqual({ precision: 10, scale: 5 });
     });
+
+    it('Works toString', () => {
+        let typeBinding = TypedBinding.create(PARAM_BIGINT, BigInt(10));
+        expect(typeBinding.toString()).toBe('BIGINT(10)');
+        typeBinding = TypedBinding.create(PARAM_NUMERIC, null, { precision: BigInt(10), scale: 5 });
+        typeBinding.toString();
+        expect(typeBinding.toString()).toBe('NUMERIC(null, {"precision":"10","scale":5})');
+    });
 });
