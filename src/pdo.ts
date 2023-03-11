@@ -1,3 +1,4 @@
+import { v4 as uuidv4 } from 'uuid';
 import { PdoError } from './errors';
 import PdoI, { PdoLogger } from './types/pdo';
 import PdoAttributes from './types/pdo-attributes';
@@ -9,6 +10,7 @@ import PdoTransactionI from './types/pdo-transaction';
 
 class Pdo implements PdoI {
     protected driver: PdoDriverI;
+    public uuid: string;
 
     protected static logger: PdoLogger = (): void => {
         return void 0;
@@ -44,6 +46,8 @@ class Pdo implements PdoI {
         this.driver.on('log', (level: string, message: string) => {
             Pdo.logger(level, message);
         });
+
+        this.uuid = uuidv4();
     }
 
     public async beginTransaction(): Promise<PdoTransactionI> {

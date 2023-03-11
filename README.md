@@ -1,14 +1,14 @@
 <p align="center">
-	<a href="https://www.npmjs.com/package/lupdo" target="__blank">
+	<a href="https://www.npmjs.com/package/lupdo" target="_blank">
         <img src="https://img.shields.io/npm/v/lupdo?color=0476bc&label=" alt="NPM version">
     </a>
-	<a href="https://www.npmjs.com/package/lupdo" target="__blank">
+	<a href="https://www.npmjs.com/package/lupdo" target="_blank">
         <img alt="NPM Downloads" src="https://img.shields.io/npm/dm/lupdo?color=3890aa&label=">
     </a>
-    <a href="https://app.codecov.io/github/Lupennat/lupdo" target="__blank">
+    <a href="https://app.codecov.io/github/Lupennat/lupdo" target="_blank">
         <img src="https://codecov.io/github/Lupennat/lupdo/branch/main/graph/badge.svg?token=FOECLCWQ7F"/>
     </a>
-    <a href="https://snyk.io/test/github/lupennat/lupdo" target="__blank">
+    <a href="https://snyk.io/test/github/lupennat/lupdo" target="_blank">
         <img src="https://snyk.io/test/github/lupennat/lupdo/badge.svg">
     </a>
 </p>

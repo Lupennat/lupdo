@@ -220,4 +220,14 @@ describe('Pdo Api', () => {
         expect(pdo.getAttribute(ATTR_DRIVER_NAME)).toBe('fake');
         await pdo.disconnect();
     });
+
+    it('Works uuid', async () => {
+        const pdo = new Pdo('fake', {}, {}, { [ATTR_DEBUG]: DEBUG_ENABLED });
+        const pdo2 = new Pdo('fake', {}, {}, { [ATTR_DEBUG]: DEBUG_ENABLED });
+        expect(typeof pdo.uuid).toBe('string');
+        expect(typeof pdo2.uuid).toBe('string');
+        expect(pdo.uuid).not.toBe(pdo2.uuid);
+        await pdo.disconnect();
+        await pdo2.disconnect();
+    });
 });
