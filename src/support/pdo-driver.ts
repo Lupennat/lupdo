@@ -140,7 +140,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
                 },
                 log: (message: any): void => {
                     // tarn always log only 'warn' messages
-                    this.emit('log', message, 'warning');
+                    this.emit('log', 'warning', message);
                 }
             };
         }

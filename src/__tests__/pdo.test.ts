@@ -50,8 +50,8 @@ describe('Pdo Api', () => {
 
         const err = new Error('Error to be logged');
 
-        Pdo.setLogger((message: any, level: any) => {
-            expect(originalLogger(message, level)).toBeUndefined();
+        Pdo.setLogger((level: any, message: any) => {
+            expect(originalLogger(level, message)).toBeUndefined();
         });
 
         const pdo = new PdoStub(
@@ -82,10 +82,10 @@ describe('Pdo Api', () => {
         );
         await pdo.query('SELECT 1');
         await pdo.disconnect();
+        expect(mock.mock.lastCall[0]).toEqual('warning');
         expect(
-            mock.mock.lastCall[0].startsWith('Tarn: resource destroyer threw an exception Error: Error to be logged')
+            mock.mock.lastCall[1].startsWith('Tarn: resource destroyer threw an exception Error: Error to be logged')
         ).toBeTruthy();
-        expect(mock.mock.lastCall[1]).toEqual('warning');
     });
 
     it('Works Attributes', async () => {

@@ -320,8 +320,8 @@ Lupdo by default doesn't log anything, you can assign a custom log for Lupdo to 
 const { Pdo } = require('lupdo');
 // ES6 or Typescrypt
 import { Pdo } from 'lupdo';
-Pdo.setLogger((message: any, level?: any) => {
-    console.log(message, level);
+Pdo.setLogger((level: any, message: any) => {
+    console.log(level, message);
 });
 ```
 

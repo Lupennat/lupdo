@@ -3,7 +3,7 @@ import PdoPreparedStatementI from './pdo-prepared-statement';
 import PdoStatementI from './pdo-statement';
 import PdoTransactionI from './pdo-transaction';
 
-export type PdoLogger = (message: any, level: any) => any;
+export type PdoLogger = (level: any, message: any) => any;
 
 export default interface PdoI {
     beginTransaction: () => Promise<PdoTransactionI>;
