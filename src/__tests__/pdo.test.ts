@@ -50,8 +50,8 @@ describe('Pdo Api', () => {
 
         const err = new Error('Error to be logged');
 
-        Pdo.setLogger((message: any, level: any) => {
-            expect(originalLogger(message, level)).toBeUndefined();
+        Pdo.setLogger((level: any, message: any) => {
+            expect(originalLogger(level, message)).toBeUndefined();
         });
 
         const pdo = new PdoStub(
