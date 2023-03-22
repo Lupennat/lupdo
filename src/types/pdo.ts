@@ -25,4 +25,6 @@ export default interface PdoI {
     disconnect: () => Promise<void>;
 
     reconnect: () => void;
+
+    getVersion: () => Promise<string>;
 }

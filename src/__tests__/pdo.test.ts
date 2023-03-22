@@ -103,6 +103,12 @@ describe('Pdo Api', () => {
         expect(pdo.setAttribute(ATTR_CASE, CASE_NATURAL)).toBeTruthy();
     });
 
+    it('Works get Version', async () => {
+        const pdo = new Pdo('fake', {}, {}, {});
+
+        expect(await pdo.getVersion()).toBe('1.0.0-fake');
+    });
+
     it('Works BeginTransaction Return Transaction', async () => {
         const pdo = new Pdo('fake', {});
         const trx = await pdo.beginTransaction();

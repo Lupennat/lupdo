@@ -195,6 +195,10 @@ class FakeDriver extends PdoDriver {
     public getRawConnection(): PdoRawConnectionI {
         return new FakeRawConnection(this.pool);
     }
+
+    public async getVersion(): Promise<string> {
+        return '1.0.0-fake';
+    }
 }
 
 Pdo.addDriver('fake', FakeDriver);

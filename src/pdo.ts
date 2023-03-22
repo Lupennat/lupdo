@@ -10,6 +10,7 @@ import PdoTransactionI from './types/pdo-transaction';
 
 class Pdo implements PdoI {
     protected driver: PdoDriverI;
+    protected version: string | undefined;
     public uuid: string;
 
     protected static logger: PdoLogger = (): void => {
@@ -83,6 +84,14 @@ class Pdo implements PdoI {
 
     public async getRawDriverConnection<T>(): Promise<T> {
         return await this.driver.getRawDriverConnection<T>();
+    }
+
+    public async getVersion(): Promise<string> {
+        if (this.version === undefined) {
+            this.version = await this.driver.getVersion();
+        }
+
+        return this.version;
     }
 
     public getAttribute(attribute: string): string | number {
