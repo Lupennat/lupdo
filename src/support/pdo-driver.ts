@@ -24,6 +24,7 @@ import PdoStatement from './pdo-statement';
 import PdoTransaction from './pdo-transaction';
 
 abstract class PdoDriver extends EventEmitter implements PdoDriverI {
+    protected version: string | undefined;
     protected instances: DriverInstances = {
         transaction: PdoTransaction,
         preparedStatement: PdoPreparedStatement,
@@ -97,8 +98,14 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
                     const connection = await this.createConnection();
                     const uuid = uuidv4();
 
+                    if (this.version === undefined) {
+                        this.version = await this.getVersionFromConnection(connection);
+                    }
+
                     if (typeof this.poolEvents.created === 'function') {
-                        await this.poolEvents.created(uuid, this.createPdoConnection(connection));
+                        const pdoConnection = this.createPdoConnection(connection);
+                        pdoConnection.version = this.version;
+                        await this.poolEvents.created(uuid, pdoConnection);
                     }
                     connection.__lupdo_uuid = uuid;
                     connection.__lupdo_killed = false;
@@ -212,7 +219,12 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
     }
 
     public async getVersion(): Promise<string> {
-        return this.getServerVersion();
+        if (this.version === undefined) {
+            const connection = await this.createConnection();
+            this.version = await this.getVersionFromConnection(connection);
+            await this.closeConnection(connection);
+        }
+        return this.version;
     }
 
     public async getRawPoolConnection(): Promise<RawPoolConnection> {
@@ -258,7 +270,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
     protected abstract destroyConnection(connection: PoolConnection): Promise<void>;
     protected abstract createPdoConnection(connection: PoolConnection): PdoConnectionI;
     protected abstract validateRawConnection(connection: PoolConnection): boolean;
-    protected abstract getServerVersion(): Promise<string>;
+    protected abstract getVersionFromConnection(connection: PoolConnection): Promise<string>;
 
     protected throwIfDisconnected(): void {
         if (this.disconnected) {

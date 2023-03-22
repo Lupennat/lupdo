@@ -78,12 +78,12 @@ export interface PoolOptions {
      * Define Custom Created Callback.
      * Error on Created Callback will be logged and not raised
      */
-    created?: (uuid: string, connection: PdoConnectionI) => Promise<void>;
+    created?: (uuid: string, connection: PdoConnectionI) => Promise<void> | void;
     /**
      * Define Custom Destroyed Callback.
      * Error on Destroyed Callback will be logged and not raised
      */
-    destroyed?: (uuid: string) => Promise<void>;
+    destroyed?: (uuid: string) => Promise<void> | void;
     /**
      * Define Custom Acquired Callback.
      */
