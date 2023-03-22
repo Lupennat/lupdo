@@ -39,4 +39,6 @@ export default interface PdoDriverI {
     getRawPoolConnection: () => Promise<RawPoolConnection>;
 
     getRawDriverConnection: <T>() => Promise<T>;
+
+    getVersion: () => Promise<string>;
 }

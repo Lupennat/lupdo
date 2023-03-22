@@ -211,6 +211,10 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
         return false;
     }
 
+    public async getVersion(): Promise<string> {
+        return this.getServerVersion();
+    }
+
     public async getRawPoolConnection(): Promise<RawPoolConnection> {
         this.throwIfDisconnected();
         const connection = await this.pool.acquire().promise;
@@ -254,6 +258,7 @@ abstract class PdoDriver extends EventEmitter implements PdoDriverI {
     protected abstract destroyConnection(connection: PoolConnection): Promise<void>;
     protected abstract createPdoConnection(connection: PoolConnection): PdoConnectionI;
     protected abstract validateRawConnection(connection: PoolConnection): boolean;
+    protected abstract getServerVersion(): Promise<string>;
 
     protected throwIfDisconnected(): void {
         if (this.disconnected) {
