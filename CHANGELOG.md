@@ -5,6 +5,21 @@ All notable changes to this project from 1.0.0 forward will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.3.0] - 2023-03-22
+
+### Added
+
+-   `PdoConnectionI.version` added, you can retrieve db version from connection on `pool.created` callback.
+
+### Changed
+
+-   `pool.created` and `pool.destroyed` callback can be promise/non-promise
+-   **(DEV)** please ensure your driver is updated for lupdo version 3.3.0 and implements abstract `pdoDriver.getVersionFromConnection(PoolConnection)`.
+
+### Removed
+
+-   **(DEV)** please ensure your driver is updated for lupdo version 3.3.0 and remove abstract `pdoDriver.getServerVersion()`.
+
 ## [3.2.0] - 2023-03-22
 
 ### Added

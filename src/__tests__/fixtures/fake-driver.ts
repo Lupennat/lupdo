@@ -50,7 +50,7 @@ class FakeDriver extends PdoDriver {
         await connection.end();
     }
 
-    protected async getServerVersion(): Promise<string> {
+    protected async getVersionFromConnection(): Promise<string> {
         return '1.0.0-fake';
     }
 

@@ -1,7 +1,7 @@
 import { ATTR_CASE, ATTR_DEBUG, ATTR_DRIVER_NAME, CASE_LOWER, CASE_NATURAL, DEBUG_ENABLED } from '../constants';
 import { PdoError } from '../errors';
 import Pdo from '../pdo';
-import { PdoPreparedStatement, PdoStatement, PdoTransaction } from '../support';
+import { PdoConnection, PdoPreparedStatement, PdoStatement, PdoTransaction } from '../support';
 import { PdoLogger } from '../types/pdo';
 import { PdoDriverConstructor } from '../types/pdo-driver';
 import { createFakePdo } from './fixtures';
@@ -105,8 +105,23 @@ describe('Pdo Api', () => {
 
     it('Works get Version', async () => {
         const pdo = new Pdo('fake', {}, {}, {});
-
         expect(await pdo.getVersion()).toBe('1.0.0-fake');
+        await pdo.disconnect();
+    });
+
+    it('Works Version', async () => {
+        const pdo = new Pdo(
+            'fake',
+            {},
+            {
+                created: (_uuid: string, connection: PdoConnection) => {
+                    expect(connection.version).toBe('1.0.0-fake');
+                }
+            },
+            {}
+        );
+        await pdo.query('SELECT 1');
+        await pdo.disconnect();
     });
 
     it('Works BeginTransaction Return Transaction', async () => {
