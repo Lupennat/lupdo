@@ -216,6 +216,7 @@ Debug mode, is defined through Pdo Attributes, custom debug connection options, 
 -   prototype.getColumnMeta(column: number): ColumnData | null;
 -   prototype.rowCount(): number;
 -   prototype.lastInsertId(name?: string): Promise<string | bigint | number | null>;
+-   prototype.nextRowset(): boolean;
 
 > **Note**
 > statement.debug() will return SQL and Params Reflecting user input, statement.debugSent() will return SQL and Params Adapted by the Driver.

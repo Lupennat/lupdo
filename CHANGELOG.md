@@ -5,6 +5,17 @@ All notable changes to this project from 1.0.0 forward will be documented in thi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [3.4.0] - 2023-12-24
+
+### Added
+
+-   `PdoStatementI.nextRowset` added, you can advances to the next rowset in a multi-rowset statement handle.
+
+### Changed
+
+-   **(DEV)** please ensure your driver is updated for lupdo version 3.4.0,
+-   **(DEV)** support `pdo-raw-connection` methods `doQuery`, `executeStatement`, `execute`, `query` signature are changed to support multi-rowset statement.
+
 ## [3.3.0] - 2023-03-22
 
 ### Added

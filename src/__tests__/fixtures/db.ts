@@ -57,5 +57,29 @@ export default {
             { id: 18, name: 'Beier and Sons', opened: '1999-12-22T00:00:00.000Z', active: 0, binary: null },
             { id: 19, name: 'Harvey Inc', opened: '2022-12-22T00:00:00.000Z', active: 1, binary: null }
         ]
+    },
+    procedure: {
+        columns: [
+            [
+                { name: 'id', table: 'companies' },
+                { name: 'name', table: 'companies' }
+            ],
+            [
+                { name: 'id', table: 'users' },
+                { name: 'name', table: 'users' },
+                { name: 'gender', table: 'users' }
+            ]
+        ],
+        data: [
+            [
+                [1, 'Satterfield Inc'],
+                [2, 'Grimes - Reinger'],
+                [3, 'Skiles LLC']
+            ],
+            [
+                [1, 'Edmund', 'Multigender'],
+                [2, 'Kyleigh', 'Cis man']
+            ]
+        ]
     }
 };

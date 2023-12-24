@@ -8,8 +8,8 @@ export type PdoStatementConstructor = new (
     connection: PdoRawConnectionI,
     rawSql: string,
     affectingResults: PdoAffectingData,
-    selectResults: PdoRowData[],
-    columns: PdoColumnData[]
+    selectResults: PdoRowData[][] | PdoRowData[],
+    columns: PdoColumnData[][] | PdoColumnData[]
 ) => PdoStatementI;
 
 export type Dictionary = { [key: string]: PdoColumnValue };
@@ -97,4 +97,6 @@ export default interface PdoStatementI {
     debugSent(): string;
 
     resetCursor: () => void;
+
+    nextRowset: () => boolean;
 }

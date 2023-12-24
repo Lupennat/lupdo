@@ -1,6 +1,6 @@
 {
     "name": "lupdo",
-    "version": "3.3.0",
+    "version": "3.4.0",
     "description": "Database Abstraction Layer for Node js",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",
@@ -41,7 +41,7 @@
         "lint:fix": "eslint --fix --ext \".js,.jsx,.ts,.tsx\" \"./src\""
     },
     "engines": {
-        "node": "^14.19.0 || ^16.10.0 || >=18.0.0"
+        "node": "^16.10.0 || >=18.0.0"
     },
     "devDependencies": {
         "@types/jest": "^29.2.4",

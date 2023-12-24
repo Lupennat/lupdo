@@ -9,7 +9,10 @@ export default interface PdoRawConnectionI {
 
     prepare: (sql: string) => Promise<any>;
 
-    execute: (sql: string, params: Params | null) => Promise<[string, PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
+    execute: (
+        sql: string,
+        params: Params | null
+    ) => Promise<[string, PdoAffectingData, PdoRowData[] | PdoRowData[][], PdoColumnData[] | PdoColumnData[][]]>;
 
     close: () => Promise<void>;
 
@@ -17,7 +20,9 @@ export default interface PdoRawConnectionI {
 
     exec: (sql: string) => Promise<number>;
 
-    query: (sql: string) => Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
+    query: (
+        sql: string
+    ) => Promise<[PdoAffectingData, PdoRowData[] | PdoRowData[][], PdoColumnData[] | PdoColumnData[][]]>;
 
     getAttribute: (attribute: string) => string | number;
     setAttribute: (attribute: string, value: number | string) => boolean;

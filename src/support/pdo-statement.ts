@@ -24,19 +24,31 @@ class PdoStatement implements PdoStatementI {
     protected rawParams: Params | null = null;
     protected params: Params | null = null;
     protected cursor: number | null = null;
+    protected rowset = 0;
+    protected isRowset = false;
+    protected currentSelectResults: PdoRowData[] = [];
+    protected currentColumns: PdoColumnData[] = [];
+    protected selectResults: PdoRowData[] | PdoRowData[][];
+    protected columns: PdoColumnData[] | PdoColumnData[][];
 
     constructor(
         protected readonly connection: PdoRawConnectionI,
         protected readonly rawSql: string,
         protected affectingResults: PdoAffectingData,
-        protected selectResults: PdoRowData[],
-        protected columns: PdoColumnData[]
+        selectResults: PdoRowData[] | PdoRowData[][],
+        columns: PdoColumnData[] | PdoColumnData[][]
     ) {
         this.sql = this.rawSql;
+        this.columns = columns;
+        this.selectResults = selectResults;
+        this.resetRowset();
+        this.resetCursor();
+        this.setCurrentColumns();
+        this.setCurrentSelectResults();
     }
 
     public columnCount(): number {
-        return this.columns.length;
+        return this.currentColumns.length;
     }
 
     public debug(): string {
@@ -48,7 +60,7 @@ class PdoStatement implements PdoStatementI {
     }
 
     public getColumnMeta(column: number): PdoColumnData | null {
-        return this.columns.length > column ? this.columns[column] : null;
+        return this.currentColumns.length > column ? this.currentColumns[column] : null;
     }
 
     public rowCount(): number {
@@ -60,7 +72,11 @@ class PdoStatement implements PdoStatementI {
 
     public async lastInsertId(name?: string): Promise<string | bigint | number | null> {
         return await this.connection.lastInsertId(
-            { affectingResults: this.affectingResults, selectResults: this.selectResults, columns: this.columns },
+            {
+                affectingResults: this.affectingResults,
+                selectResults: this.currentSelectResults,
+                columns: this.currentColumns
+            },
             name
         );
     }
@@ -273,7 +289,7 @@ class PdoStatement implements PdoStatementI {
 
     protected getCasedColumnsName(): string[] {
         const columnCase = this.getAttribute(ATTR_CASE) as number;
-        return this.columns.map(column => {
+        return this.currentColumns.map(column => {
             return (columnCase & CASE_NATURAL) !== 0
                 ? column.name
                 : (columnCase & CASE_LOWER) !== 0
@@ -320,7 +336,7 @@ class PdoStatement implements PdoStatementI {
 
         this.setCursor(cursor);
 
-        return this.selectResults[cursor];
+        return this.currentSelectResults[cursor];
     }
 
     protected fetchAll(): PdoRowData[] {
@@ -328,11 +344,11 @@ class PdoStatement implements PdoStatementI {
         const cursor = this.getTempCursorForFetch(cursorOrientation);
         if (cursorOrientation === FETCH_BACKWARD) {
             this.setCursorToStart();
-            return this.selectResults.slice(0, cursor + 1).reverse();
+            return this.currentSelectResults.slice(0, cursor + 1).reverse();
         }
 
         this.setCursorToEnd();
-        return this.selectResults.slice(cursor);
+        return this.currentSelectResults.slice(cursor);
     }
 
     protected setCursor(cursor: number | null): void {
@@ -340,7 +356,7 @@ class PdoStatement implements PdoStatementI {
     }
 
     protected setCursorToEnd(): void {
-        this.setCursor(this.selectResults.length);
+        this.setCursor(this.currentSelectResults.length);
     }
 
     protected setCursorToStart(): void {
@@ -350,14 +366,47 @@ class PdoStatement implements PdoStatementI {
     protected getTempCursorForFetch(cursorOrientation: number): number {
         let cursor = this.cursor;
         if (cursor === null) {
-            cursor = cursorOrientation === FETCH_BACKWARD ? this.selectResults.length : -1;
+            cursor = cursorOrientation === FETCH_BACKWARD ? this.currentSelectResults.length : -1;
         }
 
         return cursorOrientation === FETCH_BACKWARD ? cursor - 1 : cursor + 1;
     }
 
     protected isValidCursor(cursor: number, cursorOrientation: number): boolean {
-        return cursorOrientation === FETCH_BACKWARD ? cursor > -1 : cursor < this.selectResults.length;
+        return cursorOrientation === FETCH_BACKWARD ? cursor > -1 : cursor < this.currentSelectResults.length;
+    }
+
+    protected resetRowset(): void {
+        this.rowset = 0;
+        this.isRowset = Array.isArray(this.columns[0]);
+    }
+
+    protected setCurrentColumns(): void {
+        this.currentColumns = this.isRowset
+            ? (this.columns as PdoColumnData[][])[this.rowset]
+            : (this.columns as PdoColumnData[]);
+    }
+
+    protected setCurrentSelectResults(): void {
+        this.currentSelectResults = this.isRowset
+            ? (this.selectResults as PdoRowData[][])[this.rowset]
+            : (this.selectResults as PdoRowData[]);
+    }
+
+    public nextRowset(): boolean {
+        if (!this.isRowset) {
+            return false;
+        } else {
+            if (this.selectResults.length > this.rowset + 1) {
+                this.rowset++;
+                this.resetCursor();
+                this.setCurrentColumns();
+                this.setCurrentSelectResults();
+
+                return true;
+            }
+            return false;
+        }
     }
 }
 

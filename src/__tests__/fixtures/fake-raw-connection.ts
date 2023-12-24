@@ -36,7 +36,7 @@ class FakeRawConnection extends PdoRawConnection {
     protected async executeStatement(
         statement: FakeDBStatement,
         bindings: string[] | { [key: string]: string }
-    ): Promise<[string, PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+    ): Promise<[string, PdoAffectingData, PdoRowData[][] | PdoRowData[], PdoColumnData[][] | PdoColumnData[]]> {
         return [statement.query, ...(await statement.execute(bindings))];
     }
 
@@ -51,7 +51,7 @@ class FakeRawConnection extends PdoRawConnection {
     protected async doQuery(
         connection: FakeDBConnection,
         sql: string
-    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+    ): Promise<[PdoAffectingData, PdoRowData[][] | PdoRowData[], PdoColumnData[][] | PdoColumnData[]]> {
         return await connection.query(sql);
     }
 
