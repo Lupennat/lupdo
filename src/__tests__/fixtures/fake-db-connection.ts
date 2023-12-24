@@ -39,8 +39,12 @@ async function processSql(
     threadId: number,
     sql: string,
     transaction = false
-): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+): Promise<[PdoAffectingData, PdoRowData[][] | PdoRowData[], PdoColumnData[][] | PdoColumnData[]]> {
     sql = sql.toLowerCase().trim();
+
+    if (sql === 'call multiple_rowsets()') {
+        return [{}, db.procedure.data, db.procedure.columns];
+    }
 
     if (sql.startsWith('select sleep(60)')) {
         sleeps[threadId] = true;
@@ -518,7 +522,7 @@ export class FakeDBStatement {
 
     public async execute(
         params: string[] | string[][] | { [key: string]: string | string[] }
-    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+    ): Promise<[PdoAffectingData, PdoRowData[][] | PdoRowData[], PdoColumnData[][] | PdoColumnData[]]> {
         this.logIfDebug('Execute', params);
         let sql = this.query;
         if (Array.isArray(params)) {
@@ -584,7 +588,9 @@ class FakeDBConnection {
         this.inTransaction = false;
     }
 
-    public async query(sql: string): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+    public async query(
+        sql: string
+    ): Promise<[PdoAffectingData, PdoRowData[][] | PdoRowData[], PdoColumnData[][] | PdoColumnData[]]> {
         this.logIfDebug('query', sql);
         return await processSql(this.threadId, sql, this.inTransaction);
     }

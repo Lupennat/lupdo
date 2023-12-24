@@ -92,6 +92,9 @@ class PdoTransactionPreparedStatement extends PdoStatement implements PdoTransac
             this.params
         );
         this.resetCursor();
+        this.resetRowset();
+        this.setCurrentColumns();
+        this.setCurrentSelectResults();
     }
 
     public debug(): string {

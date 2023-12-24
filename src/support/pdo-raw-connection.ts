@@ -22,7 +22,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     protected abstract doQuery(
         connection: PoolConnection,
         sql: string
-    ): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
+    ): Promise<[PdoAffectingData, PdoRowData[][] | PdoRowData[], PdoColumnData[][] | PdoColumnData[]]>;
 
     protected abstract doExec(connection: PoolConnection, sql: string): Promise<PdoAffectingData>;
 
@@ -32,7 +32,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         statement: any,
         bindings: Params,
         connection: PoolConnection
-    ): Promise<[string, PdoAffectingData, PdoRowData[], PdoColumnData[]]>;
+    ): Promise<[string, PdoAffectingData, PdoRowData[][] | PdoRowData[], PdoColumnData[][] | PdoColumnData[]]>;
     protected abstract closeStatement(statement: any, connection: PoolConnection): Promise<void>;
 
     protected abstract adaptBindValue(value: ValidBindingsSingle): ValidBindingsSingle;
@@ -92,7 +92,7 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
     public async execute(
         sql: string,
         params: Params | null
-    ): Promise<[string, PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+    ): Promise<[string, PdoAffectingData, PdoRowData[][] | PdoRowData[], PdoColumnData[][] | PdoColumnData[]]> {
         try {
             const connection = await this.generateOrReuseConnection();
 
@@ -135,7 +135,9 @@ abstract class PdoRawConnection implements PdoRawConnectionI {
         }
     }
 
-    public async query(sql: string): Promise<[PdoAffectingData, PdoRowData[], PdoColumnData[]]> {
+    public async query(
+        sql: string
+    ): Promise<[PdoAffectingData, PdoRowData[][] | PdoRowData[], PdoColumnData[][] | PdoColumnData[]]> {
         try {
             const connection = await this.generateOrReuseConnection();
             const [affectingResults, selectResults, columns] = await this.doQuery(connection, sql);
