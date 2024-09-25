@@ -1,0 +1,26 @@
+name: Docs
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy_docs:
+    name: Deploy Docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Generate Docs
+        run: npm docs
+
+      - uses: contention/rsync-deployments@v2.0.0
+        with:
+          flags: -avzr --delete
+          excludes:
+          user: ${{ secrets.SSH_USERNAME }}
+          host: ${{ secrets.SSH_HOST }}
+          localpath: docs/
+          remotepath: ${{ secrets.SSH_REMOTE_PATH }}
+          deploy_key: ${{ secrets.SSH_KEY }}
