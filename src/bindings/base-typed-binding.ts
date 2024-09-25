@@ -1,7 +1,7 @@
 import { ValidBindingsPrimitive } from '../types/pdo-prepared-statement';
 import { TypeBindingOptions } from '../types/type-bindings';
 
-export default abstract class BaseTypedBinding {
+export abstract class BaseTypedBinding {
   constructor(
     public type: string,
     public value: ValidBindingsPrimitive,
@@ -17,3 +17,5 @@ export default abstract class BaseTypedBinding {
     return `${this.type}(${this.value === null ? 'null' : this.value.toString()}${options})`;
   }
 }
+
+export default BaseTypedBinding;

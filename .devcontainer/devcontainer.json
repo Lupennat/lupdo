@@ -5,9 +5,15 @@
 	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
 	"image": "mcr.microsoft.com/devcontainers/typescript-node:18",
 	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
+	"features": {
+		"ghcr.io/devcontainers/features/github-cli:1": {}
+	},
+	"containerEnv": {
+		"GH_TOKEN": "${localEnv:GH_TOKEN}"
+	},
 	// Use 'forwardPorts' to make a list of ports inside the container available locally.
 	// "forwardPorts": [],
+	"onCreateCommand": "git config --global --add safe.directory /workspaces/${localWorkspaceFolderBasename}",
 	// Use 'postCreateCommand' to run commands after the container is created.
 	"postCreateCommand": "npm ci",
 	// Configure tool-specific properties.

@@ -3,7 +3,7 @@ import { PromiseInspection } from 'tarn/dist/PromiseInspection';
 
 import { InternalPdoPoolOptions, PoolI } from '../types/pdo-pool';
 
-export default class PdoPool<T> extends TarnPool<T> implements PoolI<T> {
+export class PdoPool<T> extends TarnPool<T> implements PoolI<T> {
   protected timeout: NodeJS.Timeout | null = null;
   protected killResource: boolean;
   protected killTimeoutMillis: number;
@@ -38,3 +38,5 @@ export default class PdoPool<T> extends TarnPool<T> implements PoolI<T> {
     return res;
   }
 }
+
+export default PdoPool;

@@ -1,7 +1,7 @@
 import { PdoPreparedStatementI } from '../types/pdo-prepared-statement';
 import PdoTransactionPreparedStatement from './pdo-transaction-prepared-statement';
 
-export default class PdoPreparedStatement
+export class PdoPreparedStatement
   extends PdoTransactionPreparedStatement
   implements PdoPreparedStatementI
 {
@@ -9,3 +9,5 @@ export default class PdoPreparedStatement
     await this.connection.close();
   }
 }
+
+export default PdoPreparedStatement;

@@ -1,4 +1,4 @@
-export default class PdoError extends Error {
+export class PdoError extends Error {
   public cause: any;
 
   constructor(error: Error | string = '', cause?: any) {
@@ -23,3 +23,5 @@ export default class PdoError extends Error {
     }
   }
 }
+
+export default PdoError;

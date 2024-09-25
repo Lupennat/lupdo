@@ -28,7 +28,7 @@ import {
 } from '../types/pdo-statement';
 import { paramsToString } from '../utils';
 
-export default class PdoStatement implements PdoStatementI {
+export class PdoStatement implements PdoStatementI {
   protected sql: string;
 
   protected rawParams: Params | null = null;
@@ -466,3 +466,4 @@ export default class PdoStatement implements PdoStatementI {
     }
   }
 }
+export default PdoStatement;
