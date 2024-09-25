@@ -11,7 +11,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout code
+        uses: actions/checkout@v3
+
       - name: Install deps
         run: npm ci
         env:
@@ -22,12 +24,12 @@ jobs:
         env:
           CI: true
 
-      - uses: contention/rsync-deployments@v2.0.0
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
         with:
-          flags: -avzr --delete
-          excludes:
-          user: ${{ secrets.SSH_USERNAME }}
-          host: ${{ secrets.SSH_HOST }}
-          localpath: docs/
-          remotepath: ${{ secrets.SSH_REMOTE_PATH }}
-          deploy_key: ${{ secrets.SSH_KEY }}
+          ssh-private-key: ${{ secrets.SSH_KEY }}
+        
+      - name: Deploy code to server
+        run: |
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} 'rm -rf ${{ secrets.SSH_REMOTE_PATH }} && mkdir -p ${{ secrets.SSH_REMOTE_PATH }}'
+          scp -o StrictHostKeyChecking=no -r ./docs/* ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.SSH_REMOTE_PATH }}
