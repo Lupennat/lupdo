@@ -1,2 +1,2 @@
-export { default as isFunctionConstructor } from './is-function-constructor';
-export { default as paramsToString } from './params-to-string';
+export * from './is-function-constructor';
+export * from './params-to-string';

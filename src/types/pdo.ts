@@ -1,30 +1,30 @@
 import { RawPoolConnection } from './pdo-pool';
-import PdoPreparedStatementI from './pdo-prepared-statement';
-import PdoStatementI from './pdo-statement';
-import PdoTransactionI from './pdo-transaction';
+import { PdoPreparedStatementI } from './pdo-prepared-statement';
+import { PdoStatementI } from './pdo-statement';
+import { PdoTransactionI } from './pdo-transaction';
 
 export type PdoLogger = (level: any, message: any) => any;
 
-export default interface PdoI {
-    beginTransaction: () => Promise<PdoTransactionI>;
+export interface PdoI {
+  beginTransaction: () => Promise<PdoTransactionI>;
 
-    prepare: (sql: string) => Promise<PdoPreparedStatementI>;
+  prepare: (sql: string) => Promise<PdoPreparedStatementI>;
 
-    exec: (sql: string) => Promise<number>;
+  exec: (sql: string) => Promise<number>;
 
-    query: (sql: string) => Promise<PdoStatementI>;
+  query: (sql: string) => Promise<PdoStatementI>;
 
-    getAttribute: (attribute: string) => string | number;
+  getAttribute: (attribute: string) => string | number;
 
-    setAttribute: (attribute: string, value: number | string) => boolean;
+  setAttribute: (attribute: string, value: number | string) => boolean;
 
-    getRawPoolConnection: () => Promise<RawPoolConnection>;
+  getRawPoolConnection: () => Promise<RawPoolConnection>;
 
-    getRawDriverConnection: <T>() => Promise<T>;
+  getRawDriverConnection: <T>() => Promise<T>;
 
-    disconnect: () => Promise<void>;
+  disconnect: () => Promise<void>;
 
-    reconnect: () => void;
+  reconnect: () => void;
 
-    getVersion: () => Promise<string>;
+  getVersion: () => Promise<string>;
 }

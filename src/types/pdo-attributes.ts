@@ -1,3 +1,3 @@
-export default interface PdoAttributes {
-    [key: string]: number | string;
+export interface PdoAttributes {
+  [key: string]: number | string;
 }

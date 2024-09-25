@@ -1,4 +1,4 @@
-export default interface PdoColumnData {
-    name: string;
-    table: string;
+export interface PdoColumnData {
+  name: string;
+  table: string;
 }

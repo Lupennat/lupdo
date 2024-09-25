@@ -1,9 +1,9 @@
 # Available Drivers
 
--   [lupdo-mysql](https://www.npmjs.com/package/lupdo-mysql)
--   [lupdo-sqlite](https://www.npmjs.com/package/lupdo-sqlite)
--   [lupdo-postgres](https://www.npmjs.com/package/lupdo-postgres)
--   [lupdo-mssql](https://www.npmjs.com/package/lupdo-mssql)
+- [lupdo-mysql](https://www.npmjs.com/package/lupdo-mysql)
+- [lupdo-sqlite](https://www.npmjs.com/package/lupdo-sqlite)
+- [lupdo-postgres](https://www.npmjs.com/package/lupdo-postgres)
+- [lupdo-mssql](https://www.npmjs.com/package/lupdo-mssql)
 
 ## WRITE CUSTOM DRIVER
 
@@ -11,37 +11,37 @@ Custom Lupdo Driver must implements a sql syntax; only string can be used to per
 
 Please follow this rules if you can:
 
--   supports all Lupdo validBindings
+- supports all Lupdo validBindings
 
-    -   number
-    -   string
-    -   bigint
-    -   Buffer
-    -   Date
-    -   boolean
-    -   null
-    -   TypedBinding
-    -   (number|string|bigint|Buffer|Date|boolean|null|TypedBinding)[]
+  - number
+  - string
+  - bigint
+  - Buffer
+  - Date
+  - boolean
+  - null
+  - BaseTypedBinding
+  - (number|string|bigint|Buffer|Date|boolean|null|BaseTypedBinding)[]
 
--   supports the syntax of named parameters `:key` and the syntax of numeric parameters `?`, adds documentation for other syntax types.
+- supports the syntax of named parameters `:key` and the syntax of numeric parameters `?`, adds documentation for other syntax types.
 
--   **date** from database should be returned as javascript `string` not javascript `Date`.
--   **bigint** from database should be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
--   **decimal** from database should be returned as javascript `string` not javascript `Number` to not loose precision, even if driver can't guarantee the precision it is better to return a `string` as standard.
--   **numeric int** from database shold be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
--   **numeric float** from database should be returned as javascript `string` not javascript `Number` to not loose precision, even if driver can't guarantee the precision it is better to return a `string` as standard.
--   **boolean** should be returned as `Number` 1 or 0.
--   **json** should be always returned as `String` not an `Object`.
--   **array** should be returned as Javascript `Array` and value of array should respect rules above.
+- **date** from database should be returned as javascript `string` not javascript `Date`.
+- **bigint** from database should be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
+- **decimal** from database should be returned as javascript `string` not javascript `Number` to not loose precision, even if driver can't guarantee the precision it is better to return a `string` as standard.
+- **numeric int** from database shold be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
+- **numeric float** from database should be returned as javascript `string` not javascript `Number` to not loose precision, even if driver can't guarantee the precision it is better to return a `string` as standard.
+- **boolean** should be returned as `Number` 1 or 0.
+- **json** should be always returned as `String` not an `Object`.
+- **array** should be returned as Javascript `Array` and value of array should respect rules above.
 
--   you should only expose custom Driver APIs if necessary to integrate basic database functionality.
--   you should override/suppress third party configuration if they can change lupdo core behaviour based on unsecure parameter of createConnection (see example).
--   you are free to add ATTRIBUTES if necessary _please prefix all attributes with unique driver name_.
--   you must avoid to override any core funtionality, you can open a discussion or propose a pull-request.
--   import or require of the library must automatically register the driver within Lupdo.
--   driver should export a function `create{driver}Pdo` that return a new instance of Pdo for the driver to improve options typing.
--   you can create a new version of existing driver using another thirdy party library, you should avoid to implements duplicated version with same third party driver, instead try to improve the existing one.
--   you can add a new type parameter to be used on `TypedBinding` and implement `TypedBindingOptions` for all `TypeBinding`, please document all options and the new accepted type.
+- you should only expose custom Driver APIs if necessary to integrate basic database functionality.
+- you should override/suppress third party configuration if they can change lupdo core behaviour based on unsecure parameter of createConnection (see example).
+- you are free to add ATTRIBUTES if necessary _please prefix all attributes with unique driver name_.
+- you must avoid to override any core funtionality, you can open a discussion or propose a pull-request.
+- import or require of the library must automatically register the driver within Lupdo.
+- driver should export a function `create{driver}Pdo` that return a new instance of Pdo for the driver to improve options typing.
+- you can create a new version of existing driver using another thirdy party library, you should avoid to implements duplicated version with same third party driver, instead try to improve the existing one.
+- you can add a new type parameter to be used on `TypedBinding` and implement `TypedBindingOptions` for all `TypeBinding`, please document all options and the new accepted type.
 
 > **Note**
 > As soon as it will be stable, Lupdo will accept [Temporal](https://tc39.es/proposal-temporal/docs/) as validBindings and db date should be returned as Temporal.
