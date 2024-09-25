@@ -103,6 +103,10 @@ export const PARAM_INTEGER = 'INTEGER';
  */
 export const PARAM_DECIMAL = 'DECIMAL';
 /**
+ * Param type Double
+ */
+export const PARAM_DOUBLE = 'DOUBLE';
+/**
  * Param type Numeric
  */
 export const PARAM_NUMERIC = 'NUMERIC';
@@ -139,17 +143,25 @@ export const PARAM_DATE = 'DATE';
  */
 export const PARAM_DATETIME = 'DATETIME';
 /**
+ * Param type Datetime TimeZone
+ */
+export const PARAM_DATETIMETZ = 'DATETIMETZ';
+/**
  * Param type Timestamp
  */
 export const PARAM_TIMESTAMP = 'TIMESTAMP';
 /**
- * Param type Datetimezone
+ * Param type Timestamp TimeZone
  */
-export const PARAM_DATETIMEZONE = 'DATETIMEZONE';
+export const PARAM_TIMESTAMPTZ = 'TIMESTAMPTZ';
 /**
  * Param type Time
  */
 export const PARAM_TIME = 'TIME';
+/**
+ * Param type Time TimeZone
+ */
+export const PARAM_TIMETZ = 'TIMETZ';
 /**
  * Param type Binary
  */

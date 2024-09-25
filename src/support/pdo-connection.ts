@@ -1,9 +1,7 @@
-import { PdoConnectionI } from '../types';
+import { PdoConnectionI } from '../types/pdo-connection';
 
-abstract class PdoConnection implements PdoConnectionI {
-    public version = '';
+export default abstract class PdoConnection implements PdoConnectionI {
+  public version = '';
 
-    abstract query(sql: string): Promise<void>;
+  abstract query(sql: string): Promise<void>;
 }
-
-export default PdoConnection;

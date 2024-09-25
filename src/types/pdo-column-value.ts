@@ -1,5 +1,3 @@
-type PdoColumnValue = PdoColumnValueSingle | PdoColumnValueArray;
-type PdoColumnValueSingle = string | bigint | Buffer | number | null;
-type PdoColumnValueArray = (string | bigint | Buffer | number | null)[];
-
-export default PdoColumnValue;
+export type PdoColumnValue = PdoColumnValueSingle | PdoColumnValueArray;
+export type PdoColumnValueSingle = string | bigint | Buffer | number | null;
+export type PdoColumnValueArray = (string | bigint | Buffer | number | null)[];

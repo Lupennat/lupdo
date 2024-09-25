@@ -12,17 +12,19 @@ test/
 *.test.js
 
 # Configs
+.devcontainer/
 .github/
 .vscode/
 .travis.yml
 tsconfig.json
 typescript/
-.eslintrc.yml
+.eslintrc.js
 .prettierrc.yml
 .huskyrc.json
 .nvmrc
 .publishrc
 .prettierrc
+.snyk
 
 # Lock files
 package-lock.json

@@ -1,44 +1,50 @@
-import PdoAttributes from './pdo-attributes';
-import { PoolOptions, RawPoolConnection } from './pdo-pool';
-import PdoPreparedStatementI, { PdoPreparedStatementConstructor } from './pdo-prepared-statement';
-import PdoStatementI, { PdoStatementConstructor } from './pdo-statement';
-import PdoTransactionI, { PdoTransactionConstructor } from './pdo-transaction';
+import { PdoAttributes } from './pdo-attributes';
+import { PdoPoolOptions, RawPoolConnection } from './pdo-pool';
+import {
+  PdoPreparedStatementConstructor,
+  PdoPreparedStatementI,
+} from './pdo-prepared-statement';
+import { PdoStatementConstructor, PdoStatementI } from './pdo-statement';
+import { PdoTransactionConstructor, PdoTransactionI } from './pdo-transaction';
 
 export interface DriverInstances {
-    preparedStatement: PdoPreparedStatementConstructor;
-    statement: PdoStatementConstructor;
-    transaction: PdoTransactionConstructor;
+  preparedStatement: PdoPreparedStatementConstructor;
+  statement: PdoStatementConstructor;
+  transaction: PdoTransactionConstructor;
 }
 
 export type PdoDriverConstructor = new (
-    driver: string,
-    options: any,
-    poolOptions: PoolOptions,
-    attributes: PdoAttributes
+  driver: string,
+  options: any,
+  poolOptions: PdoPoolOptions,
+  attributes: PdoAttributes,
 ) => PdoDriverI;
 
-export default interface PdoDriverI {
-    beginTransaction: () => Promise<PdoTransactionI>;
+export interface PdoDriverI {
+  beginTransaction: () => Promise<PdoTransactionI>;
 
-    disconnect: () => Promise<void>;
+  disconnect: () => Promise<void>;
 
-    reconnect: () => void;
+  reconnect: () => void;
 
-    prepare: (sql: string) => Promise<PdoPreparedStatementI>;
+  prepare: (sql: string) => Promise<PdoPreparedStatementI>;
 
-    exec: (sql: string) => Promise<number>;
+  exec: (sql: string) => Promise<number>;
 
-    query: (sql: string) => Promise<PdoStatementI>;
+  query: (sql: string) => Promise<PdoStatementI>;
 
-    on: (eventName: 'log', handler: (level: string, message: string) => void) => void;
+  on: (
+    eventName: 'log',
+    handler: (level: string, message: string) => void,
+  ) => void;
 
-    getAttribute: (attribute: string) => string | number;
+  getAttribute: (attribute: string) => string | number;
 
-    setAttribute: (attribute: string, value: number | string) => boolean;
+  setAttribute: (attribute: string, value: number | string) => boolean;
 
-    getRawPoolConnection: () => Promise<RawPoolConnection>;
+  getRawPoolConnection: () => Promise<RawPoolConnection>;
 
-    getRawDriverConnection: <T>() => Promise<T>;
+  getRawDriverConnection: <T>() => Promise<T>;
 
-    getVersion: () => Promise<string>;
+  getVersion: () => Promise<string>;
 }

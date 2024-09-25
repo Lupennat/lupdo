@@ -1,27 +1,27 @@
 # Fetch Modes
 
--   Classic Modes:
-    -   [Fetch Both](#fetch-both)
-    -   [Fetch Array](#fetch-array)
-    -   [Fetch Dictionary](#fetch-dictionary)
--   Most useful modes:
-    -   [Fetch Column](#fetch-column)
-    -   [Fetch Pair](#fetch-pair)
--   OOP:
-    -   [Fetch Object](#fetch-object)
--   Miscellaneous
-    -   [Fetch Closure](#fetch-closure)
-    -   [Fetch Named](#fetch-named)
--   [Fetched](#fetched)
+- Classic Modes:
+  - [Fetch Both](#fetch-both)
+  - [Fetch Array](#fetch-array)
+  - [Fetch Dictionary](#fetch-dictionary)
+- Most useful modes:
+  - [Fetch Column](#fetch-column)
+  - [Fetch Pair](#fetch-pair)
+- OOP:
+  - [Fetch Object](#fetch-object)
+- Miscellaneous
+  - [Fetch Closure](#fetch-closure)
+  - [Fetch Named](#fetch-named)
+- [Fetched](#fetched)
 
-    -   [get](#fetch-get)
-    -   [unique](#fetch-unique)
-    -   [group](#fetch-group)
-    -   [all](#fetch-all)
+  - [get](#fetch-get)
+  - [unique](#fetch-unique)
+  - [group](#fetch-group)
+  - [all](#fetch-all)
 
--   [Cursor](#cursor)
-    -   [FETCH_FORWARD](#fetch-forward)
-    -   [FETCH_BACKWARD](#fetch-backward)
+- [Cursor](#cursor)
+  - [FETCH_FORWARD](#fetch-forward)
+  - [FETCH_BACKWARD](#fetch-backward)
 
 ## Fetch Both
 
@@ -144,9 +144,9 @@ will give you an array consists of objects of a User class, with properties fill
 
 No matter which method you choose, all the returned columns will be assigned to the corresponding class' properties according to the following rules:
 
--   if there is a class property, which name is the same as a column name, the column value will be assigned to this property.
--   if there is no such property, but exist a setter then the setter will be called.
--   if setter method is not defined for the class, then a public property will be created and a column value assigned to it.
+- if there is a class property, which name is the same as a column name, the column value will be assigned to this property.
+- if there is no such property, but exist a setter then the setter will be called.
+- if setter method is not defined for the class, then a public property will be created and a column value assigned to it.
 
 Properties are always assigned after class constructor is called.
 
@@ -265,10 +265,10 @@ const data = pdo.query("SELECT * FROM users, companies WHERE users.name = 'Claud
 
 Fetched Object is an iterable object, that expose theese methods:
 
--   get: () => T | undefined;
--   all: () => T[];
--   group: () => Group<T>;
--   unique: () => Unique<T>;
+- get: () => T | undefined;
+- all: () => T[];
+- group: () => Group<T>;
+- unique: () => Unique<T>;
 
 ```ts
 (await pdo.query('SELECT * from users').fetchArray()).get();

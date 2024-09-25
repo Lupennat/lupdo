@@ -1,5 +1,3 @@
-import PdoColumnValue from './pdo-column-value';
+import { PdoColumnValue } from './pdo-column-value';
 
-type PdoRowData = PdoColumnValue[];
-
-export default PdoRowData;
+export type PdoRowData = PdoColumnValue[];

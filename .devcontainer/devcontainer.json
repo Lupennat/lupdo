@@ -1,0 +1,87 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/typescript-node
+{
+	"name": "Node.js & TypeScript",
+	// Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
+	"image": "mcr.microsoft.com/devcontainers/typescript-node:18",
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+	// Use 'postCreateCommand' to run commands after the container is created.
+	"postCreateCommand": "npm ci",
+	// Configure tool-specific properties.
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"esbenp.prettier-vscode",
+				"dbaeumer.vscode-eslint",
+				"orta.vscode-jest",
+				"GitHub.vscode-github-actions",
+				"DavidAnson.vscode-markdownlint",
+				"eamodio.gitlens"
+			],
+			"settings": {
+				"[jsonc]": {
+					"editor.defaultFormatter": "vscode.json-language-features",
+					"editor.formatOnSave": true
+				},
+				"[json]": {
+					"editor.defaultFormatter": "vscode.json-language-features",
+					"editor.formatOnSave": true
+				},
+				"[markdown]": {
+					"editor.defaultFormatter": "DavidAnson.vscode-markdownlint",
+					"editor.formatOnSave": true
+				},
+				"[javascript]": {
+					"editor.codeActionsOnSave": {
+						"source.fixAll.eslint": "explicit"
+					}
+				},
+				"[typescript]": {
+					"editor.codeActionsOnSave": {
+						"source.fixAll.eslint": "explicit"
+					}
+				},
+				"typescript.preferences.importModuleSpecifier": "relative",
+				"launch": {
+					"version": "0.2.0",
+					"configurations": [
+						{
+							"name": "Debug NestJs",
+							"type": "node",
+							"request": "attach",
+							"port": 9229
+						}
+					],
+					"compounds": []
+				},
+				"jest.coverageColors": {
+					"covered": "rgba(9, 156, 65, 0.4)",
+					"uncovered": "rgba(121, 31, 10, 0.4)",
+					"partially-covered": "rgba(235, 198, 52, 0.4)"
+				},
+				"jest.runMode": {
+					"type": "on-demand",
+					"coverage": false
+				},
+				"jest.virtualFolders": [
+					{
+						"name": "coverage",
+						"jestCommandLine": "npm run test:coverage --",
+						"runMode": {
+							"type": "on-demand",
+							"coverage": true
+						}
+					},
+					{
+						"name": "unit",
+						"jestCommandLine": "npm run test:unit --",
+						"runMode": "on-demand"
+					}
+				]
+			}
+		}
+	}
+}
