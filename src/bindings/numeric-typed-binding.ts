@@ -5,7 +5,7 @@ import {
 } from '../types/type-bindings';
 import BaseTypedBinding from './base-typed-binding';
 
-export default class NumericTypedBinding extends BaseTypedBinding {
+export class NumericTypedBinding extends BaseTypedBinding {
   constructor(
     public type: NumericType,
     public value: NumericValidPrimitive,
@@ -14,3 +14,5 @@ export default class NumericTypedBinding extends BaseTypedBinding {
     super(type, value, options);
   }
 }
+
+export default NumericTypedBinding;

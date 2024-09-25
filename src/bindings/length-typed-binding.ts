@@ -5,7 +5,7 @@ import {
 } from '../types/type-bindings';
 import BaseTypedBinding from './base-typed-binding';
 
-export default class LengthTypedBinding extends BaseTypedBinding {
+export class LengthTypedBinding extends BaseTypedBinding {
   constructor(
     public type: LengthType,
     public value: LengthValidPrimitive,
@@ -14,3 +14,5 @@ export default class LengthTypedBinding extends BaseTypedBinding {
     super(type, value, options);
   }
 }
+
+export default LengthTypedBinding;

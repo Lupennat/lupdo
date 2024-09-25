@@ -10,7 +10,7 @@ import { PdoRawConnectionI } from '../types/pdo-raw-connection';
 import { paramsToString } from '../utils';
 import PdoStatement from './pdo-statement';
 
-export default class PdoTransactionPreparedStatement
+export class PdoTransactionPreparedStatement
   extends PdoStatement
   implements PdoTransactionPreparedStatementI
 {
@@ -120,3 +120,5 @@ export default class PdoTransactionPreparedStatement
     return `PROCESSED SQL: ${this.sql}\nPARAMS:${paramsToString(this.params ?? this.bindedParams ?? [], 2)}`;
   }
 }
+
+export default PdoTransactionPreparedStatement;

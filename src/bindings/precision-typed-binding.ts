@@ -5,7 +5,7 @@ import {
 } from '../types/type-bindings';
 import BaseTypedBinding from './base-typed-binding';
 
-export default class PrecisionTypedBinding extends BaseTypedBinding {
+export class PrecisionTypedBinding extends BaseTypedBinding {
   constructor(
     public type: PrecisionType,
     public value: PrecisionValidPrimitive,
@@ -14,3 +14,5 @@ export default class PrecisionTypedBinding extends BaseTypedBinding {
     super(type, value, options);
   }
 }
+
+export default PrecisionTypedBinding;

@@ -9,7 +9,7 @@ import { PdoPreparedStatementI } from './types/pdo-prepared-statement';
 import { PdoStatementI } from './types/pdo-statement';
 import { PdoTransactionI } from './types/pdo-transaction';
 
-export default class Pdo implements PdoI {
+export class Pdo implements PdoI {
   protected driver: PdoDriverI;
   protected version: string | undefined;
   public uuid: string;
@@ -109,3 +109,5 @@ export default class Pdo implements PdoI {
     return this.driver.setAttribute(attribute, value);
   }
 }
+
+export default Pdo;

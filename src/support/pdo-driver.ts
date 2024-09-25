@@ -34,10 +34,7 @@ import PdoPreparedStatement from './pdo-prepared-statement';
 import PdoStatement from './pdo-statement';
 import PdoTransaction from './pdo-transaction';
 
-export default abstract class PdoDriver
-  extends EventEmitter
-  implements PdoDriverI
-{
+export abstract class PdoDriver extends EventEmitter implements PdoDriverI {
   protected version: string | undefined;
   protected instances: DriverInstances = {
     transaction: PdoTransaction,
@@ -327,3 +324,4 @@ export default abstract class PdoDriver
     }
   }
 }
+export default PdoDriver;

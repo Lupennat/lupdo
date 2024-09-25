@@ -10,7 +10,7 @@ import {
 import PdoStatement from './pdo-statement';
 import PdoTransactionPreparedStatement from './pdo-transaction-prepared-statement';
 
-export default class PdoTransaction implements PdoTransactionI {
+export class PdoTransaction implements PdoTransactionI {
   protected instances: TransactionInstances = {
     preparedStatement: PdoTransactionPreparedStatement,
     statement: PdoStatement,
@@ -46,3 +46,5 @@ export default class PdoTransaction implements PdoTransactionI {
     );
   }
 }
+
+export default PdoTransaction;

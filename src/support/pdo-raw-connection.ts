@@ -12,7 +12,7 @@ import {
 import { PdoRawConnectionI } from '../types/pdo-raw-connection';
 import { PdoRowData } from '../types/pdo-raw-data';
 
-export default abstract class PdoRawConnection implements PdoRawConnectionI {
+export abstract class PdoRawConnection implements PdoRawConnectionI {
   protected attributes: PdoAttributes = {};
   protected connection: PoolConnection | null = null;
   protected inTransaction = false;
@@ -274,3 +274,4 @@ export default abstract class PdoRawConnection implements PdoRawConnectionI {
     return this.connection;
   }
 }
+export default PdoRawConnection;
