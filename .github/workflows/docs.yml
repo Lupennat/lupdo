@@ -12,8 +12,15 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      - name: Install deps
+        run: npm ci
+        env:
+          CI: true
+
       - name: Generate Docs
         run: npm docs
+        env:
+          CI: true
 
       - uses: contention/rsync-deployments@v2.0.0
         with:
