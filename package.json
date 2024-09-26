@@ -1,6 +1,6 @@
 {
     "name": "lupdo",
-    "version": "4.0.0",
+    "version": "4.0.1",
     "description": "Database Abstraction Layer for Node js",
     "author": "Claudio Pennati <claudio.pennati@gmail.com>",
     "license": "MIT",
@@ -16,12 +16,12 @@
     ],
     "main": "dist/cjs/index.js",
     "module": "./dist/esm/index.js",
-    "types": "./dist/typings/index.d.ts",
+    "types": "./dist/types/index.d.ts",
     "exports": {
         ".": {
             "require": "./dist/cjs/index.js",
             "import": "./dist/esm/index.js",
-            "types": "./dist/typings/index.d.ts"
+            "types": "./dist/types/index.d.ts"
         }
     },
     "publishConfig": {
