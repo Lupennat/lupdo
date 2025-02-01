@@ -98,7 +98,7 @@ export default class FakeRawConnection extends PdoRawConnection {
               val = parseFloat(val).toFixed(value.options.precision);
             }
             return this.adaptBindValue(val);
-          case value instanceof NumericTypedBinding:
+          case value instanceof NumericTypedBinding: {
             const maxDigits = value.options.total ?? 0;
             const maxDecimals = value.options.places ?? 0;
             const maxInteger = maxDigits ? maxDigits - maxDecimals : Infinity;
@@ -117,6 +117,7 @@ export default class FakeRawConnection extends PdoRawConnection {
             }
 
             return this.adaptBindValue(val);
+          }
           case value instanceof LengthTypedBinding:
             return this.adaptBindValue(val);
           default:

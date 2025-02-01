@@ -1,11 +1,11 @@
-export function isFunctionConstructor(fn: Function): boolean {
+export function isFunctionConstructor(fn: any): boolean {
   try {
     const Proxied = new Proxy(fn as FunctionConstructor, {
       construct() {
         return {};
       },
     });
-    // eslint-disable-next-line no-new
+
     new Proxied();
     return fn.name !== '';
   } catch (err) {

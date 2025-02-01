@@ -378,9 +378,12 @@ export class PdoStatement implements PdoStatementI {
     const cursor = this.getTempCursorForFetch(cursorOrientation);
 
     if (!this.isValidCursor(cursor, cursorOrientation)) {
-      cursorOrientation === FETCH_BACKWARD
-        ? this.setCursorToStart()
-        : this.setCursorToEnd();
+      if (cursorOrientation === FETCH_BACKWARD) {
+        this.setCursorToStart();
+      } else {
+        this.setCursorToEnd();
+      }
+
       return null;
     }
 

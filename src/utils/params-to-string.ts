@@ -8,7 +8,7 @@ class JsonDate extends Date {
 }
 
 class JsonBigInt {
-  constructor(protected readonly bigint: BigInt) {}
+  constructor(protected readonly bigint: bigint) {}
   toJSON(): any {
     return { type: 'BigInt', data: this.bigint.toString() };
   }

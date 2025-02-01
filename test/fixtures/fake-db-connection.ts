@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-
 import { PdoAffectingData, PdoColumnData, PdoRowData } from '../../src';
 import db from './db';
 
@@ -53,11 +51,7 @@ async function processSql(
 
   if (sql.startsWith('select sleep(60)')) {
     sleeps[threadId] = true;
-    try {
-      await sleep(threadId);
-    } catch (error) {
-      throw error;
-    }
+    await sleep(threadId);
   }
 
   if (sql.startsWith('select array')) {

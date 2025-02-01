@@ -57,7 +57,13 @@ export abstract class PdoDriver extends EventEmitter implements PdoDriverI {
   private userPoolOptions: PdoPoolOptions;
   private processedPoolOptions: InternalPdoPoolOptions<PoolConnection> | null =
     null;
-  private poolEvents: { [key: string]: Function | undefined } = {};
+  private poolEvents: {
+    created?: PdoPoolOptions['created'];
+    destroyed?: PdoPoolOptions['destroyed'];
+    acquired?: PdoPoolOptions['acquired'];
+    released?: PdoPoolOptions['released'];
+    killed?: PdoPoolOptions['killed'];
+  } = {};
 
   protected hasDebug = false;
 
