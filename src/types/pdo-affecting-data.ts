@@ -1,4 +1,4 @@
 export interface PdoAffectingData {
-  lastInsertRowid?: string | number | bigint;
+  lastInsertRowid?: string | number;
   affectedRows?: number;
 }

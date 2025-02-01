@@ -15,7 +15,7 @@ export default class FakeRawConnection extends PdoRawConnection {
   public async lastInsertId(
     { affectingResults }: { affectingResults: PdoAffectingData },
     name?: string,
-  ): Promise<string | number | bigint | null> {
+  ): Promise<string | number | null> {
     if (name != null) {
       return name;
     }

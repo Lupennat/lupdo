@@ -25,12 +25,13 @@ Please follow this rules if you can:
 
 - supports the syntax of named parameters `:key` and the syntax of numeric parameters `?`, adds documentation for other syntax types.
 
-- **date** from database should be returned as javascript `string` not javascript `Date`.
-- **bigint** from database should be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
-- **decimal** from database should be returned as javascript `string` not javascript `Number` to not loose precision, even if driver can't guarantee the precision it is better to return a `string` as standard.
-- **numeric int** from database shold be returned as javascript `Number` if respect Number.MAX_SAFE_INTEGER and Number.MIN_SAFE_INTEGER otherwise it should be a javascript `BigInt`.
-- **numeric float** from database should be returned as javascript `string` not javascript `Number` to not loose precision, even if driver can't guarantee the precision it is better to return a `string` as standard.
-- **boolean** should be returned as `Number` 1 or 0.
+- **date** from database should be returned as javascript `String`.
+- **time** from database should be returned as javascript `String`.
+- **bigint** from database should be returned as javascript `String`.
+- **decimal** from database should be returned as javascript `String`.
+- **numeric int** from database shold be returned as javascript `Number`.
+- **numeric float** from database should be returned as javascript `String`.
+- **boolean** should be returned as javascript `Boolean`.
 - **json** should be always returned as `String` not an `Object`.
 - **array** should be returned as Javascript `Array` and value of array should respect rules above.
 
@@ -44,7 +45,7 @@ Please follow this rules if you can:
 - you can add a new type parameter to be used on `TypedBinding` and implement `TypedBindingOptions` for all `TypeBinding`, please document all options and the new accepted type.
 
 > **Note**
-> As soon as it will be stable, Lupdo will accept [Temporal](https://tc39.es/proposal-temporal/docs/) as validBindings and db date should be returned as Temporal.
+> As soon as it will be stable, Lupdo will accept [Temporal](https://tc39.es/proposal-temporal/docs/) as validBindings.
 
 ## FULL EXAMPLE
 

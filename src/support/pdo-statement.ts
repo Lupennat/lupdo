@@ -82,9 +82,7 @@ export class PdoStatement implements PdoStatementI {
     return 0;
   }
 
-  public async lastInsertId(
-    name?: string,
-  ): Promise<string | bigint | number | null> {
+  public async lastInsertId(name?: string): Promise<string | number | null> {
     return await this.connection.lastInsertId(
       {
         affectingResults: this.affectingResults,

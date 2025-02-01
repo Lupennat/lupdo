@@ -55,5 +55,5 @@ export interface PdoRawConnectionI {
       columns: PdoColumnData[];
     },
     name?: string,
-  ) => Promise<string | number | bigint | null>;
+  ) => Promise<string | number | null>;
 }

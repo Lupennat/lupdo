@@ -212,7 +212,7 @@ export abstract class PdoRawConnection implements PdoRawConnectionI {
     affectingResults,
   }: {
     affectingResults: PdoAffectingData;
-  }): Promise<string | number | bigint | null> {
+  }): Promise<string | number | null> {
     if (typeof affectingResults.lastInsertRowid === 'undefined') {
       return null;
     }
